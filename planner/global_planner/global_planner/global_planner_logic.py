@@ -155,10 +155,12 @@ class GlobalPlannerLogic:
         # If we are not creating a map, then we can simply compute the trajectory. No further action needed.
         if not self.create_map:
             self.loginfo("Not creating map, only computing trajectory.")
-            self.compute_global_trajectory(cent_length=0.0)
-            self.loginfo('Successfully computed trajectory.')
-
-            return (True, self.map_name)
+            if self.compute_global_trajectory(cent_length=0.0):
+                self.loginfo('Successfully computed trajectory.')
+                return (True, self.map_name)
+            else:
+                self.logerror('Failed to compute trajectory.')
+                return (False, "")
 
         # Wait for map and pose to be valid
         if not self.pose_valid or not self.map_valid:
