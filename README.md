@@ -1,8 +1,20 @@
-# ROS 2 ForzaETH Race Stack at Center for Project Based Learning
+# eth_roboracer - ICRA 2026 Sim Racing League
 
-<a href="https://arxiv.org/abs/2403.11784">
-    <img src="https://img.shields.io/badge/arXiv.org-2403.11784-b31b1b" alt="arXiv e-print Badge">
-</a>
+This is a customized version of the **ForzaETH Race Stack**, specifically adapted for the **AutoDRIVE RoboRacer ICRA 2026 Sim Racing League**. It integrates the high-performance racing algorithms from ETH Zurich with the AutoDRIVE simulator environment.
+
+## 🚀 Key RoboRacer Additions
+
+*   **AutoDRIVE Bridge:** A custom `autodrive_adapter` package that translates AutoDRIVE simulator topics (LiDAR, Odometry, IPS) to the standard ROS 2 topics expected by the ForzaETH stack.
+*   **Porto Track Support:** Full integration for the Porto competition circuit, including:
+    *   Pre-processed track maps (`pf_map.yaml`, `porto.yaml`).
+    *   LiDAR scan cleaning and denoising scripts (`clean_map.py`, `clean_advanced.py`).
+    *   Optimizedraceline waypoints for minimum curvature racing.
+*   **Advanced Gap Follower (v2):** Improved obstacle avoidance with disparity extension, forward bias targeting, and proximity-based speed scaling.
+*   **Custom Launch Infrastructure:** Dedicated launch scripts (`launch_localmap_v5.sh`, `launch_ips_mapper.sh`) tailored for the RoboRacer Docker environment.
+
+---
+
+# Original ForzaETH Race Stack 
 
 ForzaETH Race Stack by the [D-ITET Center for Project Based Learning (PBL)](https://pbl.ee.ethz.ch/) at ETH Zurich. 
 
