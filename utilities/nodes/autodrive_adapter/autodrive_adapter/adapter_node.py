@@ -203,10 +203,11 @@ class AutoDRIVEAdapter(Node):
     def _drive_cb(self, msg: AckermannDriveStamped) -> None:
         """
         Convert ForzaETH /drive → AutoDRIVE throttle + steering commands.
-
-        ForzaETH: speed [m/s], steering_angle [rad]
-        AutoDRIVE: normalised Float32 in [-1, 1]
+        Only processes messages if teleop is not currently active.
         """
+        if self._teleop_active:
+             return
+
         steer_norm = float(msg.drive.steering_angle) / STEER_NORM_TO_RAD
         steer_norm = max(-1.0, min(1.0, steer_norm))
 
@@ -219,12 +220,20 @@ class AutoDRIVEAdapter(Node):
         self._throttle_pub.publish(th)
 
     def _teleop_cb(self, msg: Twist) -> None:
-        """Manual teleop relay for mapping. Overrides /drive when active."""
+        """Manual teleop relay for mapping. Handled as a prioritized override."""
+        self._teleop_active = True
+        
+        # Reset override if joystick is idle
+        if abs(msg.linear.x) < 0.001 and abs(msg.angular.z) < 0.001:
+            self._teleop_active = False
+
         throttle = float(msg.linear.x) / THROTTLE_NORM_TO_MS
         throttle = max(-1.0, min(1.0, throttle))
-        # Convert angular.z to steering: assume max angular = 1.0 rad/s → max steer
-        steer_norm = -float(msg.angular.z) * 0.4
+
+        # Fix: Direction is Positive (+) Left, and range is full [-1.0, 1.0]
+        steer_norm = float(msg.angular.z)
         steer_norm = max(-1.0, min(1.0, steer_norm))
+        
         s = Float32(); s.data = steer_norm
         th = Float32(); th.data = throttle
         self._steering_pub.publish(s)

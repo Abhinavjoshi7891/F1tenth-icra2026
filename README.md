@@ -14,6 +14,81 @@ This is a customized version of the **ForzaETH Race Stack**, specifically adapte
 
 ---
 
+## 🏁 End-to-End Run Instructions (v1.0)
+
+### 🏎️ Racing Setup (5 Terminals)
+
+**Terminal 1 — AutoDRIVE Simulator (Host)**
+```bash
+cd /home/abhinav/Data_Drive/forzaeth/autodrive_sim/autodrive_simulator_practice_linux/autodrive_simulator
+./AutoDRIVE\ Simulator.x86_64
+```
+*Note: Do not click connect yet.*
+
+**Terminal 2 — Devkit Bridge (Docker)**
+```bash
+docker run --name autodrive_roboracer_api --rm -it \
+    --network=host --ipc=host \
+    -e ROS_DOMAIN_ID=48 \
+    -e FASTDDS_BUILTIN_TRANSPORTS=UDPv4 \
+    -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+    --env DISPLAY --privileged --gpus all \
+    roboracer-localmap:latest
+# Inside:
+source /opt/ros/humble/setup.bash
+source /home/autodrive_devkit/install/setup.bash
+ros2 run autodrive_roboracer autodrive_bridge --ros-args -r /tf:=/tf_devkit_unused
+```
+*Wait for "Connected!" then click connect in the simulator.*
+
+**Terminal 3 — Adapter Node (ForzaETH Container)**
+```bash
+cd /home/abhinav/Data_Drive/forzaeth/race_stack
+./.docker_utils/main_attach_dock.sh
+# Inside:
+source ~/ws/install/setup.bash
+ros2 run autodrive_adapter adapter_node --ros-args -r /tf:=/tf_adapter_unused
+```
+
+**Terminal 4 — Base System (ForzaETH Container)**
+```bash
+./.docker_utils/sec_dock.sh
+# Inside:
+source ~/ws/install/setup.bash
+ros2 launch stack_master base_system_autodrive_launch.xml \
+    map_name:=porto racecar_version:=AUTODRIVE autodrive:=True
+```
+
+**Terminal 5 — Time Trials (ForzaETH Container)**
+```bash
+./.docker_utils/sec_dock.sh
+# Inside:
+source ~/ws/install/setup.bash
+ros2 launch stack_master time_trials_launch.xml \
+    racecar_version:=AUTODRIVE LU_table:=SIM_linear ctrl_algo:=MAP
+```
+
+---
+
+### 🗺️ Mapping Setup (5 Terminals)
+
+1.  **Terminal 1 (ForzaETH Main):** Start `adapter_node` (remapped `/tf`).
+2.  **Terminal 2 (ForzaETH Sec):** `ros2 launch stack_master mapping_autodrive_launch.xml map_name:=porto racecar_version:=AUTODRIVE`
+3.  **Terminal 3 (ForzaETH Sec):** Teleop drive: `ros2 run key_teleop key_teleop --ros-args -p forward_rate:=0.5`
+4.  **Terminal 4 (Devkit Container):** `ros2 launch autodrive_roboracer bringup_headless.launch.py` (Domain ID 48).
+5.  **Terminal 5 (Host):** Launch AutoDRIVE Simulator binary.
+
+### ✏️ Interactive Raceline Editor
+Inside the ForzaETH container:
+```bash
+python3 ~/ws/src/race_stack/utilities/nodes/raceline_editor.py --map-dir ~/ws/src/race_stack/stack_master/maps/porto
+# Then rebuild map package if changed:
+cd ~/ws && colcon build --packages-select stack_master --symlink-install
+source ~/ws/install/setup.bash
+```
+
+---
+
 # Original ForzaETH Race Stack 
 
 ForzaETH Race Stack by the [D-ITET Center for Project Based Learning (PBL)](https://pbl.ee.ethz.ch/) at ETH Zurich. 
