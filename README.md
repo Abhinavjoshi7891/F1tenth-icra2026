@@ -121,6 +121,22 @@ source ~/ws/install/setup.bash
 
 ---
 
+## 🛠️ Tuning & Configuration
+
+To fine-tune your racing performance and path generation, you can tinker with the following files:
+
+### 🏎️ Speed Profile & Scaling
+*   **File:** `stack_master/maps/<map_name>/speed_scaling.yaml`
+*   **Usage:** Used to adjust the speed profile and apply ceilings to the maximum speed, both globally and for specific track sections.
+
+### 📐 Raceline Generation (ETH Algorithm)
+*   **File:** `stack_master/config/global_planner/global_planner_params.yaml`
+*   **Usage:** Manage parameters for the initial raceline generation, including:
+    *   **Safety Width:** Distance to keep from track boundaries.
+    *   **Optimization Type:** Toggle between shortest path and minimum curvature algorithms.
+
+---
+
 # Original ForzaETH Race Stack 
 
 ForzaETH Race Stack by the [D-ITET Center for Project Based Learning (PBL)](https://pbl.ee.ethz.ch/) at ETH Zurich. 
