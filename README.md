@@ -70,6 +70,32 @@ ros2 launch stack_master time_trials_launch.xml \
 
 ---
 
+### 🏎️ F1TENTH Gym & RViz Setup (2 Terminals)
+
+For running the native F1Tenth Gym and RViz-based simulator:
+
+**Terminal 1 — Load Base System (Docker)**
+```bash
+cd /home/abhinav/Data_Drive/forzaeth/race_stack
+./.docker_utils/main_attach_dock.sh
+# Inside:
+source ~/ws/install/setup.bash
+ros2 launch stack_master base_system_launch.xml \
+    map_name:=<map_name> sim:=true racecar_version:=SIM
+```
+
+**Terminal 2 — Load Racing System (Docker)**
+```bash
+./.docker_utils/sec_dock.sh
+# Inside:
+source ~/ws/install/setup.bash
+ros2 launch stack_master time_trials_launch.xml \
+    racecar_version:=SIM LU_table:=SIM_linear ctrl_algo:=MAP
+```
+*Note: `ctrl_algo` can be `MAP` or `PP` (Pure Pursuit).*
+
+---
+
 ### 🗺️ Mapping Setup (5 Terminals)
 
 1.  **Terminal 1 (ForzaETH Main):** Start `adapter_node` (remapped `/tf`).
@@ -78,12 +104,18 @@ ros2 launch stack_master time_trials_launch.xml \
 4.  **Terminal 4 (Devkit Container):** `ros2 launch autodrive_roboracer bringup_headless.launch.py` (Domain ID 48).
 5.  **Terminal 5 (Host):** Launch AutoDRIVE Simulator binary.
 
+---
+
 ### ✏️ Interactive Raceline Editor
 Inside the ForzaETH container:
 ```bash
-python3 ~/ws/src/race_stack/utilities/nodes/raceline_editor.py --map-dir ~/ws/src/race_stack/stack_master/maps/porto
-# Then rebuild map package if changed:
+# 1. Run the editor
+python3 ~/ws/src/race_stack/utilities/nodes/raceline_editor.py --map-dir ~/ws/src/race_stack/stack_master/maps/<map_name>
+
+# 2. Rebuild the stack_master package to apply changes
 cd ~/ws && colcon build --packages-select stack_master --symlink-install
+
+# 3. Source the updated workspace
 source ~/ws/install/setup.bash
 ```
 
