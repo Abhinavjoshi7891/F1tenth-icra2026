@@ -23,6 +23,7 @@ setup(
     entry_points={
         'console_scripts': [
             'adapter_node = autodrive_adapter.adapter_node:main',
+            'local_map_pp_cartographer = autodrive_adapter.local_map_pp_cartographer:main',
         ],
     },
 )

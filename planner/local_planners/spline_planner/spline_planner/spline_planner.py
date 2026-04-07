@@ -87,11 +87,13 @@ class ObstacleSpliner(Node):
         self.pre_apex_0 = -4.0
         self.pre_apex_1 = -3.0
         self.pre_apex_2 = -1.5
-        self.post_apex_0 = 2.0
-        self.post_apex_1 = 3.0
-        self.post_apex_2 = 4.0
+        # Post-apex defaults match ROS1 dyn_spliner_tuner.cfg (were 2/3/4 — too short, caused wall hits on exit)
+        self.post_apex_0 = 4.5
+        self.post_apex_1 = 5.0
+        self.post_apex_2 = 5.5
         self.evasion_dist = 0.65
-        self.obs_traj_tresh = 0.3
+        # ROS1 cfg default is 1.0m. The 0.3m default was silently dropping obstacles not perfectly on the raceline.
+        self.obs_traj_tresh = 1.0
         self.spline_bound_mindist = 0.2
         self.fixed_pred_time = 0.15
         self.kd_obs_pred = 1.0
@@ -521,8 +523,10 @@ class ObstacleSpliner(Node):
                 if abs(evasion_d[i]) > spline_resolution:
                     tb_dist = gb_wpnts[gb_wpnt_i].d_left if more_space == "left" else gb_wpnts[gb_wpnt_i].d_right
                     if abs(evasion_d[i]) > abs(tb_dist) - self.spline_bound_mindist:
+                        # Throttle to 2s to match ROS1 loginfo_throttle_identical behaviour
                         self.get_logger().info(
-                            "Evasion trajectory too close to TRACKBOUNDS, aborting evasion"
+                            "Evasion trajectory too close to TRACKBOUNDS, aborting evasion",
+                            throttle_duration_sec=2.0
                         )
                         danger_flag = True
                         break

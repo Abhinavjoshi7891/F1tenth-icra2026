@@ -62,6 +62,12 @@ CTRL_QOS = QoSProfile(
     depth=10
 )
 
+SENSOR_QOS = QoSProfile(
+    reliability=QoSReliabilityPolicy.BEST_EFFORT,
+    history=QoSHistoryPolicy.KEEP_LAST,
+    depth=5
+)
+
 
 def _yaw_to_quat(yaw: float) -> Quaternion:
     q = Quaternion()
@@ -84,7 +90,12 @@ class AutoDRIVEAdapter(Node):
         # Encoder angle state (radians, cumulative from bridge)
         self._left_angle_prev:  float = None
         self._right_angle_prev: float = None
+        self._last_enc_time: float = None
         self._steering_rad:     float = 0.0
+
+        # Velocity state for twist field (computed each encoder cycle)
+        self._vx:    float = 0.0
+        self._omega: float = 0.0
 
         # ── Speed controller state ────────────────────────────────────────────
         self._actual_speed: float = 0.0    # from /autodrive/roboracer_1/speed
@@ -111,10 +122,11 @@ class AutoDRIVEAdapter(Node):
 
         # ── Publishers ────────────────────────────────────────────────────────
         self._odom_pub     = self.create_publisher(Odometry,   '/odom',                                   CTRL_QOS)
-        self._scan_pub     = self.create_publisher(LaserScan,  '/scan',                                   RELIABLE_QOS)
+        self._scan_pub = self.create_publisher(LaserScan, '/scan', SENSOR_QOS)
         self._imu_pub      = self.create_publisher(Imu,        '/sensors/imu/raw',                        RELIABLE_QOS)
         self._throttle_pub = self.create_publisher(Float32,    '/autodrive/roboracer_1/throttle_command',  CTRL_QOS)
         self._steering_pub = self.create_publisher(Float32,    '/autodrive/roboracer_1/steering_command',  CTRL_QOS)
+        self._speed_pub = self.create_publisher(Float32, '/autodrive/roboracer_1/speed', 10)
 
         # ── Subscribers ───────────────────────────────────────────────────────
         self.create_subscription(JointState,            '/autodrive/roboracer_1/left_encoder',  self._left_enc_cb,  RELIABLE_QOS)
@@ -162,8 +174,33 @@ class AutoDRIVEAdapter(Node):
             return
 
         d_s = (angle - self._right_angle_prev) * WHEEL_RADIUS
+
+        # ── Compute velocity BEFORE updating _last_enc_time ──────────────
+        now_sec = self.get_clock().now().nanoseconds * 1e-9
+        if self._last_enc_time is not None:
+            dt_enc = now_sec - self._last_enc_time
+            if dt_enc > 1e-4:
+                self._vx = d_s / dt_enc
+                self._omega = self._vx * math.tan(self._steering_rad) / WHEELBASE
+
+                # Also publish speed topic + update PID state
+                speed_msg = Float32()
+                speed_msg.data = float(abs(self._vx))
+                self._speed_pub.publish(speed_msg)
+                self._actual_speed = float(abs(self._vx))
+            else:
+                # dt too small — keep previous velocity (don't zero it out)
+                pass
+        else:
+            # First encoder pair — no velocity yet
+            self._vx = 0.0
+            self._omega = 0.0
+
+        # Update time AFTER using it for dt
+        self._last_enc_time = now_sec
         self._right_angle_prev = angle
 
+        # ── Dead-reckoning integration (unchanged) ───────────────────────
         delta = self._steering_rad
         if abs(delta) < 1e-6:
             self._x += d_s * math.cos(self._theta)
@@ -176,6 +213,7 @@ class AutoDRIVEAdapter(Node):
             self._theta += d_theta
             self._theta = math.atan2(math.sin(self._theta), math.cos(self._theta))
 
+        # ── Publish /odom WITH twist ─────────────────────────────────────
         stamp = msg.header.stamp
 
         odom = Odometry()
@@ -186,8 +224,19 @@ class AutoDRIVEAdapter(Node):
         odom.pose.pose.position.y  = self._y
         odom.pose.pose.position.z  = 0.0
         odom.pose.pose.orientation = _yaw_to_quat(self._theta)
+
+        # Twist — THIS is what the EKF actually fuses
+        odom.twist.twist.linear.x  = self._vx
+        odom.twist.twist.angular.z = self._omega
+
+        # Non-zero covariances so EKF treats these as real measurements
+        # (36-element row-major 6×6: indices [0]=var(vx), [35]=var(yaw_rate))
+        odom.twist.covariance[0]  = 0.001    # var(vx)  — encoder is decent
+        odom.twist.covariance[7]  = 0.001   # var(vy) ← ADD THIS
+        odom.twist.covariance[35] = 0.003    # var(wz)  — derived from steering model
         self._odom_pub.publish(odom)
 
+        # ── Publish tf odom → base_link ──────────────────────────────────
         t = TransformStamped()
         t.header.stamp            = stamp
         t.header.frame_id         = 'odom'

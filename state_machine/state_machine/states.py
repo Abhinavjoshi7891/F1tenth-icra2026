@@ -35,10 +35,24 @@ def Trailing(state_machine: StateMachine) -> List[Wpnt]:
     if state_machine.last_valid_avoidance_wpnts is not None:
         splini_wpts = state_machine.get_splini_wpts()
         s = int(state_machine.cur_s/state_machine.waypoints_dist + 0.5)
-        return [splini_wpts[(s + i)%state_machine.num_glb_wpnts] for i in range(state_machine.params.n_loc_wpnts)]
+        wpts = [splini_wpts[(s + i)%state_machine.num_glb_wpnts] for i in range(state_machine.params.n_loc_wpnts)]
     else:
         s = int(state_machine.cur_s/state_machine.waypoints_dist + 0.5)
-        return [state_machine.glb_wpnts[(s + i)%state_machine.num_glb_wpnts] for i in range(state_machine.params.n_loc_wpnts)]
+        wpts = [state_machine.glb_wpnts[(s + i)%state_machine.num_glb_wpnts] for i in range(state_machine.params.n_loc_wpnts)]
+
+    # SAFETY: Slow down to match opponent speed
+    if len(state_machine.obstacles) > 0:
+        # Find closest opponent (should be the one we are trailing)
+        closest_obs = min(state_machine.obstacles, key=lambda obs: (obs.s_center - state_machine.cur_s) % state_machine.track_length)
+        
+        # Target speed = opponent speed - safety buffer (0.2 m/s)
+        target_v = max(0.0, closest_obs.vs - 0.2)
+        
+        # Apply the cap to all local waypoints
+        for wpnt in wpts:
+            wpnt.vx_mps = min(wpnt.vx_mps, target_v)
+            
+    return wpts
 
 def Overtaking(state_machine: StateMachine) -> List[Wpnt]:
     splini_wpts = state_machine.get_splini_wpts()

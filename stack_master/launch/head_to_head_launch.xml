@@ -23,8 +23,10 @@
     </group>
 
     <!-- PERCEPTION -->
+    <!--
     <include file="$(find-pkg-share perception)/launch/perception_launch.xml">
         <arg name="param_file" value="$(find-pkg-share stack_master)/config/opponent_tracker_params.yaml" />
     </include> 
+    -->
     
 </launch>
