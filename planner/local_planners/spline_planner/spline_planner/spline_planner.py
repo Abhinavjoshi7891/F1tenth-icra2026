@@ -39,14 +39,19 @@ class ObstacleSpliner(Node):
 
         # initialize the instance variable
         self.obs = ObstacleArray()
-        self.gb_wpnts = None
-        self.gb_scaled_wpnts = None
+        self.gb_wpnts = WpntArray()
+        self.gb_scaled_wpnts = WpntArray()
         self.gb_vmax = None
         self.gb_max_idx = None
         self.gb_max_s = None
-        self.cur_s = None
-        self.cur_d = None
-        self.cur_vs = None
+        self.cur_s = 0.0
+        self.cur_d = 0.0
+        self.cur_vs = 0.0
+        
+        self._state_received = False
+        self._gb_received = False
+        self._gb_scaled_received = False
+
         self.lookahead = 10  # in meters [m] — 8m gives accurate paths while keeping pre-apex safely ahead of the car
         self.last_switch_time = self.get_clock().now().to_msg()
         self.last_ot_side = ""
@@ -92,17 +97,17 @@ class ObstacleSpliner(Node):
         self.pre_apex_1 = -3.0
         self.pre_apex_2 = -1.5
         # Post-apex: 8m max — 14m was wrapping past S=23m into tight S=9.3m section, aborting every evasion
-        self.post_apex_0 = 6.0
-        self.post_apex_1 = 7.0
-        self.post_apex_2 = 8.0
+        self.post_apex_0 = 2.0
+        self.post_apex_1 = 3.0
+        self.post_apex_2 = 4.0
         # Using 0.40m offset: clears tight walls at S=9.3m while still passing safely
-        self.evasion_dist = 0.40
+        self.evasion_dist = 0.65
         # ROS1 cfg default is 1.0m. The 0.3m default was silently dropping obstacles not perfectly on the raceline.
-        self.obs_traj_tresh = 1.0
+        self.obs_traj_tresh = 0.3
         # 0.02m clearance — was 0.05m but that was aborting post-apex returns at S=3.4m
         # where wall=0.53m, path=0.50m → 0.03m real clearance was being rejected
         # On the return leg the car moves TOWARD center so 0.02m is safe here
-        self.spline_bound_mindist = 0.02
+        self.spline_bound_mindist = 0.2
         self.fixed_pred_time = 0.15
         self.kd_obs_pred = 1.0
         
@@ -240,10 +245,12 @@ class ObstacleSpliner(Node):
         self.cur_s = msg.pose.pose.position.x
         self.cur_d = msg.pose.pose.position.y
         self.cur_vs = msg.twist.twist.linear.x
+        self._state_received = True
 
     def gb_cb(self, msg: WpntArray):
         # Callback function for global waypoints
         self.gb_wpnts = msg
+        self._gb_received = True
         if self.gb_vmax is None:
             self.gb_vmax = np.max(
                 np.array([wpnt.vx_mps for wpnt in msg.wpnts]))
@@ -253,26 +260,25 @@ class ObstacleSpliner(Node):
     def gb_scaled_cb(self, msg: WpntArray):
         # Callback function for scaled global waypoints
         self.gb_scaled_wpnts = msg
+        self._gb_scaled_received = True
 
     #################### HELPER FUNCTIONS####################
     def wait_for_messages(self):
-        self.get_logger().info('Carstate Node waiting for Odometry messages...')
+        self.get_logger().info('Spliner Node waiting for essential messages...')
         state_print = False
         gb_print = False
         scaled_gb_print = False
-        waitlist = [self.cur_s, self.gb_wpnts, self.gb_scaled_wpnts]
-        while None in waitlist:
-            rclpy.spin_once(self)
-            if self.cur_s is not None and not state_print:
+        while rclpy.ok() and not (self._state_received and self._gb_received and self._gb_scaled_received):
+            rclpy.spin_once(self, timeout_sec=0.1)
+            if self._state_received and not state_print:
                 self.get_logger().info('Received State message.')
                 state_print = True
-            if self.gb_wpnts is not None and not gb_print:
+            if self._gb_received and not gb_print:
                 self.get_logger().info('Received Global Waypoints message.')
                 gb_print = True
-            if self.gb_scaled_wpnts is not None and not scaled_gb_print:
+            if self._gb_scaled_received and not scaled_gb_print:
                 self.get_logger().info('Received Scaled Global Waypoints message.')
                 scaled_gb_print = True
-            waitlist = [self.cur_s, self.gb_wpnts, self.gb_scaled_wpnts]
         self.get_logger().info('All required messages received. Continuing...')
 
     def initialize_converter(self):
