@@ -53,6 +53,14 @@ def SpliniTrailingTransition(state_machine: StateMachine) -> StateType:
     """Transitions for being in `StateType.TRAILING`"""
     gb_free = state_machine._check_gbfree
     ot_sector = state_machine._check_ot_sector
+    splini_avail = state_machine._check_availability_splini_wpts
+    o_free = state_machine._check_ofree
+
+    # DIAGNOSTIC: print every gate condition to identify the blocker
+    state_machine.get_logger().info(
+        f"TRANSITION GATE: gb_free={gb_free} | ot_sector={ot_sector} | splini_avail={splini_avail} | o_free={o_free}",
+        throttle_duration_sec=1.0
+    )
 
     if not state_machine._check_only_ftg_zone:
         # If we have been sitting around in TRAILING for a while then FTG
@@ -65,8 +73,8 @@ def SpliniTrailingTransition(state_machine: StateMachine) -> StateType:
         elif (
             not gb_free
             and ot_sector
-            and state_machine._check_availability_splini_wpts
-            and state_machine._check_ofree
+            and splini_avail
+            and o_free
         ):
             return StateType.OVERTAKE
         else:

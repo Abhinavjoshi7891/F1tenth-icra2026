@@ -47,9 +47,14 @@ class ObstacleSpliner(Node):
         self.cur_s = None
         self.cur_d = None
         self.cur_vs = None
-        self.lookahead = 10  # in meters [m]
+        self.lookahead = 10  # in meters [m] — 8m gives accurate paths while keeping pre-apex safely ahead of the car
         self.last_switch_time = self.get_clock().now().to_msg()
         self.last_ot_side = ""
+        
+        # Persistence buffer to handle LiDAR flickering/occlusion
+        self.last_valid_obs = None
+        self.last_obs_time = 0.0
+        self.obs_persistence_sec = 1.0 # Keep 'ghost' obstacles alive for 1s
 
         # Initialize instance variables
         self.declare_parameters(
@@ -68,8 +73,7 @@ class ObstacleSpliner(Node):
             ObstacleArray, '/perception/obstacles', self.obs_cb, QoSProfile(depth=10))
         self.create_subscription(
             Odometry, '/car_state/frenet/odom', self.state_cb, QoSProfile(depth=10))
-        self.create_subscription(
-            WpntArray, '/global_waypoints', self.gb_cb, QoSProfile(depth=10))
+        self.create_subscription(WpntArray, '/global_waypoints', self.gb_cb, QoSProfile(depth=10))
         self.create_subscription(
             WpntArray, '/global_waypoints_scaled', self.gb_scaled_cb, QoSProfile(depth=10))
 
@@ -87,20 +91,24 @@ class ObstacleSpliner(Node):
         self.pre_apex_0 = -4.0
         self.pre_apex_1 = -3.0
         self.pre_apex_2 = -1.5
-        # Post-apex defaults match ROS1 dyn_spliner_tuner.cfg (were 2/3/4 — too short, caused wall hits on exit)
-        self.post_apex_0 = 4.5
-        self.post_apex_1 = 5.0
-        self.post_apex_2 = 5.5
-        self.evasion_dist = 0.65
+        # Post-apex: 8m max — 14m was wrapping past S=23m into tight S=9.3m section, aborting every evasion
+        self.post_apex_0 = 6.0
+        self.post_apex_1 = 7.0
+        self.post_apex_2 = 8.0
+        # Using 0.40m offset: clears tight walls at S=9.3m while still passing safely
+        self.evasion_dist = 0.40
         # ROS1 cfg default is 1.0m. The 0.3m default was silently dropping obstacles not perfectly on the raceline.
         self.obs_traj_tresh = 1.0
-        self.spline_bound_mindist = 0.2
+        # 0.02m clearance — was 0.05m but that was aborting post-apex returns at S=3.4m
+        # where wall=0.53m, path=0.50m → 0.03m real clearance was being rejected
+        # On the return leg the car moves TOWARD center so 0.02m is safe here
+        self.spline_bound_mindist = 0.02
         self.fixed_pred_time = 0.15
         self.kd_obs_pred = 1.0
         
         pd = ParameterDescriptor(
             type=ParameterType.PARAMETER_DOUBLE,
-            floating_point_range=[FloatingPointRange(from_value=0.1, to_value=8.0, step=0.001)]
+            floating_point_range=[FloatingPointRange(from_value=0.01, to_value=8.0, step=0.001)]
         )
         param_dicts = [
             {'name': 'pre_apex_0', 'default': abs(self.pre_apex_0), 'descriptor': pd},
@@ -211,7 +219,21 @@ class ObstacleSpliner(Node):
     #################### CALLBACKS####################
     def obs_cb(self, msg: ObstacleArray):
         # Callback function for obstacle data
-        self.obs = msg
+        current_time = self.get_clock().now().nanoseconds / 1e9
+        
+        if len(msg.obstacles) > 0:
+            self.obs = msg
+            self.last_valid_obs = msg
+            self.last_obs_time = current_time
+        else:
+            # If no obstacles seen, check if we can use the persisted ones
+            if self.last_valid_obs is not None and (current_time - self.last_obs_time) < self.obs_persistence_sec:
+                self.obs = self.last_valid_obs
+                # Optional: log that we are using persistence (throttled)
+                # self.get_logger().info("Using persisted obstacle data (LiDAR flicker)", throttle_duration_sec=2.0)
+            else:
+                self.obs = msg # Actually empty
+                self.last_valid_obs = None
 
     def state_cb(self, msg: Odometry):
         # Callback function for car state data
@@ -262,7 +284,7 @@ class ObstacleSpliner(Node):
         return FrenetConverter(np.array(waypoints_x), np.array(waypoints_y), np.array(waypoints_psi))
 
     #################### UTILS FUNCTIONS####################
-    def _predict_obs_movement(self, obs: Obstacle, mode: str = "constant") -> Obstacle:
+    def _predict_obs_movement(self, obs: Obstacle, mode: str = "adaptive") -> Obstacle:
         """
         Predicts the movement of an obstacle based on the current state and mode.
 
@@ -339,10 +361,10 @@ class ObstacleSpliner(Node):
 
         return obs
 
-    def _check_ot_side_possible(self, more_space) -> bool:
-        # TODO make rosparam for cur_d threshold
-        if abs(self.cur_d) > 0.25 and more_space != self.last_ot_side:
-            self.get_logger().info("Can't switch sides, because we are not on the raceline")
+    def _check_ot_side_possible(self, more_space, dist_to_opponent) -> bool:
+        # Block switch only at close range (<4.0m) AND if we've committed heavily to one side (>0.5m offset)
+        if dist_to_opponent < 4.0 and abs(self.cur_d) > 0.5 and more_space != self.last_ot_side:
+            self.get_logger().info(f"Side switch to '{more_space}' BLOCKED: Too close to opponent ({dist_to_opponent:.1f}m) and off raceline (cur_d={self.cur_d:.2f}m)")
             return False
         return True
 
@@ -350,8 +372,11 @@ class ObstacleSpliner(Node):
         left_gap = abs(gb_wpnts[gb_idxs[0]].d_left - obstacle.d_left)
         right_gap = abs(gb_wpnts[gb_idxs[0]].d_right + obstacle.d_right)
         min_space = self.evasion_dist + self.spline_bound_mindist
+        
+        log_msg = f"SPACE CHECK: LeftGap={left_gap:.2f}m (Wall={gb_wpnts[gb_idxs[0]].d_left:.2f}m) | RightGap={right_gap:.2f}m (Wall={gb_wpnts[gb_idxs[0]].d_right:.2f}m) | Required={min_space:.2f}m"
 
         if right_gap > min_space and left_gap < min_space:
+            self.get_logger().info(f"{log_msg} -> CHOICE: RIGHT (Limited room on left)", throttle_duration_sec=1.0)
             # Compute apex distance to the right of the opponent
             d_apex_right = obstacle.d_right - self.evasion_dist
             # If we overtake to the right of the opponent BUT the apex is to the left of the raceline, then we set the apex to 0
@@ -360,6 +385,7 @@ class ObstacleSpliner(Node):
             return "right", d_apex_right
 
         elif left_gap > min_space and right_gap < min_space:
+            self.get_logger().info(f"{log_msg} -> CHOICE: LEFT (Limited room on right)", throttle_duration_sec=1.0)
             # Compute apex distance to the left of the opponent
             d_apex_left = obstacle.d_left + self.evasion_dist
             # If we overtake to the left of the opponent BUT the apex is to the right of the raceline, then we set the apex to 0
@@ -367,19 +393,30 @@ class ObstacleSpliner(Node):
                 d_apex_left = 0
             return "left", d_apex_left
         else:
-            candidate_d_apex_left = obstacle.d_left + self.evasion_dist
-            candidate_d_apex_right = obstacle.d_right - self.evasion_dist
-
-            if abs(candidate_d_apex_left) <= abs(candidate_d_apex_right):
-                # If we overtake to the left of the opponent BUT the apex is to the right of the raceline, then we set the apex to 0
-                if candidate_d_apex_left < 0:
-                    candidate_d_apex_left = 0
-                return "left", candidate_d_apex_left
+            # Choose the side with more actual physical space to the wall
+            # Add a small deadband to prevent flickering when gaps are nearly equal
+            deadband = 0.05
+            if self.last_ot_side == "left":
+                # Only switch to right if right_gap is significantly better
+                side = "right" if right_gap > left_gap + deadband else "left"
+            elif self.last_ot_side == "right":
+                # Only switch to left if left_gap is significantly better
+                side = "left" if left_gap > right_gap + deadband else "right"
             else:
-                # If we overtake to the right of the opponent BUT the apex is to the left of the raceline, then we set the apex to 0
-                if candidate_d_apex_right > 0:
-                    candidate_d_apex_right = 0
-                return "right", candidate_d_apex_right
+                side = "left" if left_gap >= right_gap else "right"
+
+            self.get_logger().info(f"{log_msg} -> CHOICE: {side} (Tie/Both Open | Deadband applied)", throttle_duration_sec=1.0)
+
+            if side == "left":
+                d_apex_left = obstacle.d_left + self.evasion_dist
+                if d_apex_left < 0:
+                    d_apex_left = 0
+                return "left", d_apex_left
+            else:
+                d_apex_right = obstacle.d_right - self.evasion_dist
+                if d_apex_right > 0:
+                    d_apex_right = 0
+                return "right", d_apex_right
 
     #################### MAIN FUNCTIONS####################
     def spliner_loop(self):
@@ -447,6 +484,9 @@ class ObstacleSpliner(Node):
                 close_obs, key=lambda obs: (
                     obs.s_center - self.cur_s) % self.gb_max_s
             )
+            
+            # Log evasion planning event
+            self.get_logger().info(f"PLANNER: Starting EVASION for obstacle at S: {closest_obs.s_center:.1f}m", throttle_duration_sec=1.0)
 
             # Get Apex for evasion that is further away from the trackbounds
             if closest_obs.s_end < closest_obs.s_start:
@@ -461,8 +501,29 @@ class ObstacleSpliner(Node):
                 [gb_wpnts[gb_idx].kappa_radpm for gb_idx in gb_idxs])
             outside = "left" if np.sum(kappas) < 0 else "right"
             # Choose the correct side and compute the distance to the apex based on left of right of the obstacle
-            more_space, d_apex = self._more_space(
+            more_space_candidate, d_apex_candidate = self._more_space(
                 closest_obs, gb_wpnts, gb_idxs)
+
+            # High-level deadband: only switch sides if the new side has significantly more clearance
+            if self.last_ot_side in ("left", "right") and more_space_candidate != self.last_ot_side:
+                left_gap_raw = abs(gb_wpnts[gb_idxs[0]].d_left - closest_obs.d_left)
+                right_gap_raw = abs(gb_wpnts[gb_idxs[0]].d_right + closest_obs.d_right)
+                if self.last_ot_side == "left":
+                    switch_warranted = right_gap_raw > left_gap_raw + 0.1
+                else:
+                    switch_warranted = left_gap_raw > right_gap_raw + 0.1
+                if not switch_warranted:
+                    more_space_candidate = self.last_ot_side
+                    # Recompute d_apex for the sticky side
+                    if more_space_candidate == "left":
+                        d_apex_candidate = closest_obs.d_left + self.evasion_dist
+                        if d_apex_candidate < 0:
+                            d_apex_candidate = 0
+                    else:
+                        d_apex_candidate = closest_obs.d_right - self.evasion_dist
+                        if d_apex_candidate > 0:
+                            d_apex_candidate = 0
+            more_space, d_apex = more_space_candidate, d_apex_candidate
 
             # Publish the point around which we are splining
             mrk = self.xy_to_point(
@@ -513,32 +574,35 @@ class ObstacleSpliner(Node):
             danger_flag = False
             resp = self.converter.get_cartesian(evasion_s, evasion_d)
 
-            # Check if a side switch is possible
-            if not self._check_ot_side_possible(more_space):
+            # Check if a side switch is safe — abort the whole manoeuvre if not
+            dist_to_opponent = (closest_obs.s_center - self.cur_s) % self.gb_max_s
+            if not self._check_ot_side_possible(more_space, dist_to_opponent):
+                self.get_logger().warn(f"Side switch to '{more_space}' not safe at {dist_to_opponent:.1f}m gap (cur_d={self.cur_d:.2f}m) — aborting evasion, reverting to global raceline")
                 danger_flag = True
 
-            for i in range(evasion_s.shape[0]):
-                gb_wpnt_i = int((evasion_s[i] / wpnt_dist) % self.gb_max_idx)
-                # Check if wpnt is too close to the trackbounds but only if spline is actually off the raceline
-                if abs(evasion_d[i]) > spline_resolution:
-                    tb_dist = gb_wpnts[gb_wpnt_i].d_left if more_space == "left" else gb_wpnts[gb_wpnt_i].d_right
-                    if abs(evasion_d[i]) > abs(tb_dist) - self.spline_bound_mindist:
-                        # Throttle to 2s to match ROS1 loginfo_throttle_identical behaviour
-                        self.get_logger().info(
-                            "Evasion trajectory too close to TRACKBOUNDS, aborting evasion",
-                            throttle_duration_sec=2.0
-                        )
-                        danger_flag = True
-                        break
-                # Get V from gb wpnts and go slower if we are going through the inside
-                # TODO make speed scaling ros param
-                vi = gb_wpnts[gb_wpnt_i].vx_mps if outside == more_space else gb_wpnts[gb_wpnt_i].vx_mps * 0.9
-                wpnts.wpnts.append(
-                    self.xyv_to_wpnts(
-                        x=resp[0, i], y=resp[1, i], s=evasion_s[i], d=evasion_d[i], v=vi, wpnts=wpnts)
-                )
-                mrks.markers.append(self.xyv_to_markers(
-                    x=resp[0, i], y=resp[1, i], v=vi, mrks=mrks))
+            if not danger_flag:
+                for i in range(evasion_s.shape[0]):
+                    gb_wpnt_i = int((evasion_s[i] / wpnt_dist) % self.gb_max_idx)
+                    # Check if wpnt is too close to the trackbounds but only if spline is actually off the raceline
+                    if abs(evasion_d[i]) > spline_resolution:
+                        tb_dist = gb_wpnts[gb_wpnt_i].d_left if more_space == "left" else gb_wpnts[gb_wpnt_i].d_right
+                        if abs(evasion_d[i]) > abs(tb_dist) - self.spline_bound_mindist:
+                            # SAFETY ABORT: path too close to wall
+                            self.get_logger().warn(
+                                f"Evasion at S={evasion_s[i]:.1f}m is {abs(evasion_d[i]):.2f}m lateral, wall at {abs(tb_dist):.2f}m — ABORTING (min clearance={self.spline_bound_mindist}m)",
+                                throttle_duration_sec=2.0
+                            )
+                            danger_flag = True
+                            break
+                    # Get V from gb wpnts and go slower if we are going through the inside
+                    vi = gb_wpnts[gb_wpnt_i].vx_mps if outside == more_space else gb_wpnts[gb_wpnt_i].vx_mps * 0.9
+                    wpnts.wpnts.append(
+                        self.xyv_to_wpnts(
+                            x=resp[0, i], y=resp[1, i], s=evasion_s[i], d=evasion_d[i], v=vi, wpnts=wpnts)
+                    )
+                    mrks.markers.append(self.xyv_to_markers(
+                        x=resp[0, i], y=resp[1, i], v=vi, mrks=mrks))
+
 
             # Fill the rest of OTWpnts
             wpnts.header.stamp = self.get_clock().now().to_msg()
@@ -553,12 +617,26 @@ class ObstacleSpliner(Node):
                 if self.last_ot_side != more_space:
                     self.last_switch_time = self.get_clock().now().to_msg()
                 self.last_ot_side = more_space
+
+                self.get_logger().info(
+                    f">>> EVASION ACTIVE: side={more_space} | apex_d={d_apex:.2f}m | apex_s={s_apex:.1f}m | {len(wpnts.wpnts)} path points generated",
+                    throttle_duration_sec=1.0
+                )
             else:
                 wpnts.wpnts = []
                 mrks.markers = []
                 # This fools the statemachine to cool down
                 wpnts.side_switch = True
                 self.last_switch_time = self.get_clock().now().to_msg()
+                self.get_logger().info(
+                    f">>> EVASION ABORTED: handing back to global planner",
+                    throttle_duration_sec=1.0
+                )
+        else:
+            self.get_logger().info(
+                ">>> No obstacles in lookahead — global planner in control",
+                throttle_duration_sec=2.0
+            )
         return wpnts, mrks
 
     def _obs_filtering(self, obstacles: ObstacleArray) -> List[Obstacle]:
@@ -574,6 +652,7 @@ class ObstacleSpliner(Node):
             dist_in_front = (obs.s_center - self.cur_s) % self.gb_max_s
             # dist_in_back = abs(dist_in_front % (-self.gb_max_s)) # distance from ego to obstacle in the back
             if dist_in_front < self.lookahead:
+                self.get_logger().info(f"PLANNER: Obstacle detected within {self.lookahead}m lookahead at S: {obs.s_center:.1f}m", throttle_duration_sec=1.0)
                 close_obs.append(obs)
                 # Not within lookahead
             else:

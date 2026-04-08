@@ -17,8 +17,8 @@ state_machine:
     gb_horizon_m: 6.9 # [m] horizon considered for the global waypoints to check for obstacles
 
     overtaking_horizon_m: 6.9 # [m] horizon considered for overtaking
-    lateral_width_ot_m: 0.3 # [m] lateral width within which we consider opponents to be on the overtaking line -> NOW DYNAMIC RECONFIGURABLE
-    splini_hyst_timer_sec: 0.2 # [s] time we have to wait between switching from overtaking on one side to the other -> NOW DYNAMIC RECONFIGURABLE
+    lateral_width_ot_m: 0.0 # [m] disabled — check was comparing evasion path D at obs_s (always 0) vs. obs_d (always 0) = always False
+    splini_hyst_timer_sec: 0.1 # [s] time we have to wait between switching from overtaking on one side to the other -> NOW DYNAMIC RECONFIGURABLE
 
     ftg_threshold_speed: 0.1 # [m/s] speed threshold below which we start a timer for activating FTG
     ftg_timer_sec: 3. # [s] time we have to stay slower than the `ftg_threshold_speed` threshold before we activate FTG

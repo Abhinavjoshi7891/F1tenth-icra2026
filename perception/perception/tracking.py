@@ -470,7 +470,7 @@ class StaticDynamic(Node):
         self.static_dynamic_marker_pub = self.create_publisher(
             MarkerArray, '/perception/static_dynamic_marker_pub', 5)
         self.estimated_obstacles_pub = self.create_publisher(
-            ObstacleArray, '/perception/obstacles', 5)
+            ObstacleArray, '/perception/tracked_obstacles', 5)
         self.raw_opponent_pub = self.create_publisher(
             ObstacleArray, '/perception/raw_obstacles', 5)
         if self.measuring:

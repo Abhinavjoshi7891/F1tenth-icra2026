@@ -554,6 +554,15 @@ class StateMachine(Node):
         self.local_waypoints.wpnts = self.state_logic(self)
         self._pub_local_waypoints(self.local_waypoints)
 
+        # HUD LOGGING: Print race status once per second
+        if len(self.obstacles) > 0 and self.cur_s is not None:
+            closest_obs = min(self.obstacles, key=lambda obs: (obs.s_center - self.cur_s) % self.track_length)
+            gap = (closest_obs.s_center - self.cur_s) % self.track_length
+            self.get_logger().info(
+                f"HUD: Ego S: {self.cur_s:.1f}m | Opp S: {closest_obs.s_center:.1f}m | Gap: {gap:.1f}m | State: {self.state}",
+                throttle_duration_sec=1.0
+            )
+
         if self.params.mode=="head_to_head" and self.params.overtake_mode == "spliner":
             self.splini_ttl_counter -= 1
             # Once ttl has reached 0 we overwrite the avoidance waypoints with the empty waypoints

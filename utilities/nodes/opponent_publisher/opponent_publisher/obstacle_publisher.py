@@ -403,8 +403,13 @@ class ObstaclePublisher(Node):
         obstacle_msg.header.frame_id = 'frenet'
         obstacle_msg.obstacles.append(self.dynamic_obstacle)
 
-        # --- ALWAYS publish ObstacleArray (core fix vs old ROS2 port) ---
         self.obstacle_pub.publish(obstacle_msg)
+
+        # HUD LOGGING: Detailed status of virtual opponent
+        self.get_logger().info(
+            f"VIRTUAL OPPONENT: S: {self.dynamic_obstacle.s_center:.1f}m | D: {self.dynamic_obstacle.d_center:.1f}m | Speed: {self.dynamic_obstacle.vs:.2f}m/s | Profile: {self.speed_type}",
+            throttle_duration_sec=1.0
+        )
 
         # --- ALWAYS publish RVIZ markers ---
         self._publish_markers(obstacle_msg.obstacles)
