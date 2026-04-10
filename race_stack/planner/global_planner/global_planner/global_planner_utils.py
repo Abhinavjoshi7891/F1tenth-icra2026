@@ -4,6 +4,11 @@ import numpy as np
 from pathlib import Path
 import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
+try:
+    from ccma.ccma import CCMA as _CCMA
+    _CCMA_AVAILABLE = True
+except ImportError:
+    _CCMA_AVAILABLE = False
 from skimage.segmentation import watershed
 from ament_index_python.packages import get_package_share_directory
 
@@ -104,53 +109,139 @@ def extract_centerline(skeleton, cent_length: float, map_resolution: float, map_
     return centerline
 
 
-def smooth_centerline(centerline: np.ndarray) -> np.ndarray:
+def smooth_centerline(
+        centerline: np.ndarray,
+        smoother: str = 'ccma',
+        show_plots: bool = False,
+        map_dir: str = None) -> np.ndarray:
     """
-    Smooth the centerline with a Savitzky-Golay filter.
+    Smooth the raw centerline extracted from the skeletonized map.
 
-    Notes
-    -----
-    The savgol filter doesn't ensure a smooth transition at the end and beginning of the centerline. That's why
-    we apply a savgol filter to the centerline with start and end points on the other half of the track.
-    Afterwards, we take the results of the second smoothed centerline for the beginning and end of the
-    first centerline to get an overall smooth centerline
+    Two smoothers available:
+
+    'savgol' — Savitzky-Golay (scipy). Fast. Overshoots at hairpin->straight
+               transitions on competition tracks due to uniform parametrization.
+
+    'ccma'   — Curvature Corrected Moving Average. Centripetal parametrization
+               prevents inward bending at hairpins. Recommended for F1Tenth
+               competition tracks. Requires: pip install ccma
+
+    When show_plots=True, both smoothers run and a comparison image is saved
+    to map_dir/smoother_comparison.png. Use this to validate CCMA on your
+    actual track before committing to it.
 
     Parameters
     ----------
     centerline : np.ndarray
-        Unsmoothed centerline
+        Raw centerline in image cells, shape (N, 2).
+    smoother : str
+        'ccma' or 'savgol'. Default: 'ccma'.
+    show_plots : bool
+        If True, run both and save comparison plot to map_dir.
+    map_dir : str or None
+        Directory to save comparison plot. Only used when show_plots=True.
 
     Returns
     -------
     centerline_smooth : np.ndarray
-        Smooth centerline
+        Smoothed centerline, same shape and coordinate space as input.
     """
-    # centerline_smooth = centerline
-    # smooth centerline with a Savitzky Golay filter
-    # filter_length = 20
-    centerline_length = len(centerline)
-    # print("Number of centerline points: ", centerline_length)
+    if smoother not in ('ccma', 'savgol'):
+        raise ValueError(f"smoother must be 'ccma' or 'savgol', got: '{smoother}'")
 
-    if centerline_length > 2000:
-        filter_length = int(centerline_length / 200) * 10 + 1
-    elif centerline_length > 1000:
-        filter_length = 81
-    elif centerline_length > 500:
-        filter_length = 41
-    else:
-        filter_length = 21
-    centerline_smooth = savgol_filter(centerline, filter_length, 3, axis=0)
+    if smoother == 'ccma' and not _CCMA_AVAILABLE:
+        import warnings
+        warnings.warn(
+            "CCMA requested but 'ccma' package is not installed. "
+            "Falling back to savgol. Run: pip install ccma",
+            RuntimeWarning, stacklevel=2)
+        smoother = 'savgol'
 
-    # cen_len is half the length of the centerline
-    cen_len = int(len(centerline) / 2)
-    centerline2 = np.append(centerline[cen_len:], centerline[0:cen_len], axis=0)
-    centerline_smooth2 = savgol_filter(centerline2, filter_length, 3, axis=0)
+    # ── internal: SavGol ──────────────────────────────────────────────────────
+    def _run_savgol(pts: np.ndarray) -> np.ndarray:
+        n = len(pts)
+        if n > 2000:
+            fl = int(n / 200) * 10 + 1
+        elif n > 1000:
+            fl = 81
+        elif n > 500:
+            fl = 41
+        else:
+            fl = 21
+        smoothed = savgol_filter(pts, fl, 3, axis=0)
+        # fix wrap-around boundary artifact using second pass on shifted centerline
+        cen_len = int(n / 2)
+        pts2 = np.append(pts[cen_len:], pts[0:cen_len], axis=0)
+        smoothed2 = savgol_filter(pts2, fl, 3, axis=0)
+        smoothed[0:fl] = smoothed2[cen_len:(cen_len + fl)]
+        smoothed[-fl:] = smoothed2[(cen_len - fl):cen_len]
+        return smoothed
 
-    # take points from second (smoothed) centerline for first centerline
-    centerline_smooth[0:filter_length] = centerline_smooth2[cen_len:(cen_len + filter_length)]
-    centerline_smooth[-filter_length:] = centerline_smooth2[(cen_len - filter_length):cen_len]
+    # ── internal: CCMA ────────────────────────────────────────────────────────
+    def _run_ccma(pts: np.ndarray) -> np.ndarray:
+        n = len(pts)
+        # Window sizes scale with track density.
+        # Invariant: w_cc < w_ma always.
+        # w_ma: smoothing strength. w_cc: curvature correction (accuracy at bends).
+        if n > 2000:
+            w_ma, w_cc = 15, 5
+        elif n > 1000:
+            w_ma, w_cc = 11, 4
+        elif n > 500:
+            w_ma, w_cc = 7, 3
+        else:
+            w_ma, w_cc = 5, 3
+        ccma = _CCMA(w_ma=w_ma, w_cc=w_cc)
+        return ccma.filter(pts, mode='wrapping')
 
-    return centerline_smooth
+    # ── comparison plot ───────────────────────────────────────────────────────
+    if show_plots:
+        result_savgol = _run_savgol(centerline)
+        result_ccma = _run_ccma(centerline) if _CCMA_AVAILABLE else None
+
+        fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+        fig.suptitle(
+            f'Centerline Smoother Comparison  |  Active: {smoother.upper()}',
+            fontsize=14, fontweight='bold')
+
+        axes[0].plot(centerline[:, 0], centerline[:, 1], 'k.', markersize=1)
+        axes[0].set_title('Raw (from skeleton)')
+        axes[0].set_aspect('equal')
+        axes[0].grid(True, alpha=0.3)
+
+        axes[1].plot(centerline[:, 0], centerline[:, 1], 'k.', markersize=1, alpha=0.3, label='raw')
+        axes[1].plot(result_savgol[:, 0], result_savgol[:, 1], 'b-', linewidth=1.5, label='SavGol')
+        axes[1].set_title('Savitzky-Golay')
+        axes[1].set_aspect('equal')
+        axes[1].grid(True, alpha=0.3)
+        axes[1].legend(fontsize=8)
+
+        if result_ccma is not None:
+            axes[2].plot(centerline[:, 0], centerline[:, 1], 'k.', markersize=1, alpha=0.3, label='raw')
+            axes[2].plot(result_ccma[:, 0], result_ccma[:, 1], 'r-', linewidth=1.5, label='CCMA')
+            axes[2].set_title('CCMA (recommended)')
+            axes[2].set_aspect('equal')
+            axes[2].grid(True, alpha=0.3)
+            axes[2].legend(fontsize=8)
+        else:
+            axes[2].text(0.5, 0.5, 'ccma package not installed',
+                         ha='center', va='center', transform=axes[2].transAxes)
+            axes[2].set_title('CCMA — unavailable')
+
+        plt.tight_layout()
+        if map_dir is not None:
+            import os as _os
+            save_path = _os.path.join(str(map_dir), 'smoother_comparison.png')
+            plt.savefig(save_path, dpi=150, bbox_inches='tight')
+            print(f'[global_planner] Smoother comparison saved → {save_path}')
+        plt.show()
+
+        return result_ccma if (smoother == 'ccma' and result_ccma is not None) else result_savgol
+
+    # ── fast path (no plots) ──────────────────────────────────────────────────
+    if smoother == 'ccma':
+        return _run_ccma(centerline)
+    return _run_savgol(centerline)
 
 
 def extract_track_bounds(

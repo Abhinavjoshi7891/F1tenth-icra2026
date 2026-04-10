@@ -38,6 +38,7 @@
             <arg name="mapping_bool" value="True" />
             <arg name="map_name" value="$(var map_name)" />
             <arg name="frenet_bool" value="False" />
+            <arg name="state_machine_bool" value="False" />
         </include>
 
         <!-- Launch FTG for Mapping -->
@@ -75,7 +76,7 @@
 
     <!-- Launch global trajectory publisher via launch wrapper -->
     <include file="$(find-pkg-share global_planner)/launch/global_trajectory_publisher_launch.xml">
-        <arg name="map_path" value="$(var map_src_path)/$(var map_name).yaml" />
+        <arg name="map_path" value="$(var map_src_path)" />
     </include>
 
 </launch>

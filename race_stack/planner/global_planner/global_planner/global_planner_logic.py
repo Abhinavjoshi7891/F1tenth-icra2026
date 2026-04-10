@@ -54,6 +54,7 @@ class GlobalPlannerLogic:
                  filter_kernel_size_: int = 3,
                  required_laps_: int = 1,
                  reverse_mapping_: bool = False,
+                 centerline_smoother_: str = 'ccma',   # <-- ADD THIS
                  loginfo_: Callable[[str], None] = print,
                  logwarn_: Callable[[str], None] = sys.stderr.write,
                  logerror_: Callable[[str], None] = sys.stderr.write) -> None:
@@ -66,6 +67,7 @@ class GlobalPlannerLogic:
 
         # Debugging
         self.show_plots = show_plots_
+        self.centerline_smoother = centerline_smoother_  
 
         # Affects operation of the module
         self.map_editor_mode = map_editor_mode_
@@ -286,7 +288,12 @@ class GlobalPlannerLogic:
             self.cent_driven = [self.initial_position]
             return False
 
-        centerline_smooth = smooth_centerline(centerline)
+        centerline_smooth = smooth_centerline(
+            centerline,
+            smoother=self.centerline_smoother,
+            show_plots=self.show_plots,
+            map_dir=self.map_dir,
+        )
 
         # convert centerline from cells to meters
         centerline_meter = np.zeros(np.shape(centerline_smooth))

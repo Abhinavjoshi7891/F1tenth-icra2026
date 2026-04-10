@@ -1,0 +1,33 @@
+<launch>
+  <!-- Mode: 'sector_scalers' or 'map_params' -->
+  <arg name="mode"             default="sector_scalers"/>
+  <arg name="n_calls"          default="20"/>
+  <arg name="n_random_starts"  default="5"/>
+  <arg name="n_sectors"        default="4"/>
+  <arg name="results_path"     default="/tmp/bayesopt_results.json"/>
+
+  <!-- Cost function weights -->
+  <!-- w_crash HIGH = safety-first (qualifying). Lower it once setup is trusted. -->
+  <arg name="w_time"           default="1.0"/>
+  <arg name="w_crash"          default="3.0"/>
+  <arg name="w_lat"            default="0.5"/>
+
+  <!-- Reference values for normalisation — tune per track -->
+  <arg name="lap_time_ref"     default="30.0"/>   <!-- expected lap time [s] -->
+  <arg name="lat_err_ref"      default="0.10"/>   <!-- expected avg lateral error [m] -->
+  <arg name="boundary_margin"  default="0.15"/>   <!-- safe wall distance [m] -->
+
+  <node pkg="param_optimizer" exec="param_optimizer_node" name="param_optimizer" output="screen">
+    <param name="mode"            value="$(var mode)"/>
+    <param name="n_calls"         value="$(var n_calls)"/>
+    <param name="n_random_starts" value="$(var n_random_starts)"/>
+    <param name="n_sectors"       value="$(var n_sectors)"/>
+    <param name="results_path"    value="$(var results_path)"/>
+    <param name="w_time"          value="$(var w_time)"/>
+    <param name="w_crash"         value="$(var w_crash)"/>
+    <param name="w_lat"           value="$(var w_lat)"/>
+    <param name="lap_time_ref"    value="$(var lap_time_ref)"/>
+    <param name="lat_err_ref"     value="$(var lat_err_ref)"/>
+    <param name="boundary_margin" value="$(var boundary_margin)"/>
+  </node>
+</launch>

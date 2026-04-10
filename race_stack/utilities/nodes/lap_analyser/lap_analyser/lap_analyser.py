@@ -131,7 +131,8 @@ class LapAnalyser(Node):
             else:
                 self.lap_count += 1
                 self.publish_lap_info()
-                # self.publish_min_distance()
+                if self.car_distance_to_boundary:       # guard: only publish if list is non-empty
+                    self.publish_min_distance()
                 self.car_distance_to_boundary = []
                 self.lap_start_time = self.get_clock().now()
                 self.max_error = abs(current_d)
@@ -166,6 +167,17 @@ class LapAnalyser(Node):
             self.n_datapoints += 1
             if self.max_error < abs(current_d):
                 self.max_error = abs(current_d)
+
+
+        # compute and store distance to boundary for this position
+        if self.wp_flag and self.global_lateral_waypoints is not None:
+            # find closest waypoint by s coordinate
+            idx = np.searchsorted(self.global_lateral_waypoints[:, 0], current_s)
+            idx = min(idx, len(self.global_lateral_waypoints) - 1)
+            d_right = self.global_lateral_waypoints[idx, 1]
+            d_left  = self.global_lateral_waypoints[idx, 2]
+            dist = self.get_distance_to_boundary(current_d, d_left, d_right)
+            self.car_distance_to_boundary.append(dist)
         self.last_s = current_s
 
         # search for closest s value: s values of global waypoints do not match the s values of car position exactly
@@ -238,7 +250,9 @@ class LapAnalyser(Node):
 
     def publish_min_distance(self):
         self.min_car_distance_to_boundary = np.min(self.car_distance_to_boundary)
-        self.min_car_distance_to_boundary_pub.publish(self.min_car_distance_to_boundary)
+        msg = Float32()
+        msg.data = float(self.min_car_distance_to_boundary)
+        self.min_car_distance_to_boundary_pub.publish(msg)
 
     def get_distance_to_boundary(self, current_d, d_left, d_right):
         """

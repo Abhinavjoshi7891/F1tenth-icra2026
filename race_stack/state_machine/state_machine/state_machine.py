@@ -70,6 +70,7 @@ class StateMachine(Node):
             self.get_logger().info("Waiting for car state frenet message", throttle_duration_sec=0.5)
             rclpy.spin_once(self)
 
+        self.obstacles = []
         if self.params.mode == 'head_to_head':
             self.current_position = None
             self.create_subscription(PoseStamped, '/car_state/pose', self.car_state_cb, 10)
@@ -83,7 +84,6 @@ class StateMachine(Node):
             self.avoidance_wpnts = None
             self.create_subscription(OTWpntArray, '/planner/avoidance/otwpnts', self.avoidance_cb, 10)
 
-            self.obstacles = []
             self.create_subscription(ObstacleArray, "/perception/obstacles", self.obstacles_cb, 10)
         
             # TODO setup things for sectors and overtaking sectors

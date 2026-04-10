@@ -8,4 +8,5 @@ global_planner:
     filter_kernel_size: 9 # how much filtering to do to raw map images
     reverse_mapping: False  # By default, do not reverse the direction of the track
 
-    show_plots: False
+    show_plots: True
+    centerline_smoother: 'ccma'   # <-- ADD THIS LINE
