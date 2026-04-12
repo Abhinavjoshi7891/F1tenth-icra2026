@@ -1,12 +1,12 @@
 ## L1 Controller Parameters (Lateral Control)
 controller:
   ros__parameters:
-    t_clip_min: 1
-    t_clip_max: 5
+    t_clip_min: 1.0
+    t_clip_max: 5.0
     m_l1: 0.3
     q_l1: 0.15
-    speed_lookahead: 0
-    lat_err_coeff: 1
+    speed_lookahead: 0.0
+    lat_err_coeff: 1.0
 
     acc_scaler_for_steer: 1.0
     dec_scaler_for_steer: 1.0 

@@ -21,6 +21,7 @@ from frenet_conversion.frenet_converter import FrenetConverter
 from controller.map import MAP_Controller
 from controller.pp import PP_Controller
 from controller.ftg import FTG_Controller
+from controller.plotter import Plotter
 from rcl_interfaces.msg import ParameterValue, ParameterType, ParameterDescriptor, FloatingPointRange, IntegerRange
 from tf_transformations import quaternion_from_euler
 from stack_master.parameter_event_handler import ParameterEventHandler
@@ -66,9 +67,9 @@ def return_param_value(p: ParameterValue) -> Union[None, bool, int, str, float, 
 
 class Controller(Node):
     def __init__(self):
-        super().__init__('controller_manager',
-                         allow_undeclared_parameters=True,
-                         automatically_declare_parameters_from_overrides=True)
+        super().__init__('controller_manager', 
+                         automatically_declare_parameters_from_overrides=True,
+                         allow_undeclared_parameters=True)
 
         self.type_arr = ["not_set", "bool_value", "integer_value", "double_value", "string_value",
                          "byte_array_value", "bool_array_value", "integer_array_value",
@@ -216,7 +217,17 @@ class Controller(Node):
         # main loop
         self.create_timer(1/self.rate, self.control_loop)
 
+        
         self.get_logger().info("Controller ready")
+        
+        # Data logger — active for MAP and PP only (FTG has no raceline context)
+        self.plotter = None
+        if self.mode in ("MAP", "PP"):
+            self.plotter = Plotter(logger_warn=self.get_logger().warn)
+            self.get_logger().info(
+                f"[Plotter] Logging to ~/plot_datas/ — "
+                f"set FLUSH_EVERY in plotter.py to tune I/O frequency"
+            )
 
     def wait_for_messages(self):
         self.get_logger().info('Controller Manager waiting for messages...')
@@ -530,6 +541,25 @@ class Controller(Node):
             self.gap_data.publish(pid_msg)
 
         self.map_controller.flag1 = False
+
+        # ── Plotter ──────────────────────────────────────────────────────
+        if self.plotter is not None and self.waypoint_array_in_map is not None:
+            nearest_idx = self.map_controller.idx_nearest_waypoint or 0
+            trackbounds_avg = float(self.waypoint_array_in_map[
+                min(nearest_idx, len(self.waypoint_array_in_map) - 1), 3
+            ])
+            self.plotter.add_values(
+                goal_speed        = float(self.map_controller.goal_speed),
+                car_speed         = float(self.speed_now),
+                calculated_speed  = float(speed),
+                curvature         = float(self.map_controller.curvature_export),
+                trackbounds_avg   = trackbounds_avg,
+                lateral_error     = float(self.map_controller.lateral_error),
+                position_on_path  = float(nearest_idx),
+                lookahead_distance= float(L1_distance),
+                steering_angle    = float(steering_angle),
+            )
+        # ─────────────────────────────────────────────────────────────────
             
         return speed, steering_angle
     
@@ -564,6 +594,25 @@ class Controller(Node):
             self.gap_data.publish(pid_msg)
 
         self.pp_controller.flag1 = False
+
+        # ── Plotter ──────────────────────────────────────────────────────
+        if self.plotter is not None and self.waypoint_array_in_map is not None:
+            nearest_idx = self.pp_controller.idx_nearest_waypoint or 0
+            trackbounds_avg = float(self.waypoint_array_in_map[
+                min(nearest_idx, len(self.waypoint_array_in_map) - 1), 3
+            ])
+            self.plotter.add_values(
+                goal_speed        = float(self.pp_controller.goal_speed),
+                car_speed         = float(self.speed_now),
+                calculated_speed  = float(speed),
+                curvature         = float(self.pp_controller.curvature_export),
+                trackbounds_avg   = trackbounds_avg,
+                lateral_error     = float(self.pp_controller.lateral_error),
+                position_on_path  = float(nearest_idx),
+                lookahead_distance= float(L1_distance),
+                steering_angle    = float(steering_angle),
+            )
+        # ─────────────────────────────────────────────────────────────────
         return speed, steering_angle
 
     def ftg_cycle(self):

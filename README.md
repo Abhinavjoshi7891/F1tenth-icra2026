@@ -137,6 +137,41 @@ To fine-tune your racing performance and path generation, you can tinker with th
 
 ---
 
+## 📊 Live Tuning & Diagnostics
+
+This stack includes tools for real-time performance analysis and runtime parameter tuning without restarting the car.
+
+### 🎚️ GUI Tuning (rqt_reconfigure)
+You can adjust controller parameters while the car is driving using a graphical interface.
+1.  Launch the stack as normal.
+2.  Open a new terminal and run: `ros2 run rqt_reconfigure rqt_reconfigure`
+3.  Select `/controller`. You can now move sliders for:
+    *   **`m_l1`:** Speed gain (Higher = smoother, Lower = aggressive).
+    *   **`q_l1`:** Lookahead offset.
+    *   **`t_clip_min`:** Minimum lookahead floor (Crucial for tight corners).
+    *   **`lat_err_coeff`:** Speed penalty for high lateral error.
+
+### ⌨️ Terminal Tuning (ros2 param)
+If the GUI is unavailable, use standard ROS 2 commands:
+```bash
+# Example: Decrease lookahead floor to 0.5m for sharper turning
+ros2 param set /controller t_clip_min 0.5
+```
+*Note: Ensure you include the decimal (e.g., `1.0` instead of `1`) to avoid Type Mismatch errors.*
+
+### 📈 Controller Performance Plotter
+The stack automatically logs high-resolution diagnostic data to `~/plot_datas/` in CSV format.
+1.  **Run:** Launch with `ctrl_algo:=PP` or `ctrl_algo:=MAP`.
+2.  **Stop:** The file is flushed and closed upon Ctrl+C.
+3.  **Analyze:** Use the included visualizer script:
+    ```bash
+    # Run from the repository root
+    python3 race_stack/utilities/nodes/plot_controller_data.py ~/plot_datas/plot_data_TIMESTAMP.csv
+    ```
+This will generate a 4-pane plot showing **Speed Accuracy**, **Lateral Error spikes**, **L1 Scaling**, and **Steering Saturation**.
+
+---
+
 # Original ForzaETH Race Stack 
 
 ForzaETH Race Stack by the [D-ITET Center for Project Based Learning (PBL)](https://pbl.ee.ethz.ch/) at ETH Zurich. 

@@ -103,9 +103,16 @@ class MAP_Controller:
 
         # calculate lateral error and lateral error norm (lateral_error, self.lateral_error_list, self.lat_e_norm)
         lat_e_norm, lateral_error = self.calc_lateral_error_norm()
+        self.lateral_error = lateral_error
 
         ### LONGITUDINAL CONTROL ###
         self.speed_command = self.calc_speed_command(v, lat_e_norm)
+        self.goal_speed = self.waypoint_array_in_map[
+            self.nearest_waypoint(
+                [self.position_in_map[0,0] + v[0]*self.speed_lookahead,
+                 self.position_in_map[0,1] + v[1]*self.speed_lookahead],
+                self.waypoint_array_in_map[:, :2]
+            ), 2]
         
         # POSTPROCESS for acceleration/speed decision
         if self.speed_command is not None:
@@ -121,6 +128,9 @@ class MAP_Controller:
         ### LATERAL CONTROL ###
         steering_angle = None
         L1_point, L1_distance = self.calc_L1_point(lateral_error)
+        self.curvature_export = float(np.mean(abs(
+            self.waypoint_array_in_map[self.idx_nearest_waypoint:, 5]
+        ))) if len(self.waypoint_array_in_map[self.idx_nearest_waypoint:]) > 2 else 0.0
         
         if L1_point.any() is not None: 
             steering_angle = self.calc_steering_angle(L1_point, L1_distance, yaw, lat_e_norm, v)
