@@ -161,14 +161,32 @@ ros2 param set /controller t_clip_min 0.5
 
 ### 📈 Controller Performance Plotter
 The stack automatically logs high-resolution diagnostic data to `~/plot_datas/` in CSV format.
-1.  **Run:** Launch with `ctrl_algo:=PP` or `ctrl_algo:=MAP`.
-2.  **Stop:** The file is flushed and closed upon Ctrl+C.
-3.  **Analyze:** Use the included visualizer script:
-    ```bash
-    # Run from the repository root
-    python3 race_stack/utilities/nodes/plot_controller_data.py ~/plot_datas/plot_data_TIMESTAMP.csv
-    ```
-This will generate a 4-pane plot showing **Speed Accuracy**, **Lateral Error spikes**, **L1 Scaling**, and **Steering Saturation**.
+
+#### 1. How to Run
+Launch with `ctrl_algo:=PP` or `ctrl_algo:=MAP`. The car will start writing to a new CSV file automatically. Once you have finished your test laps, stop the car with `Ctrl+C`.
+
+#### 2. How to Visualize
+Run the analyzer script from the repository root:
+```bash
+# Replace TIMESTAMP with your actual file name
+python3 race_stack/utilities/nodes/plot_controller_data.py ~/plot_datas/plot_data_TIMESTAMP.csv
+```
+
+#### 3. How to Interpret (The 4-Pane Analysis)
+When the window pops up, analyze these four key metrics to improve your lap times:
+
+*   **Pane 1 (Speed Accuracy):**
+    *   *Ideal:* `actual` (dashed green) should hug `calculated` (orange) tightly.
+    *   *Problem:* If `actual` lags behind significantly, your low-level motor controller (VESC) gains are too low.
+*   **Pane 2 (Lateral Error):**
+    *   *Ideal:* Red line stays below the 0.05m (5cm) threshold.
+    *   *Problem:* Spikes up to 0.20m in corners mean your `m_l1` is too high (cutting corners) or your `t_clip_min` is too high (turning late).
+*   **Pane 3 (Lookahead Dynamics):**
+    *   *Ideal:* Blue line (`L1 distance`) should scale up on straights and down in corners.
+    *   *Problem:* If the blue line "flatlines" at 1.0 during slow turns, you are hitting the `t_clip_min` floor and need to lower it for better turning.
+*   **Pane 4 (Steering Saturation):**
+    *   *Ideal:* Purple line stays within the red dotted limits (±24°).
+    *   *Problem:* If the purple line "flatlines" at the top or bottom, the car is trying to turn harder than the wheels physically can. You must slow down (`max_speed`) or smooth your raceline.
 
 ---
 
