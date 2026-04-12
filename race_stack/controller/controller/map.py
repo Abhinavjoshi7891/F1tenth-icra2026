@@ -82,6 +82,7 @@ class MAP_Controller:
                 
         self.logger_info = logger_info
         self.logger_warn = logger_warn
+        self.flag1 = False
 
         self.steer_lookup = LookupSteerAngle(self.LUT_name, logger_info)
     # main loop    
@@ -145,7 +146,7 @@ class MAP_Controller:
         
         """
         # lookahead for steer (steering delay incorporation by propagating position)
-        if self.state == "StateType.TRAILING" and (self.opponent is not None):
+        if self.state == "TRAILING" and (self.opponent is not None):
             speed_la_for_lu = self.speed_now
         else:
             adv_ts_st = self.speed_lookahead_for_steer
@@ -234,7 +235,7 @@ class MAP_Controller:
         la_position = [self.position_in_map[0, 0] + v[0]*adv_ts_sp, self.position_in_map[0, 1] + v[1]*adv_ts_sp]
         idx_la_position = self.nearest_waypoint(la_position, self.waypoint_array_in_map[:, :2])
         global_speed = self.waypoint_array_in_map[idx_la_position, 2]
-        if(self.state == "StateType.TRAILING" and (self.opponent is not None)): #Trailing controller
+        if(self.state == "TRAILING" and (self.opponent is not None)): #Trailing controller
             speed_command = self.trailing_controller(global_speed)
         else:
             self.trailing_speed = global_speed
@@ -272,6 +273,7 @@ class MAP_Controller:
         if not self.opponent[4] and self.gap_actual > self.gap_should:
             self.trailing_command = max(self.blind_trailing_speed, self.trailing_command)
             
+        self.flag1 = True
         return self.trailing_command
     
 

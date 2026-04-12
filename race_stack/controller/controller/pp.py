@@ -80,6 +80,7 @@ class PP_Controller:
                 
         self.logger_info = logger_info
         self.logger_warn = logger_warn
+        self.flag1 = False
 
     # main loop    
     def main_loop(self, state, position_in_map, waypoint_array_in_map, speed_now, opponent, position_in_map_frenet, acc_now, track_length):
@@ -263,6 +264,7 @@ class PP_Controller:
         if not self.opponent[4] and self.gap_actual > self.gap_should:
             self.trailing_command = max(self.blind_trailing_speed, self.trailing_command)
 
+        self.flag1 = True
         return self.trailing_command
     
 

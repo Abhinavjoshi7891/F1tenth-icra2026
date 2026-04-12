@@ -6,7 +6,7 @@ from visualization_msgs.msg import Marker, MarkerArray
 from rclpy.node import Node
 
 
-class FTG_Controller(Node):
+class FTG_Controller:
     #Lidar processing params
     PREPROCESS_CONV_SIZE = 3
     
@@ -16,6 +16,7 @@ class FTG_Controller(Node):
     ULTRASTRAIGHTS_ANGLE = np.pi / 60  # 3 deg
 
     def __init__(self,
+                 node,
                  mapping,
                  debug,
                  safety_radius,
@@ -23,13 +24,14 @@ class FTG_Controller(Node):
                  max_speed,
                  range_offset,
                  track_width) -> None:
-        super().__init__('controller_manager')
         """
         Initialize the FTG controller.
 
         Parameters:
+            node (rclpy.node.Node): The parent node.
             mapping (bool): Flag indicating whether FTG is used for mapping or not.
         """
+        self._node = node
         self.mapping = mapping
         self.DEBUG = debug
         self.SAFETY_RADIUS = safety_radius
@@ -51,9 +53,9 @@ class FTG_Controller(Node):
         self.velocity = 0
         self.scan = None
 
-        self.best_pnt = self.create_publisher(Marker, '/best_points/marker', 10)
-        self.scan_pub = self.create_publisher(MarkerArray, '/scan_proc/markers', 10)
-        self.best_gap = self.create_publisher(MarkerArray, '/best_gap/markers', 10)
+        self.best_pnt = node.create_publisher(Marker, '/best_points/marker', 10)
+        self.scan_pub = node.create_publisher(MarkerArray, '/scan_proc/markers', 10)
+        self.best_gap = node.create_publisher(MarkerArray, '/best_gap/markers', 10)
 
     def _preprocess_lidar(self, ranges) -> np.ndarray:
         """ 
@@ -128,7 +130,7 @@ class FTG_Controller(Node):
             for i in range(gap_left, gap_right):
                 mrk = Marker()
                 mrk.header.frame_id = 'car_state/laser'
-                mrk.header.stamp = self.get_clock().now().to_msg()
+                mrk.header.stamp = self._node.get_clock().now().to_msg()
                 mrk.type = mrk.SPHERE
                 mrk.scale.x = 0.05
                 mrk.scale.y = 0.05
@@ -147,7 +149,7 @@ class FTG_Controller(Node):
             # visualize best point aka middle of the gap
             best_mrk = Marker()
             best_mrk.header.frame_id = 'car_state/laser'
-            best_mrk.header.stamp = self.get_clock().now().to_msg()
+            best_mrk.header.stamp = self._node.get_clock().now().to_msg()
             best_mrk.type = best_mrk.SPHERE
             best_mrk.scale.x = 0.2
             best_mrk.scale.y = 0.2
@@ -184,7 +186,7 @@ class FTG_Controller(Node):
             for i, scan in enumerate(proc_ranges):
                 mrk = Marker()
                 mrk.header.frame_id = 'car_state/laser'
-                mrk.header.stamp = self.get_clock().now().to_msg()
+                mrk.header.stamp = self._node.get_clock().now().to_msg()
                 mrk.type = mrk.SPHERE
                 mrk.scale.x = 0.05
                 mrk.scale.y = 0.05
@@ -313,7 +315,7 @@ class FTG_Controller(Node):
         for i in range(1):
             del_mrk = Marker()
             del_mrk.header.frame_id = 'car_state/laser'
-            del_mrk.header.stamp = self.get_clock().now().to_msg()
+            del_mrk.header.stamp = self._node.get_clock().now().to_msg()
             del_mrk.action = del_mrk.DELETEALL
             del_mrk.id = i
             del_mrk_array.markers.append(del_mrk)

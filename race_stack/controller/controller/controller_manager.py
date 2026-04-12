@@ -91,7 +91,11 @@ class Controller(Node):
         self.mapping = self.get_parameter('mapping').value
 
         # Publishers
-        self.publish_topic = '/drive' # TODO adapt car topic name here
+        if self.sim:
+            self.publish_topic = '/drive'
+        else:
+            self.publish_topic = '/vesc/high_level/ackermann_cmd_mux/input/nav_1'
+        
         self.drive_pub = self.create_publisher(AckermannDriveStamped, self.publish_topic, 10)
         self.steering_pub = self.create_publisher(Marker, 'steering', 10)
         self.lookahead_pub = self.create_publisher(Marker, 'lookahead_point', 10)
@@ -99,8 +103,6 @@ class Controller(Node):
         self.waypoint_pub = self.create_publisher(MarkerArray, 'my_waypoints', 10)
         self.l1_pub = self.create_publisher(Point, 'l1_distance', 10)
         self.gap_data = self.create_publisher(PidData, '/trailing/gap_data', 10)
-        # Publisher for steering and speed command
-        self.publish_topic = '/vesc/high_level/ackermann_cmd_mux/input/nav_1'
 
         self.track_length = None
         self.opponent = None
@@ -337,6 +339,7 @@ class Controller(Node):
         self.get_logger().info(f"FTG Controller parameters: {self.state_machine_debug}, {self.state_machine_safety_radius}, {self.state_machine_max_lidar_dist}, {self.state_machine_max_speed}, {self.state_machine_range_offset}, {self.state_machine_track_width}")
 
         self.ftg_controller = FTG_Controller(
+            node=self,
             mapping=self.mapping,
             debug=self.state_machine_debug,
             safety_radius=self.state_machine_safety_radius,
@@ -374,7 +377,7 @@ class Controller(Node):
         Notices the change in the parameters and alters the spline params accordingly
         """
 
-        if parameter_event.node != "/controller" or self.mode == "FTG":
+        if parameter_event.node != self.get_fully_qualified_name() or self.mode == "FTG":
             return
         
         if self.mode == "MAP":
@@ -516,8 +519,6 @@ class Controller(Node):
             self.get_logger().warning("[controller_manager] Received no local wpnts. STOPPING!!")
             speed = 0
             steering_angle = 0
-        self.map_controller.flag1 = False
-        
         # Publish PID data of the Trailing controller for tuning
         if self.map_controller.flag1 == True:
             pid_msg = self.create_pid_msg(self.map_controller.gap_should, 
@@ -527,6 +528,8 @@ class Controller(Node):
                                             self.map_controller.i_gap, 
                                             self.map_controller.trailing_command)
             self.gap_data.publish(pid_msg)
+
+        self.map_controller.flag1 = False
             
         return speed, steering_angle
     
@@ -550,8 +553,6 @@ class Controller(Node):
             self.get_logger().warning("[controller_manager] Received no local wpnts. STOPPING!!")
             speed = 0
             steering_angle = 0
-        self.pp_controller.flag1 = False
-        
         # Publish PID data of the Trailing controller for tuning
         if self.pp_controller.flag1 == True:
             pid_msg = self.create_pid_msg(self.pp_controller.gap_should, 
@@ -561,6 +562,8 @@ class Controller(Node):
                                             self.pp_controller.i_gap, 
                                             self.pp_controller.trailing_command)
             self.gap_data.publish(pid_msg)
+
+        self.pp_controller.flag1 = False
         return speed, steering_angle
 
     def ftg_cycle(self):
