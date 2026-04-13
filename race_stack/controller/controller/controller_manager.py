@@ -21,6 +21,9 @@ from frenet_conversion.frenet_converter import FrenetConverter
 from controller.map import MAP_Controller
 from controller.pp import PP_Controller
 from controller.ftg import FTG_Controller
+from controller.kinematic_mpc import Kinematic_MPC_Controller
+from controller.single_track_mpc import Single_track_MPC_Controller
+from std_msgs.msg import Float64MultiArray
 from controller.plotter import Plotter
 from rcl_interfaces.msg import ParameterValue, ParameterType, ParameterDescriptor, FloatingPointRange, IntegerRange
 from tf_transformations import quaternion_from_euler
@@ -131,6 +134,14 @@ class Controller(Node):
             self.get_logger().info("Initializing FTG controller")
             self.init_ftg_controller()
             self.prioritize_dyn = False
+        elif self.mode == "KMPC":
+            self.get_logger().info("Initializing KMPC controller")
+            self.init_kmpc_controller()
+            self.prioritize_dyn = self.kmpc_config.prioritize_dyn if hasattr(self.kmpc_config, 'prioritize_dyn') else False
+        elif self.mode == "STMPC":
+            self.get_logger().info("Initializing STMPC controller")
+            self.init_stmpc_controller()
+            self.prioritize_dyn = self.stmpc_config.prioritize_dyn if hasattr(self.stmpc_config, 'prioritize_dyn') else False
         else:
             self.get_logger().error(f"Invalid mode: {self.mode}")
             return
@@ -152,67 +163,68 @@ class Controller(Node):
         #Init converter
         self.converter = FrenetConverter(self.waypoints[:, 0], self.waypoints[:, 1], self.waypoints[:, 2])
             
-        # dyn params
-        self.param_handler = ParameterEventHandler(self)
-        self.callback_handle = self.param_handler.add_parameter_event_callback(
-            callback=self.l1_param_cb, 
-        )
-        param_dicts = [{'name' : 't_clip_min',
-                        'default' : self.l1_params["t_clip_min"],
-                        'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=1.5, step=0.01)])},
-                       {'name' : 't_clip_max',
-                        'default' : self.l1_params["t_clip_max"],
-                        'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=10.0, step=0.01)])},
-                       {'name' : 'm_l1',
-                        'default' : self.l1_params["m_l1"],
-                        'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=1.0, step=0.001)])},
-                       {'name' : 'q_l1',
-                        'default' : self.l1_params["q_l1"],
-                        'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=-1.0, to_value=1.0, step=0.001)])},
-                       {'name' : 'speed_lookahead',
-                        'default' : self.l1_params["speed_lookahead"],
-                        'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=1.0, step=0.01)])},
-                       {'name' : 'lat_err_coeff',
-                        'default' : self.l1_params["lat_err_coeff"],
-                        'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=1.0, step=0.01)])},
-                       {'name' : 'acc_scaler_for_steer',
-                        'default' : self.l1_params["acc_scaler_for_steer"],
-                        'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=1.5, step=0.01)])},
-                       {'name' : 'dec_scaler_for_steer',
-                        'default' : self.l1_params["dec_scaler_for_steer"],
-                        'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=1.5, step=0.01)])},
-                       {'name' : 'start_scale_speed',
-                        'default' : self.l1_params["start_scale_speed"],
-                        'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=10.0, step=0.01)])},
-                       {'name' : 'end_scale_speed',
-                        'default' : self.l1_params["end_scale_speed"],
-                        'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=10.0, step=0.01)])},
-                       {'name' : 'downscale_factor',
-                        'default' : self.l1_params["downscale_factor"],
-                        'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=0.5, step=0.01)])},
-                       {'name' : 'speed_lookahead_for_steer',
-                        'default' : self.l1_params["speed_lookahead_for_steer"],
-                        'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=0.2, step=0.01)])},
-                       {'name' : 'prioritize_dyn',
-                        'default' : self.prioritize_dyn,
-                        'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_BOOL)},
-                       {'name' : 'trailing_gap',
-                        'default' : self.l1_params["trailing_gap"],
-                        'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=3.0, step=0.1)])},
-                       {'name' : 'trailing_p_gain',
-                        'default' : self.l1_params["trailing_p_gain"],
-                        'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=3.0, step=0.01)])},
-                       {'name' : 'trailing_i_gain',
-                        'default' : self.l1_params["trailing_i_gain"],
-                        'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=0.5, step=0.001)])},
-                       {'name' : 'trailing_d_gain',
-                        'default' : self.l1_params["trailing_d_gain"],
-                        'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=1.0, step=0.01)])},
-                       {'name' : 'blind_trailing_speed',
-                        'default' : self.l1_params["blind_trailing_speed"],
-                        'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=3.0, step=0.01)])}]
-        params = self.delcare_dyn_parameters(param_dicts)
-        self.set_parameters(params)
+        # dyn params - L1 specific
+        if self.mode in ("MAP", "PP"):
+            self.param_handler = ParameterEventHandler(self)
+            self.callback_handle = self.param_handler.add_parameter_event_callback(
+                callback=self.l1_param_cb, 
+            )
+            param_dicts = [{'name' : 't_clip_min',
+                            'default' : self.l1_params["t_clip_min"],
+                            'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=1.5, step=0.01)])},
+                           {'name' : 't_clip_max',
+                            'default' : self.l1_params["t_clip_max"],
+                            'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=10.0, step=0.01)])},
+                           {'name' : 'm_l1',
+                            'default' : self.l1_params["m_l1"],
+                            'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=1.0, step=0.001)])},
+                           {'name' : 'q_l1',
+                            'default' : self.l1_params["q_l1"],
+                            'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=-1.0, to_value=1.0, step=0.001)])},
+                           {'name' : 'speed_lookahead',
+                            'default' : self.l1_params["speed_lookahead"],
+                            'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=1.0, step=0.01)])},
+                           {'name' : 'lat_err_coeff',
+                            'default' : self.l1_params["lat_err_coeff"],
+                            'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=1.0, step=0.01)])},
+                           {'name' : 'acc_scaler_for_steer',
+                            'default' : self.l1_params["acc_scaler_for_steer"],
+                            'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=1.5, step=0.01)])},
+                           {'name' : 'dec_scaler_for_steer',
+                            'default' : self.l1_params["dec_scaler_for_steer"],
+                            'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=1.5, step=0.01)])},
+                           {'name' : 'start_scale_speed',
+                            'default' : self.l1_params["start_scale_speed"],
+                            'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=10.0, step=0.01)])},
+                           {'name' : 'end_scale_speed',
+                            'default' : self.l1_params["end_scale_speed"],
+                            'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=10.0, step=0.01)])},
+                           {'name' : 'downscale_factor',
+                            'default' : self.l1_params["downscale_factor"],
+                            'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=0.5, step=0.01)])},
+                           {'name' : 'speed_lookahead_for_steer',
+                            'default' : self.l1_params["speed_lookahead_for_steer"],
+                            'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=0.2, step=0.01)])},
+                           {'name' : 'prioritize_dyn',
+                            'default' : self.prioritize_dyn,
+                            'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_BOOL)},
+                           {'name' : 'trailing_gap',
+                            'default' : self.l1_params["trailing_gap"],
+                            'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=3.0, step=0.1)])},
+                           {'name' : 'trailing_p_gain',
+                            'default' : self.l1_params["trailing_p_gain"],
+                            'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=3.0, step=0.01)])},
+                           {'name' : 'trailing_i_gain',
+                            'default' : self.l1_params["trailing_i_gain"],
+                            'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=0.5, step=0.001)])},
+                           {'name' : 'trailing_d_gain',
+                            'default' : self.l1_params["trailing_d_gain"],
+                            'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=1.0, step=0.01)])},
+                           {'name' : 'blind_trailing_speed',
+                            'default' : self.l1_params["blind_trailing_speed"],
+                            'descriptor' : ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE, floating_point_range=[FloatingPointRange(from_value=0.0, to_value=3.0, step=0.01)])}]
+            params = self.delcare_dyn_parameters(param_dicts)
+            self.set_parameters(params)
 
         # main loop
         self.create_timer(1/self.rate, self.control_loop)
@@ -248,6 +260,36 @@ class Controller(Node):
                 state_print = True
 
         self.get_logger().info('All required messages received. Continuing...')
+        # Initialize KMPC solver now that waypoints are available
+        if self.mode == "KMPC":
+            self.kmpc_controller.mpc_initialize_solver(
+                waypoints_x   = self.waypoints[:, 0],
+                waypoints_y   = self.waypoints[:, 1],
+                waypoints_psi = self.waypoints[:, 2],
+                kapparef      = self._kmpc_kapparef,
+                vx_ref        = self._kmpc_vx_ref,
+                s_ref         = self._kmpc_s_ref,
+                d_left        = self._kmpc_d_left,
+                d_right       = self._kmpc_d_right,
+            )
+        
+        # Initialize STMPC solver now that waypoints are available
+        if self.mode == "STMPC":
+            pose_frenet = np.array([
+                self.position_in_map_frenet[0],
+                self.position_in_map_frenet[1],
+                self.position_in_map_frenet[2],
+            ])
+            self.stmpc_controller.mpc_initialize_solver_with_waypoints(
+                waypoints_x   = self.waypoints[:, 0],
+                waypoints_y   = self.waypoints[:, 1],
+                waypoints_psi = self.waypoints[:, 2],
+                kapparef      = self._kmpc_kapparef,
+                s_ref         = self._kmpc_s_ref,
+                d_left        = self._kmpc_d_left,
+                d_right       = self._kmpc_d_right,
+                pose_frenet   = pose_frenet,
+            )
         
     def delcare_dyn_parameters(self, param_dicts):
         params = []
@@ -359,6 +401,95 @@ class Controller(Node):
             range_offset=self.state_machine_range_offset,
             track_width=self.state_machine_track_width)
 
+    def init_kmpc_controller(self):
+        """Load KMPC config from YAML and build SimpleNamespace config objects."""
+        import types
+        stack_master_path = get_package_share_directory('stack_master')
+        config_path = os.path.join(
+            stack_master_path, 'config', self.racecar_version, 'kmpc_params.yaml')
+        with open(config_path, 'r') as f:
+            raw = yaml.safe_load(f)
+
+        kmpc_raw     = raw['controller']['ros__parameters']
+        car_raw      = raw['car']['ros__parameters']
+        trailing_raw = raw['trailing']['ros__parameters']
+
+        self.kmpc_config          = types.SimpleNamespace(**kmpc_raw)
+        self.car_config_kmpc      = types.SimpleNamespace(**car_raw)
+        self.trailing_config_kmpc = types.SimpleNamespace(**trailing_raw)
+
+        self.acc_now = np.zeros(10) # rolling buffer for acceleration (required for main_loop signature)
+
+        # Solver downsampling state
+        self.kmpc_step_counter = 0
+        self.last_kmpc_speed = 0.0
+        self.last_kmpc_steer = 0.0
+
+        self.kmpc_controller = Kinematic_MPC_Controller(
+            kmpc_config=self.kmpc_config,
+            car_config=self.car_config_kmpc,
+            trailing_config=self.trailing_config_kmpc,
+            logger_info=self.get_logger().info,
+            logger_warn=self.get_logger().warn,
+        )
+        self.mpc_states_pub = self.create_publisher(
+            Float64MultiArray, '/mpc_controller/states', 10)
+
+    def init_stmpc_controller(self):
+        """Load STMPC config from YAML and build SimpleNamespace config objects."""
+        import types
+        stack_master_path = get_package_share_directory('stack_master')
+        config_path = os.path.join(
+            stack_master_path, 'config', self.racecar_version, 'stmpc_params.yaml')
+        with open(config_path, 'r') as f:
+            raw = yaml.safe_load(f)
+
+        stmpc_raw    = raw['controller']['ros__parameters']
+        car_raw      = raw['car']['ros__parameters']
+        tire_raw     = raw['tire']['ros__parameters']
+        trailing_raw = raw['trailing']['ros__parameters']
+
+        self.stmpc_config          = types.SimpleNamespace(**stmpc_raw)
+        self.car_config_stmpc      = types.SimpleNamespace(**car_raw)
+        self.tire_config_stmpc     = types.SimpleNamespace(**tire_raw)
+        self.trailing_config_stmpc = types.SimpleNamespace(**trailing_raw)
+
+        # pose_frenet placeholder — real value set in wait_for_messages() after odom arrives
+        pose_frenet_placeholder = np.array([0.0, 0.0, 0.0])
+
+        self.stmpc_controller = Single_track_MPC_Controller(
+            pose_frenet          = pose_frenet_placeholder,
+            stmpc_config         = self.stmpc_config,
+            car_config           = self.car_config_stmpc,
+            tire_config          = self.tire_config_stmpc,
+            trailing_config      = self.trailing_config_stmpc,
+            controller_frequency = self.rate,
+            using_gokart         = False,
+            logger_info          = self.get_logger().info,
+            logger_warn          = self.get_logger().warn,
+        )
+
+        # STMPC also needs IMU for vel_y and yaw_rate
+        # Check if IMU subscriber already exists (MAP/KMPC may have created it)
+        if not hasattr(self, 'acc_now'):
+            self.create_subscription(Imu, '/vesc/sensors/imu/raw', self.imu_cb, 10)
+            self.acc_now = np.zeros(10)
+
+        # vel_y and yaw_rate from /car_state/odom (already subscribed in controller_manager)
+        # These are self.vel_y and self.yaw_rate — must be initialised here if not set
+        if not hasattr(self, 'vel_y'):
+            self.vel_y    = 0.0
+        if not hasattr(self, 'yaw_rate'):
+            self.yaw_rate = 0.0
+
+        self.mpc_states_pub_stmpc = self.create_publisher(
+            Float64MultiArray, '/mpc_controller/states', 10)
+
+        # Solver downsampling state
+        self.stmpc_step_counter = 0
+        self.last_stmpc_speed = 0.0
+        self.last_stmpc_steer = 0.0
+
 
 
     def get_remote_parameter(self, remote_node_name, param_name):
@@ -437,6 +568,12 @@ class Controller(Node):
     def track_length_cb(self, data:WpntArray):
         self.track_length = data.wpnts[-1].s_m
         self.waypoints = np.array([[wpnt.x_m, wpnt.y_m, wpnt.psi_rad] for wpnt in data.wpnts])
+        # Cache additional fields needed by KMPC solver initialisation
+        self._kmpc_kapparef = [w.kappa_radpm for w in data.wpnts]
+        self._kmpc_vx_ref   = [w.vx_mps      for w in data.wpnts]
+        self._kmpc_s_ref    = np.array([w.s_m    for w in data.wpnts])
+        self._kmpc_d_left   = np.array([w.d_left  for w in data.wpnts])
+        self._kmpc_d_right  = np.array([w.d_right for w in data.wpnts])
 
     def obstacle_cb(self, data:ObstacleArray):
         if len(data.obstacles) > 0 and \
@@ -619,6 +756,102 @@ class Controller(Node):
         speed, steer = self.ftg_controller.process_lidar(self.scan.ranges)
         self.get_logger().warning("[STATE MACHINE] FTGONLY!!!")
         return speed, steer
+
+    def kmpc_cycle(self):
+        speed, acceleration, jerk, steering_angle, states, status = \
+            self.kmpc_controller.main_loop(
+                state                  = self.state,
+                position_in_map        = self.position_in_map,
+                waypoint_array_in_map  = self.waypoint_array_in_map,
+                speed_now              = self.speed_now,
+                opponent               = self.opponent,
+                position_in_map_frenet = self.position_in_map_frenet,
+                acc_now                = self.acc_now,
+                track_length           = self.track_length,
+                compute_time           = 0.0,
+            )
+
+        if status != 0:
+            self.get_logger().error(
+                f"[KMPC] Solver failed status={status}. Commanding zero.")
+            return 0.0, 0.0
+
+        self.waypoint_safety_counter += 1
+        if self.waypoint_safety_counter >= self.rate / self.state_machine_rate * 10:
+            self.get_logger().warn("[controller_manager] No local waypoints. STOPPING!")
+            return 0.0, 0.0
+
+        if self.kmpc_controller.flag1:
+            pid_msg = self.create_pid_msg(
+                self.kmpc_controller.gap_should,
+                self.kmpc_controller.gap,
+                self.kmpc_controller.gap_error,
+                self.kmpc_controller.v_diff,
+                self.kmpc_controller.i_gap,
+                self.kmpc_controller.trailing_command,
+            )
+            self.gap_data.publish(pid_msg)
+        self.kmpc_controller.flag1 = False
+
+        if states is not None:
+            msg = Float64MultiArray()
+            msg.data = states
+            self.mpc_states_pub.publish(msg)
+
+        return speed, steering_angle
+
+    def stmpc_cycle(self):
+        # Pack dynamic state: [vel_y, yaw_rate, measured_acc, 0]
+        # For F1Tenth (using_gokart=False): vel_y and yaw_rate from /car_state/odom
+        # measured_acc and measured_steer are taken from internal buffers in STMPC
+        single_track_state = np.array([
+            self.vel_y,
+            self.yaw_rate,
+            self.acc_now[0],   # most recent longitudinal acceleration
+            0.0,               # placeholder (not used when using_gokart=False)
+        ])
+
+        speed, acceleration, jerk, steering_angle, states, status = \
+            self.stmpc_controller.main_loop(
+                state                  = self.state,
+                position_in_map        = self.position_in_map,
+                waypoint_array_in_map  = self.waypoint_array_in_map,
+                speed_now              = self.speed_now,
+                opponent               = self.opponent,
+                position_in_map_frenet = self.position_in_map_frenet,
+                single_track_state     = single_track_state,
+                track_length           = self.track_length,
+                compute_time           = 0.0,
+            )
+
+        if status != 0:
+            self.get_logger().error(
+                f"[STMPC] Solver failed status={status}. Commanding zero.")
+            return 0.0, 0.0
+
+        self.waypoint_safety_counter += 1
+        if self.waypoint_safety_counter >= self.rate / self.state_machine_rate * 10:
+            self.get_logger().warn("[controller_manager] No local waypoints. STOPPING!")
+            return 0.0, 0.0
+
+        if self.stmpc_controller.flag1:
+            pid_msg = self.create_pid_msg(
+                self.stmpc_controller.gap_should,
+                self.stmpc_controller.gap,
+                self.stmpc_controller.gap_error,
+                self.stmpc_controller.v_diff,
+                self.stmpc_controller.i_gap,
+                self.stmpc_controller.trailing_command,
+            )
+            self.gap_data.publish(pid_msg)
+        self.stmpc_controller.flag1 = False
+
+        if states is not None:
+            msg = Float64MultiArray()
+            msg.data = states
+            self.mpc_states_pub_stmpc.publish(msg)
+
+        return speed, steering_angle
     
     def create_pid_msg(self, should, actual, error, d_value, i_value, input):
             pid_msg = PidData()
@@ -641,6 +874,26 @@ class Controller(Node):
             speed, steer = self.pp_cycle()
         elif self.mode == "FTG":
             speed, steer = self.ftg_cycle()
+        elif self.mode == "KMPC":
+            # Downsample solver to match kmpc_config.MPC_freq (e.g. 20Hz vs 40Hz loop)
+            # This ensures solver 'dt' matches the actual progression of time between solves.
+            solve_ratio = int(max(1, self.rate / self.kmpc_config.MPC_freq))
+            if self.kmpc_step_counter % solve_ratio == 0:
+                self.last_kmpc_speed, self.last_kmpc_steer = self.kmpc_cycle()
+            
+            speed, steer = self.last_kmpc_speed, self.last_kmpc_steer
+            self.kmpc_step_counter += 1
+        elif self.mode == "STMPC":
+            # Downsample solver to match stmpc_config.MPC_freq (e.g. 20Hz vs 40Hz loop)
+            # This ensures solver 'dt' matches the actual progression of time between solves.
+            solve_ratio = int(max(1, self.rate / self.stmpc_config.MPC_freq))
+            if self.stmpc_step_counter % solve_ratio == 0:
+                self.last_stmpc_speed, self.last_stmpc_steer = self.stmpc_cycle()
+            
+            speed, steer = self.last_stmpc_speed, self.last_stmpc_steer
+            self.stmpc_step_counter += 1
+        else:
+            return
 
         ack_msg = AckermannDriveStamped()
         ack_msg.header.stamp = self.get_clock().now().to_msg()

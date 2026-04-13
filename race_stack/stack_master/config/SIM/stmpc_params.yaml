@@ -1,0 +1,88 @@
+# stack_master/config/SIM/stmpc_params.yaml
+# STMPC configuration for F1Tenth sim (f1tenth_gym, glc_ot_ez map)
+#
+# STMPC differs from KMPC:
+#   - Has tire_config section (Pacejka model params)
+#   - Has car_config with mass (m), inertia (Iz), and h_cg
+#   - Separate jerk_min/max (not same as a_min/a_max)
+#   - Has feature flags: vy_minimization, adv_maximization, load_transfer,
+#                        correct_v_y_dot, combined_constraints
+#   - Has steps_delay (for solution extraction index)
+#   - Has Zl, Zu, zl, zu (slack penalty weights)
+
+controller:
+  ros__parameters:
+    N: 20
+    MPC_freq: 20.0
+    t_delay: 0.0
+    steps_delay: 3            # horizon steps ahead for solution extraction
+
+    # Cost weights
+    qadv: 1.0
+    qv: 0.5
+    qn: 4.0                   # lateral deviation weight (starting high to prevent wall-scraping)
+    qalpha: 1.0
+    qjerk: 0.01               # jerk regularisation (replaces qac in KMPC)
+    qddelta: 0.1
+
+    # Physical constraints
+    alat_max: 7.85
+    v_min: 0.0
+    v_max: 6.0
+    delta_min: -0.4189
+    delta_max: 0.4189
+    ddelta_min: -2.0
+    ddelta_max: 2.0
+    a_min: -4.0
+    a_max: 4.0
+    jerk_min: -20.0
+    jerk_max: 20.0
+
+    # Track constraints
+    track_safety_margin: 0.50 # inflated safety margin matching user's last KMPC tuning
+    track_max_width: 3.0
+    overtake_d: 0.0
+
+    # Slack penalty weights (for soft nonlinear constraints)
+    Zl: 1000.0
+    Zu: 1000.0
+    zl: 0.0
+    zu: 0.0
+
+    # Feature flags
+    vy_minimization: false        # add 100*v_y^2 to cost (penalises lateral slip)
+    adv_maximization: true        # subtract qadv*s_dot/freq from cost (progress reward)
+    load_transfer: false          # dynamic normal load transfer based on acceleration
+    correct_v_y_dot: false        # use v_y_dot as lateral acc (true) or kinematic approx (false)
+    combined_constraints: "none"  # "ellipse", "diamond", or "none"
+
+car:
+  ros__parameters:
+    lr: 0.17125
+    lf: 0.15875
+    m: 3.47               # vehicle mass [kg]
+    Iz: 0.04712           # yaw moment of inertia [kg*m^2]
+    h_cg: 0.074           # height of center of gravity [m]
+
+tire:
+  ros__parameters:
+    # Pacejka tire model parameters for F1Tenth on carpet/tile
+    # These are placeholder SIM values — identify from hardware runs for accuracy
+    friction_coeff: 0.8
+    Bf: 7.4
+    Cf: 1.2
+    Df: 1.0
+    Ef: 0.85
+    Br: 7.4
+    Cr: 1.2
+    Dr: 1.0
+    Er: 0.85
+
+trailing:
+  ros__parameters:
+    trailing_mode: true
+    trailing_gap: 1.5
+    trailing_p_gain: 1.0
+    trailing_i_gain: 0.0
+    trailing_d_gain: 0.2
+    blind_trailing_speed: 1.5

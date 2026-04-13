@@ -7,7 +7,13 @@ package_name = 'controller'
 setup(
     name=package_name,
     version='0.0.0',
-    packages=[package_name],
+    packages=[
+        package_name,
+        'controller.kinematic_mpc',
+        'controller.kinematic_mpc.utils',
+        'controller.single_track_mpc',
+        'controller.single_track_mpc.utils',
+    ],
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
