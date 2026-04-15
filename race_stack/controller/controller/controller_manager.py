@@ -120,6 +120,9 @@ class Controller(Node):
         self.waypoint_array_buf = MarkerArray()
         self.markers_buf = [Marker() for _ in range(1000)]
 
+        # dyn params initialization
+        self.param_handler = ParameterEventHandler(self)
+
         # controller choice
         # TODO having to set prioritize_dyn like this is really ugly.
         if self.mode == "MAP":
@@ -163,9 +166,8 @@ class Controller(Node):
         #Init converter
         self.converter = FrenetConverter(self.waypoints[:, 0], self.waypoints[:, 1], self.waypoints[:, 2])
             
-        # dyn params - L1 specific
+        # L1 specific callbacks
         if self.mode in ("MAP", "PP"):
-            self.param_handler = ParameterEventHandler(self)
             self.callback_handle = self.param_handler.add_parameter_event_callback(
                 callback=self.l1_param_cb, 
             )
@@ -435,6 +437,18 @@ class Controller(Node):
         self.mpc_states_pub = self.create_publisher(
             Float64MultiArray, '/mpc_controller/states', 10)
 
+        # dynamic parameter callbacks
+        self.kmpc_callbacks = []
+        kmpc_dyn_keys = ['qadv', 'qv', 'qn', 'qalpha', 'qac', 'qddelta', 'alat_max', 'a_min', 'a_max', 'v_min', 'v_max', 'track_safety_margin']
+        for key in kmpc_dyn_keys:
+            if hasattr(self.kmpc_config, key):
+                cb = self.param_handler.add_parameter_callback(
+                    parameter_name=key,
+                    node_name='/mpc_param_tuner',
+                    callback=self.kmpc_param_update_cb
+                )
+                self.kmpc_callbacks.append(cb)
+
     def init_stmpc_controller(self):
         """Load STMPC config from YAML and build SimpleNamespace config objects."""
         import types
@@ -484,6 +498,18 @@ class Controller(Node):
 
         self.mpc_states_pub_stmpc = self.create_publisher(
             Float64MultiArray, '/mpc_controller/states', 10)
+
+        # dynamic parameter callbacks
+        self.stmpc_callbacks = []
+        stmpc_dyn_keys = ['qadv', 'qv', 'qn', 'qalpha', 'qjerk', 'qddelta', 'alat_max', 'a_min', 'a_max', 'track_safety_margin']
+        for key in stmpc_dyn_keys:
+            if hasattr(self.stmpc_config, key):
+                cb = self.param_handler.add_parameter_callback(
+                    parameter_name=key,
+                    node_name='/mpc_param_tuner',
+                    callback=self.stmpc_param_update_cb
+                )
+                self.stmpc_callbacks.append(cb)
 
         # Solver downsampling state
         self.stmpc_step_counter = 0
@@ -643,6 +669,18 @@ class Controller(Node):
 
     def l1_params_cb(self):
         pass
+
+    def stmpc_param_update_cb(self, parameter):
+        self.get_logger().info(f"[STMPC Dynamic Parameter] {parameter.name} updated to {parameter.value}")
+        setattr(self.stmpc_config, parameter.name, parameter.value)
+        # Update current controller instance
+        self.stmpc_controller.stmpc_config = self.stmpc_config
+
+    def kmpc_param_update_cb(self, parameter):
+        self.get_logger().info(f"[KMPC Dynamic Parameter] {parameter.name} updated to {parameter.value}")
+        setattr(self.kmpc_config, parameter.name, parameter.value)
+        # Update current controller instance
+        self.kmpc_controller.kmpc_config = self.kmpc_config
 
     def state_cb(self, data):
         self.state = data.data

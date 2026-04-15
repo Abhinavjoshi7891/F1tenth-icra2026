@@ -1,7 +1,7 @@
 <launch>
     <arg name="racecar_version" default="NUC2" />
     <arg name="LU_table" default="NUC2_hangar_pacejka" />
-    <arg name="overtake_mode" default="spliner" /> <!--  spliner / graph_based -->
+    <arg name="planner" default="spliner" /> <!-- frenet / graph_based / spliner / predictive_spliner -->
     <arg name="ctrl_algo" default="MAP"/> <!-- MAP / PP -->
     <arg name="measure" default="False" />
 
@@ -13,16 +13,33 @@
     <!-- launch state machine -->
     <include file="$(find-pkg-share state_machine)/launch/state_machine_launch.xml">
         <arg name="mode" value="head_to_head"/>
-        <arg name="overtake_mode" value="$(var overtake_mode)"/>
+        <arg name="overtake_mode" value="$(var planner)"/>
     </include>
 
-    <!-- SPLINE PLANNER-->
-    <!-- this is actually the only way this works -->
-    <group if="$(eval '\'$(var overtake_mode)\' == \'spliner\'')"> 
+    <!-- PLANNER SELECTION -->
+    
+    <!-- 1. Traditional Spline Planner -->
+    <group if="$(eval '\'$(var planner)\' == \'spliner\'')"> 
         <include file="$(find-pkg-share spline_planner)/launch/spline_planner_launch.xml" />
     </group>
 
-    <!-- PERCEPTION -->
+    <!-- 2. Predictive Spline Planner (GP + SQP) -->
+    <group if="$(eval '\'$(var planner)\' == \'predictive_spliner\'')">
+        <include file="$(find-pkg-share predictive_planner)/launch/predictive_planner.launch.py" />
+    </group>
+
+    <!-- 3. Graph-Based Planner -->
+    <group if="$(eval '\'$(var planner)\' == \'graph_based\'')">
+        <!-- Assuming graph_based_planner package exists -->
+        <include file="$(find-pkg-share graph_based_planner)/launch/graph_based_planner_launch.xml" />
+    </group>
+
+    <!-- 4. Frenet-Based Planner -->
+    <group if="$(eval '\'$(var planner)\' == \'frenet\'')">
+        <!-- Assuming frenet_planner package exists -->
+        <include file="$(find-pkg-share frenet_planner)/launch/frenet_planner_launch.xml" />
+    </group>
+
     <include file="$(find-pkg-share perception)/launch/perception_launch.xml">
         <arg name="param_file" value="$(find-pkg-share stack_master)/config/opponent_tracker_params.yaml" />
     </include> 

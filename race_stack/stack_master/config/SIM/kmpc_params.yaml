@@ -1,74 +1,49 @@
 # stack_master/config/SIM/kmpc_params.yaml
-# KMPC configuration for F1Tenth sim (f1tenth_gym, glc_ot_ez map)
-# Mirror this to NUC*/AUTODRIVE configs for hardware with tuned values.
-#
-# Physical basis for each parameter:
-#   N           : horizon length. 20 @ 20Hz = 1s lookahead. Increase for faster speeds.
-#   MPC_freq    : solver frequency [Hz]. Must be <= controller loop rate (40Hz).
-#   t_delay     : actuation delay [s]. 0.0 in sim, ~0.05-0.1 on hardware (VESC latency).
-#
-# Cost weights — relative magnitudes matter, not absolute values:
-#   qadv        : progress reward. Higher = more aggressive, may violate constraints.
-#   qv          : speed tracking penalty. Higher = closer to raceline speed profile.
-#   qn          : lateral deviation penalty. Higher = tighter raceline tracking.
-#   qalpha      : heading error penalty. Higher = less cutting of corners.
-#   qac         : acceleration regularisation. Higher = smoother throttle.
-#   qddelta     : steering rate regularisation. Higher = less steering oscillation.
-#
-# Constraints:
-#   alat_max    : max lateral acceleration [m/s²] = mu * g. mu≈0.8 for carpet/tile.
-#   v_min/max   : speed envelope. Start with v_max=6 in sim, increase after validation.
-#   delta_*     : steering limits from VESC/servo mechanical constraints.
-#   ddelta_*    : steering rate limits [rad/s]. Protects servo.
-#   a_min/max   : longitudinal acceleration limits [m/s²].
+# Controller params: NUC2/kinematic_mpc_params.yaml with t_delay=0.0 for sim
+# Car params: NUC2/car_model.yaml
 
 controller:
   ros__parameters:
-    # ── MPC solver settings ──────────────────────────────────────────────────
-    N: 20                      # prediction horizon [steps]
-    MPC_freq: 20.0             # [Hz] — set lower than controller rate for margin
-    t_delay: 0.0               # [s] — 0 for sim, tune on hardware
+    N: 40
+    steps_delay: 3
+    t_delay: 0.0
+    MPC_freq: 20
+    overtake_d: 1.0
+    track_safety_margin: 0.3
+    track_max_width: 1000.0
+    qac: 0.01
+    qddelta: 0.1
+    qadv: 0.0
+    qn: 20.0
+    qalpha: 7.0
+    qv: 10.0
+    zl: 10.0
+    zu: 10.0
+    Zl: 100.0
+    Zu: 100.0
+    delta_min: -0.40
+    delta_max: 0.40
+    v_min: 2.0
+    v_max: 12.0
+    ddelta_min: -0.2
+    ddelta_max: 0.2
+    a_min: -10.0
+    a_max: 10.0
+    alat_max: 10.0
 
-    # ── Cost weights ─────────────────────────────────────────────────────────
-    qadv:   1.0                # progress maximisation weight
-    qv:     0.5                # speed tracking weight
-    qn:     4.0               # lateral deviation weight
-    qalpha: 1.0                # heading error weight
-    qac:    0.1                # acceleration regularisation
-    qddelta: 0.1               # steering rate regularisation
-
-    # ── Physical constraints ──────────────────────────────────────────────────
-    alat_max: 7.85             # [m/s²] = 0.8 * 9.81 (friction coefficient * g)
-    v_min: 0.5                 # [m/s] — minimum speed (prevents division by zero)
-    v_max: 6.0                 # [m/s] — start conservatively, raise after validation
-    delta_min: -0.4189         # [rad] = -24°, from VESC servo calibration
-    delta_max:  0.4189         # [rad] = +24°
-    ddelta_min: -2.0           # [rad/s] — steering rate limit
-    ddelta_max:  2.0           # [rad/s]
-    a_min: -4.0                # [m/s²] — braking
-    a_max:  4.0                # [m/s²] — acceleration
-
-    # ── Track safety margin ───────────────────────────────────────────────────
-    track_safety_margin: 0.50  # [m] — inflates boundaries inward. ≥ car_width/2 (+ tolerance)
-    track_max_width: 3.0       # [m] — maximum track half-width (for model bounds)
-
-    # ── Head-to-head: overtake lateral offset ─────────────────────────────────
-    overtake_d: 0.0            # [m] — 0 = on raceline, set by spliner during OVERTAKE
-
-# ── Car geometry ─────────────────────────────────────────────────────────────
-# Must match sim_params.yaml / vesc.yaml (lr + lf = wheelbase)
 car:
   ros__parameters:
-    lr: 0.17125                # [m] — CoM to rear axle (F1Tenth standard)
-    lf: 0.15875                # [m] — CoM to front axle
-    # lr + lf = 0.33m = wheelbase
+    lr: 0.145
+    lf: 0.162
+    m: 3.54
+    Iz: 0.05797
+    h_cg: 0.014
 
-# ── Trailing controller (PID gap controller) ─────────────────────────────────
 trailing:
   ros__parameters:
-    trailing_mode: true        # true = fixed gap [m], false = time headway [s]
-    trailing_gap: 1.5          # [m] target gap to opponent
+    trailing_mode: true
+    trailing_gap: 2.0
     trailing_p_gain: 1.0
     trailing_i_gain: 0.0
     trailing_d_gain: 0.2
-    blind_trailing_speed: 1.5  # [m/s] speed when opponent not visible
+    blind_trailing_speed: 1.5

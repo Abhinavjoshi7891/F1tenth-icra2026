@@ -238,9 +238,13 @@ class StateMachine(Node):
             else:
                 o_free = True
             return o_free
+        elif self.params.overtake_mode == "predictive_spliner":
+            # For the predictive planner (GP+SQP), we trust the SQP solver's feasibility.
+            # If it's publishing avoidance waypoints, it has found a valid path.
+            return True
         else:
-            self.get_logger().error(f"Unknown overtake planner")
-            raise NotImplementedError
+            self.get_logger().error(f"Unknown overtake planner: {self.params.overtake_mode}")
+            return True # Fallback to True to avoid freezing the system
 
     @property
     def _check_gbfree(self) -> bool:

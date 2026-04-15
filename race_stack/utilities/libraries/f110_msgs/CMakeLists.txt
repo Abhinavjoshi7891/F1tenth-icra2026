@@ -38,6 +38,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Wpnt.msg"
   "msg/WpntArray.msg"
   "msg/OpponentTrajectory.msg"
+  "msg/OpponentTrajectories.msg"
   "msg/OppWpnt.msg"
   DEPENDENCIES 
   "std_msgs"

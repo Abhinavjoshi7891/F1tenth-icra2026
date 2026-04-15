@@ -30,6 +30,8 @@ setup(
     entry_points={
         'console_scripts': [
             'controller = controller.controller_manager:main',
+            'mpc_param_tuner = controller.online_tuning_server:main',
+            'mpc_viz = controller.mpc_viz:main',
         ],
     },
 )

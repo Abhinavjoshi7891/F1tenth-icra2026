@@ -5,6 +5,8 @@ This controller package implements the following controllers:
 - [MAP controller](#model--and-acceleration-based-pursuit-map-controller)
 - [Pure Pursuit controller](#pure-pursuit-pp-controller)
 - [Follow the Gap controller](#follow-the-gap-ftg-controller)
+- [Kinematic MPC (KMPC)](#kinematic-mpc-kmpc)
+- [Single Track MPC (STMPC)](#single-track-mpc-stmpc)
 
 The `controller_manager` implemented in `controller_manager.py` initializes the needed controllers. It runs at a specified loop rate where in each cycle the next control inputs are calculated via the choosen controller.
 
@@ -28,6 +30,78 @@ The node publishes to:
 - `/my_waypoints`: Publishes marker array of the received waypoints.
 - `/l1_distance`: Publishes the L1 distance.
 - `/trailing/gap_data`: Publishes the PID data for trailing.
+- `/mpc_controller/states`: Publishes the internal MPC state vector (for visualization).
+
+# MPC Visualization & Debugging (The Magenta Line)
+
+The `mpc_viz` node provides live visual feedback in RViz for the MPC's internal states and prediction horizon.
+
+## Launching the Visualization
+Run the following command in a separate terminal:
+```bash
+ros2 run controller mpc_viz
+```
+
+## RViz Configuration
+To see the markers, add two **MarkerArray** displays in RViz with the following topics:
+1.  **Predicted Trajectory:** `/mpc_controller/predicted_trajectory` (Magenta spheres)
+2.  **Track Boundaries:** `/mpc_controller/track_boundaries` (Green/Red cubes)
+
+**Important:** Set your RViz **Fixed Frame** to `map`.
+
+## How to Debug with the Magenta Line
+The magenta line represents the MPC's **Prediction Horizon** (the sequence of future positions the car intends to follow over the next 1–2 seconds).
+
+### 1. Stability Check
+*   **Good:** The line should be smooth and point clearly along the track or desired racing line.
+*   **Bad (Oscillation):** If the line is "jittering" or waving back and forth, your heading cost (`qalpha`) or steering rate cost (`rdeltad`) might be too low, causing the solver to propose aggressive corrections.
+
+### 2. Understeer/Overshoot
+*   **Symptom:** The car hits the outside wall, but the magenta line was pointing safely into the corner.
+*   **Diagnosis:** Your physical model (tire parameters) is overestimating the available grip. The MPC thinks it can make the turn, but the car physically can't. **Solution:** Lower the friction coefficient or adjust Pacejka parameters in `stmpc_params.yaml`.
+
+### 3. "Fearful" Driving
+*   **Symptom:** The magenta line cuts the corner very late/wide, and the car is slow.
+*   **Diagnosis:** The lateral error cost (`qn`) is too high, making the car terrified of leaving the center line even if it's faster to do so. **Solution:** Lower `qn` or increase the track safety margin.
+
+### 4. Boundary Violation
+*   **Symptom:** The magenta line goes *through* the red/green cubes.
+*   **Diagnosis:** The MPC is ignoring the track boundaries. **Solution:** Check the `track_safety_margin` or ensure the global waypoints are correctly loaded.
+
+# Online Parameter Tuning
+
+The ROS 2 stack includes a dedicated node for live tuning of MPC and L1 parameters without restarting the controller.
+
+## MPC Online Parameter Tuner
+The `mpc_param_tuner` node acts as the ROS 2 equivalent of a dynamic reconfigure server. It loads default values from `stack_master/config` and allows real-time adjustment of solver weights and constraints.
+
+### Launching the Tuner
+Run the following command in a separate terminal:
+```bash
+ros2 run controller mpc_param_tuner --ros-args -p mpc_version:=STMPC -p racecar_version:=SIM
+```
+*   `mpc_version`: `STMPC` or `KMPC`
+*   `racecar_version`: The target vehicle/config folder (e.g., `SIM`, `NUC1`)
+
+### Tuning via GUI (Recommended)
+You can use `rqt_reconfigure` to view and adjust parameters with sliders:
+```bash
+ros2 run rqt_reconfigure rqt_reconfigure
+```
+Look for the `/mpc_param_tuner` node in the sidebar.
+
+### Tuning via CLI
+You can also set parameters directly using the ROS 2 CLI:
+```bash
+ros2 param set /mpc_param_tuner qn 50.0
+```
+
+## L1 Parameter Tuning (MAP/PP)
+For non-MPC controllers (MAP/PP), parameters like `m_l1` and `t_clip` can be tuned directly on the `/controller` node:
+```bash
+ros2 run rqt_reconfigure rqt_reconfigure
+```
+Look for the `/controller` node in the sidebar.
 
 # Model- and Acceleration-based Pursuit (MAP) controller
 The MAP Controller based on [Model- and Acceleration-based Pursuit Controller for High-Performance Autonomous Racing](https://arxiv.org/pdf/2209.04346.pdf) calculates and publishes the optimal steering angle based on a vehicle model and velocity to track a given trajectory. It is managed by the `controller_manager.py` node.
