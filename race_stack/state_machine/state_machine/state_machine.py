@@ -9,7 +9,7 @@ from rcl_interfaces.msg import SetParametersResult, ParameterDescriptor
 from rcl_interfaces.srv import GetParameters
 from rclpy.parameter import Parameter
 from ament_index_python import get_package_share_directory
-from std_msgs.msg import String
+from std_msgs.msg import String, Bool, Float32MultiArray
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import PoseStamped
 from f110_msgs.msg import WpntArray, OTWpntArray, ObstacleArray
@@ -84,8 +84,20 @@ class StateMachine(Node):
             self.avoidance_wpnts = None
             self.create_subscription(OTWpntArray, '/planner/avoidance/otwpnts', self.avoidance_cb, 10)
 
+            # Perception obstacles (from /perception/obstacles)
+            self.obstacles_perception = []
             self.create_subscription(ObstacleArray, "/perception/obstacles", self.obstacles_cb, 10)
-        
+
+            # Predictive planner extras
+            self.obstacles_prediction = []
+            self.merger = None
+            self.force_trailing = False
+            self.emergency_break_horizon = 1.1  # [m]
+            self.emergency_break_d = 0.12  # [m]
+            self.create_subscription(ObstacleArray, "/collision_prediction/obstacles", self.obstacle_prediction_cb, 10)
+            self.create_subscription(Float32MultiArray, "/planner/avoidance/merger", self.merger_cb, 10)
+            self.create_subscription(Bool, "/collision_prediction/force_trailing", self.force_trailing_cb, 10)
+
             # TODO setup things for sectors and overtaking sectors
             self.only_ftg_zones = []
             self.ftg_counter = 0
@@ -118,6 +130,7 @@ class StateMachine(Node):
         self.state_marker_pub = self.create_publisher(Marker, 'state_marker', 10)
         self.loc_wpnt_pub = self.create_publisher(WpntArray, 'local_waypoints', 10)
         self.vis_loc_wpnt_pub = self.create_publisher(MarkerArray, 'local_waypoints/markers', 10)
+        self.ot_section_check_pub = self.create_publisher(Bool, '/ot_section_check', 10)
         
         # main loop
         self.main_loop = self.create_timer(1/self.params.rate_hz, self.main_loop_callback)
@@ -155,19 +168,35 @@ class StateMachine(Node):
         self.cur_d = msg.pose.pose.position.y
 
     def avoidance_cb(self, data: OTWpntArray):
-        """Subscribes to spliner waypoints"""
+        """Subscribes to avoidance waypoints (spliner or predictive_spliner)"""
         if len(data.wpnts) > 0:
-            self.splini_ttl_counter = int(self.params.splini_ttl * self.params.rate_hz)
+            if self.params.overtake_mode == "predictive_spliner":
+                ttl = self.params.pred_splini_ttl
+            else:
+                ttl = self.params.splini_ttl
+            self.splini_ttl_counter = int(ttl * self.params.rate_hz)
             self.avoidance_wpnts = data
-        else:
         # If empty we don't overwrite the avoidance waypoints
-            pass
 
     def obstacles_cb(self, data):
         if len(data.obstacles) != 0:
-            self.obstacles = data.obstacles
+            self.obstacles_perception = data.obstacles
         else:
-            self.obstacles = []
+            self.obstacles_perception = []
+        self.obstacles = self.obstacles_perception + self.obstacles_prediction
+
+    def obstacle_prediction_cb(self, data: ObstacleArray):
+        if len(data.obstacles) != 0:
+            self.obstacles_prediction = data.obstacles
+        else:
+            self.obstacles_prediction = []
+        self.obstacles = self.obstacles_perception + self.obstacles_prediction
+
+    def merger_cb(self, data: Float32MultiArray):
+        self.merger = data.data
+
+    def force_trailing_cb(self, data: Bool):
+        self.force_trailing = data.data
     
     def car_state_cb(self, data: PoseStamped):
         x = data.pose.position.x
@@ -205,11 +234,14 @@ class StateMachine(Node):
 
     @property
     def _check_ot_sector(self) -> bool:
+        in_sector = False
         for sector in self.ot_sectors:
             if sector['ot_flag']:
                 if (sector['start'] <= self.cur_s / self.waypoints_dist <= (sector['end']+1)):
-                    return True
-        return False
+                    in_sector = True
+                    break
+        self.ot_section_check_pub.publish(Bool(data=in_sector))
+        return in_sector
 
     @property
     def _check_ofree(self) -> bool:
@@ -313,28 +345,64 @@ class StateMachine(Node):
 
     @property
     def _check_emergency_break(self) -> bool:
-        # NOTE: unused flag, but could be useful
         emergency_break = False
-        if self.obstacles != []:
-            horizon = self.emergency_break_horizon # Horizon in front of cur_s [m]
-
-            for obs in self.obstacles:
-                # Wrapping madness to check if infront
-                dist_to_obj = (obs.s_center - self.cur_s) % self.track_length
-                if dist_to_obj < horizon:
-            
-                    # Get d wrt to mincurv from the overtaking line
-                    local_wpnt_idx = np.argmin(
-                        np.array([abs(avoid_s.s_m - obs.s_center) for avoid_s in self.local_waypoints.wpnts])
-                    )
-                    ot_d = self.local_waypoints.wpnts[local_wpnt_idx].d_m
-                    ot_obs_dist = ot_d - obs.d_center
-                    if abs(ot_obs_dist) < self.params.lateral_width_ot_m:
-                        emergency_break = True
-                        self.get_logger().info("emergency break")
-        else:
-            emergency_break = False
+        if self.params.overtake_mode == "predictive_spliner":
+            obstacles = list(self.obstacles_perception)
+            if obstacles and self.local_waypoints.wpnts:
+                horizon = self.emergency_break_horizon
+                for obs in obstacles:
+                    dist_to_obj = (obs.s_start - self.cur_s) % self.track_length
+                    if dist_to_obj < horizon:
+                        local_wpnt_idx = np.argmin(
+                            np.array([abs(w.s_m - obs.s_center) for w in self.local_waypoints.wpnts])
+                        )
+                        ot_d = self.local_waypoints.wpnts[local_wpnt_idx].d_m
+                        ot_obs_dist = ot_d - obs.d_center
+                        if abs(ot_obs_dist) < self.emergency_break_d:
+                            emergency_break = True
+                            self.get_logger().warn("Emergency break triggered!")
+                            break
         return emergency_break
+
+    @property
+    def _check_force_trailing(self) -> bool:
+        return self.force_trailing
+
+    @property
+    def _check_on_spline(self) -> bool:
+        """True if ego is currently inside the avoidance spline's s-range"""
+        if self.last_valid_avoidance_wpnts is not None and len(self.last_valid_avoidance_wpnts) > 0:
+            s_start = self.last_valid_avoidance_wpnts[0].s_m
+            s_end   = self.last_valid_avoidance_wpnts[-1].s_m
+            # Spline wraps around track end
+            if s_start > s_end:
+                return (self.cur_s > s_start and self.cur_s < self.track_length) or \
+                       (self.cur_s < s_end and self.cur_s > 0)
+            else:
+                return s_start < self.cur_s < s_end
+        return False
+
+    @property
+    def _check_on_merger(self) -> bool:
+        """True if ego is inside the merger region published by the SQP node"""
+        if self.merger is not None and len(self.merger) >= 2:
+            m0, m1 = self.merger[0], self.merger[1]
+            if m0 < m1:
+                return m0 < self.cur_s < m1
+            elif m0 > m1:
+                return self.cur_s > m0 or self.cur_s < m1
+        return False
+
+    @property
+    def _check_prediction_gbfree(self) -> bool:
+        """True if no collision-predicted obstacle is within 10 m ahead"""
+        horizon = 10.0
+        for obs in self.obstacles_prediction:
+            gap = (obs.s_start - self.cur_s) % self.track_length
+            if gap < horizon:
+                return False
+        return True
+
     ###########
     # HELPERS #
     ###########
@@ -567,13 +635,21 @@ class StateMachine(Node):
                 throttle_duration_sec=1.0
             )
 
-        if self.params.mode=="head_to_head" and self.params.overtake_mode == "spliner":
+        if self.params.mode == "head_to_head":
             self.splini_ttl_counter -= 1
-            # Once ttl has reached 0 we overwrite the avoidance waypoints with the empty waypoints
-            if self.splini_ttl_counter <= 0:
-                self.last_valid_avoidance_wpnts = None
-                self.avoidance_wpnts = WpntArray()
-                self.splini_ttl_counter = -1
+            if self.params.overtake_mode == "spliner":
+                if self.splini_ttl_counter <= 0:
+                    self.last_valid_avoidance_wpnts = None
+                    self.avoidance_wpnts = None
+                    self.splini_ttl_counter = -1
+            elif self.params.overtake_mode == "predictive_spliner":
+                if self.splini_ttl_counter <= 0:
+                    if not self._check_on_spline:
+                        self.avoidance_wpnts = None
+                        self.last_valid_avoidance_wpnts = None
+                    elif self.splini_ttl_counter <= -int(self.params.pred_splini_ttl * self.params.rate_hz) * 3:
+                        self.avoidance_wpnts = None
+                        self.splini_ttl_counter = -10
 
 # defined as entry point in setup.py:
 def main(args=None):

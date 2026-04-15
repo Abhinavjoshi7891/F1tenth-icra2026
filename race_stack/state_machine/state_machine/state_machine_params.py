@@ -66,9 +66,23 @@ class StateMachineParams:
         node.set_descriptor("n_loc_wpnts", descriptor=descriptor)
         self.n_loc_wpnts: int = node.get_parameter("n_loc_wpnts").value
         
-        self.overtake_mode = "spliner"
-        """Overtake mode\nOnly spliner is supported at the moment"""
-        
+        descriptor = ParameterDescriptor(
+            description="Overtake mode: 'spliner' or 'predictive_spliner'\n",
+            type=ParameterType.PARAMETER_STRING,
+            read_only=False,
+        )
+        node.set_descriptor("overtake_mode", descriptor=descriptor)
+        self.overtake_mode: str = node.get_parameter("overtake_mode").value
+
+        descriptor = ParameterDescriptor(
+            description="Time to live for predictive spliner waypoints in seconds\n",
+            read_only=False,
+            type=ParameterType.PARAMETER_DOUBLE,
+            floating_point_range=[FloatingPointRange(from_value=0.05, to_value=2.0, step=0.05)]
+        )
+        node.set_descriptor("pred_splini_ttl", descriptor=descriptor)
+        self.pred_splini_ttl: float = node.get_parameter("pred_splini_ttl").value
+
         descriptor = ParameterDescriptor(
             description="Voltage threshold for the car, below which the car is considered to be low bat.\n",
             type=ParameterType.PARAMETER_DOUBLE,
