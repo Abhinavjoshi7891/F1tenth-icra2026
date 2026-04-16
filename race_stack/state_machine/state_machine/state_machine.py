@@ -253,7 +253,8 @@ class StateMachine(Node):
         in_sector = False
         for sector in self.ot_sectors:
             if sector['ot_flag']:
-                if (sector['start'] <= self.cur_s / self.waypoints_dist <= (sector['end']+1)):
+                # Extend end by ~0.5m (5 waypoints) to prevent flicker at boundary
+                if (sector['start'] <= self.cur_s / self.waypoints_dist <= (sector['end'] + 5)):
                     in_sector = True
                     break
         self.ot_section_check_pub.publish(Bool(data=in_sector))

@@ -242,6 +242,7 @@ class Single_track_MPC_Controller:
         if trailing:
             trailing_v = self.trailing_controller(self.waypoint_array_in_map[0, 2])
             self.flag1 = True
+            self.overtake_d = 0.0   # FIX: reset lateral offset when trailing
 
         # ── Per-stage online parameters and constraint update ─────────────────
         for i in range(self.stmpc_config.N + 1):
@@ -421,4 +422,11 @@ class Single_track_MPC_Controller:
             self.trailing_command = max(
                 self.trailing_config.blind_trailing_speed, self.trailing_command)
 
+        self.logger_info(
+            f"TRAIL: opp_v={self.opponent[2]:.2f} gap_act={self.gap_actual:.2f} "
+            f"gap_err={self.gap_error:.2f} v_diff={self.v_diff:.2f} "
+            f"p={p_val:.2f} i={i_val:.2f} d={d_val:.2f} "
+            f"cmd={self.trailing_command:.2f}"
+        )
+        
         return self.trailing_command

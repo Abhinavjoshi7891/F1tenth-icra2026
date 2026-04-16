@@ -229,6 +229,7 @@ class Kinematic_MPC_Controller:
         if self.state == "TRAILING" and self.opponent is not None:
             trailing_v = self.trailing_controller(self.waypoint_array_in_map[0, 2])
             self.flag1 = True
+            self.overtake_d = 0.0   # FIX: reset lateral offset when trailing
 
         # ── Per-stage online parameters and constraint update ─────────────────
         for i in range(self.kmpc_config.N + 1):

@@ -861,6 +861,13 @@ class Controller(Node):
                 compute_time           = 0.0,
             )
 
+        # DEBUG
+        self.get_logger().info(
+            f"STMPC out: speed={speed:.2f} steer={steering_angle:.3f} status={status} "
+            f"state={self.state} wpnts_age={self.waypoint_safety_counter}",
+            throttle_duration_sec=0.2
+        )
+
         if status != 0:
             self.get_logger().error(
                 f"[STMPC] Solver failed status={status}. Commanding zero.")
