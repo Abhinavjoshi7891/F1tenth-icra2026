@@ -641,17 +641,16 @@ class Controller(Node):
     def local_waypoint_cb(self, data: WpntArray):
         self.waypoint_list_in_map = []
         for waypoint in data.wpnts:
-            waypoint_in_map = [waypoint.x_m, waypoint.y_m]
-            speed = waypoint.vx_mps
-            if waypoint.d_right + waypoint.d_left != 0:
-                self.waypoint_list_in_map.append([waypoint_in_map[0],
-                                                  waypoint_in_map[1],
-                                                  speed,
-                                                  min(waypoint.d_left, waypoint.d_right)/(waypoint.d_right + waypoint.d_left),
-                                                  waypoint.s_m, waypoint.kappa_radpm, waypoint.psi_rad, waypoint.ax_mps2]
-                                                )
-            else:
-                self.waypoint_list_in_map.append([waypoint_in_map[0], waypoint_in_map[1], speed, 0, waypoint.s_m, waypoint.kappa_radpm, waypoint.psi_rad, waypoint.ax_mps2])
+            self.waypoint_list_in_map.append([
+                waypoint.x_m,
+                waypoint.y_m,
+                waypoint.vx_mps,
+                waypoint.d_m,           # <-- THIS IS THE FIX: d_m, not boundary ratio
+                waypoint.s_m,
+                waypoint.kappa_radpm,
+                waypoint.psi_rad,
+                waypoint.ax_mps2,
+            ])
         self.waypoint_array_in_map = np.array(self.waypoint_list_in_map)
         self.waypoint_safety_counter = 0
 

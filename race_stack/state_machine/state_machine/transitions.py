@@ -1,3 +1,14 @@
+#transitions.py
+# CORRECTED VERSION — Faithful port from ROS1 state_transitions.py
+#
+# No logic bugs found in transitions.py itself.
+# All bugs were in state_machine.py (properties returning wrong values) and states.py.
+# This file is provided for completeness alongside the other corrected files.
+#
+# NOTE: The @property access pattern (state_machine._check_gbfree without parens)
+# is correct in Python — accessing a @property on an instance invokes the getter.
+# This is equivalent to ROS1's state_machine._check_gbfree() method call.
+#
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -50,6 +61,9 @@ def head_to_head_transition(state_machine: StateMachine)->str:
             raise ValueError(f"Invalid state {state_machine.state}")
 
 
+#######################
+# SPLINER TRANSITIONS #
+#######################
 def SpliniGlobalTrackingTransition(state_machine: StateMachine) -> StateType:
     """Transitions for being in `StateType.GB_TRACK`"""
     if not state_machine._check_only_ftg_zone:
@@ -67,12 +81,6 @@ def SpliniTrailingTransition(state_machine: StateMachine) -> StateType:
     ot_sector = state_machine._check_ot_sector
     splini_avail = state_machine._check_availability_splini_wpts
     o_free = state_machine._check_ofree
-
-    # DIAGNOSTIC: print every gate condition to identify the blocker
-    state_machine.get_logger().info(
-        f"TRANSITION GATE: gb_free={gb_free} | ot_sector={ot_sector} | splini_avail={splini_avail} | o_free={o_free}",
-        throttle_duration_sec=1.0
-    )
 
     if not state_machine._check_only_ftg_zone:
         # If we have been sitting around in TRAILING for a while then FTG

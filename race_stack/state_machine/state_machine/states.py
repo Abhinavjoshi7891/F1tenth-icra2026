@@ -1,3 +1,11 @@
+#states.py
+# CORRECTED VERSION — Faithful port from ROS1 states.py
+#
+# Fixes applied:
+#   Bug #9: Trailing() now checks _check_close_to_raceline first (matches ROS1 priority)
+#           ROS1: if close_to_raceline → follow global; elif avoidance exists → follow spline; else → follow global
+#           Old ROS2: if avoidance exists → follow spline; else → follow global (missing first branch)
+#
 from __future__ import annotations
 
 from typing import List, TYPE_CHECKING
@@ -31,11 +39,21 @@ def GlobalTracking(state_machine: StateMachine) -> List[Wpnt]:
     return [state_machine.glb_wpnts[(s + i)%state_machine.num_glb_wpnts] for i in range(state_machine.params.n_loc_wpnts)]
 
 def Trailing(state_machine: StateMachine) -> List[Wpnt]:
-    # This allows us to trail on the last valid spline if necessary
-    if state_machine.last_valid_avoidance_wpnts is not None:
+    """[Bug #9] Restored ROS1 three-branch priority:
+    1. If close to raceline → follow global raceline (get back on track ASAP)
+    2. If avoidance spline exists → follow last valid spline (trail on avoidance path)
+    3. Otherwise → follow global raceline (fallback)
+    """
+    # [Bug #9] Priority 1: If close to raceline, follow global (ROS1 line 1770-1772)
+    if state_machine._check_close_to_raceline:
+        s = int(state_machine.cur_s/state_machine.waypoints_dist + 0.5)
+        return [state_machine.glb_wpnts[(s + i)%state_machine.num_glb_wpnts] for i in range(state_machine.params.n_loc_wpnts)]
+    # Priority 2: If avoidance spline available, trail on it (ROS1 line 1773-1777)
+    elif state_machine.last_valid_avoidance_wpnts is not None:
         splini_wpts = state_machine.get_splini_wpts()
         s = int(state_machine.cur_s/state_machine.waypoints_dist + 0.5)
         return [splini_wpts[(s + i)%state_machine.num_glb_wpnts] for i in range(state_machine.params.n_loc_wpnts)]
+    # Priority 3: Fallback to global raceline (ROS1 line 1778-1780)
     else:
         s = int(state_machine.cur_s/state_machine.waypoints_dist + 0.5)
         return [state_machine.glb_wpnts[(s + i)%state_machine.num_glb_wpnts] for i in range(state_machine.params.n_loc_wpnts)]

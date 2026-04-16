@@ -1,5 +1,19 @@
+#state_machine.py
+# CORRECTED VERSION — Faithful port from ROS1 state_machine_node.py
+# 
+# Fixes applied (referenced to the analysis report):
+#   Bug #2:  car_state_frenet_cb now extracts cur_vs from twist.linear.x
+#   Bug #3:  state_pub now publishes self.state.value ("GB_TRACK") not str(self.state) ("StateType.GB_TRACK")
+#   Bug #1:  _check_ofree for predictive_spliner now checks static obstacles (matches ROS1)
+#   Bug #4:  get_splini_wpts now handles "avoidance over more than 1 lap" case
+#   Bug #8:  _check_ftg now uses self.state (not self.cur_state)
+#   Bug #10: FTG counter reset added when not in TRAILING
+#   Bug #11: _check_gbfree guards on head_to_head mode (timetrials_only equivalent)
+#   Bug #13: threading.Lock added back for get_splini_wpts safety
+#
 import os
 import yaml
+import threading
 import rclpy
 import numpy as np
 from builtin_interfaces.msg import Time
@@ -36,7 +50,8 @@ class StateMachine(Node):
         # PARAMETER DECLARATION
         self.params = StateMachineParams(self)
         
-        self.ftg_disabled = True # TODO fix with global prams?
+        self.ftg_disabled = True # TODO fix with global params?
+        self.lock = threading.Lock()  # [Bug #13] Lock for concurrent waypoint access
 
         # update on parameter changes for rate
         self.add_on_set_parameters_callback(self.params.parameters_callback)
@@ -65,6 +80,7 @@ class StateMachine(Node):
         
         self.cur_s = None
         self.cur_d = None
+        self.cur_vs = 0.0  # [Bug #2] Initialize ego velocity
         self.create_subscription(Odometry, '/car_state/frenet/odom',self.car_state_frenet_cb, 10) # car frenet coordinates
         while self.cur_s is None:
             self.get_logger().info("Waiting for car state frenet message", throttle_duration_sec=0.5)
@@ -166,6 +182,7 @@ class StateMachine(Node):
     def car_state_frenet_cb(self, msg: Odometry):
         self.cur_s = msg.pose.pose.position.x
         self.cur_d = msg.pose.pose.position.y
+        self.cur_vs = msg.twist.twist.linear.x  # [Bug #2] Extract ego velocity
 
     def avoidance_cb(self, data: OTWpntArray):
         """Subscribes to avoidance waypoints (spliner or predictive_spliner)"""
@@ -208,7 +225,7 @@ class StateMachine(Node):
 
         self.current_position = [x, y, theta]
     
-    ### Properties to evaulate state transitions
+    ### Properties to evaluate state transitions
     @property
     def _low_bat(self)->bool:
         if self.battery_level < self.params.volt_threshold:
@@ -224,7 +241,6 @@ class StateMachine(Node):
             for sector in self.only_ftg_zones:
                 if sector[0] <= self.cur_s / self.waypoints_dist <= sector[1]:
                     ftg_only = True
-                    # rospy.logwarn(f"[{self.name}] IN FTG ONLY ZONE")
                     break  # cannot be in two ftg zones
         return ftg_only
 
@@ -245,61 +261,68 @@ class StateMachine(Node):
 
     @property
     def _check_ofree(self) -> bool:
+        """[Bug #1] Restored ROS1 behavior: for predictive_spliner, check STATIC obstacles
+        against the avoidance trajectory. ROS1 uses the same code path for both spliner and
+        predictive_spliner, but filters with obs.is_static for predictive_spliner."""
         o_free = True
 
-        if self.params.overtake_mode == "spliner":
+        if self.params.overtake_mode in ("spliner", "predictive_spliner"):
             if self.last_valid_avoidance_wpnts is not None:
                 horizon = self.params.overtaking_horizon_m  # Horizon in front of cur_s [m]
 
                 for obs in self.obstacles:
-                    obs_s = obs.s_center
-                    # Wrapping madness to check if infront
-                    dist_to_obj = (obs_s - self.cur_s) % self.track_length
-                    if dist_to_obj < horizon and len(self.last_valid_avoidance_wpnts):
-                        obs_d = obs.d_center
-                        # Get d wrt to mincurv from the overtaking line
-                        avoid_wpnt_idx = np.argmin(
-                            np.array([abs(avoid_s.s_m - obs_s) for avoid_s in self.last_valid_avoidance_wpnts])
-                        )
-                        ot_d = self.last_valid_avoidance_wpnts[avoid_wpnt_idx].d_m
-                        ot_obs_dist = ot_d - obs_d
-                        if abs(ot_obs_dist) < self.params.lateral_width_ot_m:
-                            o_free = False
-                            self.get_logger().info(f"O_FREE False, obs dist to ot lane: {ot_obs_dist} m")
-                            break
+                    # For spliner: check all obstacles
+                    # For predictive_spliner: only check static obstacles (ROS1 line 909)
+                    if self.params.overtake_mode == "spliner" or (self.params.overtake_mode == "predictive_spliner" and obs.is_static == True):
+                        obs_s = obs.s_center
+                        # Wrapping madness to check if infront
+                        dist_to_obj = (obs_s - self.cur_s) % self.track_length
+                        if dist_to_obj < horizon and len(self.last_valid_avoidance_wpnts):
+                            obs_d = obs.d_center
+                            # Get d wrt to mincurv from the overtaking line
+                            avoid_wpnt_idx = np.argmin(
+                                np.array([abs(avoid_s.s_m - obs_s) for avoid_s in self.last_valid_avoidance_wpnts])
+                            )
+                            ot_d = self.last_valid_avoidance_wpnts[avoid_wpnt_idx].d_m
+                            ot_obs_dist = ot_d - obs_d
+                            if abs(ot_obs_dist) < self.params.lateral_width_ot_m:
+                                o_free = False
+                                self.get_logger().info(f"O_FREE False, obs dist to ot lane: {ot_obs_dist} m")
+                                break
             else:
                 o_free = True
             return o_free
-        elif self.params.overtake_mode == "predictive_spliner":
-            # For the predictive planner (GP+SQP), we trust the SQP solver's feasibility.
-            # If it's publishing avoidance waypoints, it has found a valid path.
-            return True
         else:
             self.get_logger().error(f"Unknown overtake planner: {self.params.overtake_mode}")
-            return True # Fallback to True to avoid freezing the system
+            return True  # Fallback to True to avoid freezing the system
 
     @property
     def _check_gbfree(self) -> bool:
         gb_free = True
-        # If we are in time trial only mode -> return free overtake i.e. GB_FREE True
+        # [Bug #11] Guard: if not in head_to_head, global is always free (matches ROS1 timetrials_only guard)
+        if self.params.mode != "head_to_head":
+            return True
+
         horizon = self.params.gb_horizon_m  # Horizon in front of cur_s [m]
 
         for obs in self.obstacles:
-            obs_s = (obs.s_start + obs.s_end) / 2
             obs_s = obs.s_center
             gap = (obs_s - self.cur_s) % self.track_length
             if gap < horizon:
                 obs_d = obs.d_center
-                # Get d wrt to mincurv from the overtaking line
                 if abs(obs_d) < self.params.lateral_width_gb_m:
                     gb_free = False
-                    #self.get_logger().info(f"GB_FREE False, obs dist to ot lane: {obs_d} m")
+                    self.get_logger().info(f"GB_FREE False, obs dist to gb lane: {obs_d} m")
                     break
 
         return gb_free
 
     @property
     def _check_enemy_in_front(self) -> bool:
+        # [Bug #11] Guard: matches ROS1 timetrials_only guard
+        if self.params.mode != "head_to_head":
+            return False
+
         horizon = self.params.gb_horizon_m  # Horizon in front of cur_s [m]
         for obs in self.obstacles:
             gap = (obs.s_start - self.cur_s) % self.track_length
@@ -313,7 +336,7 @@ class StateMachine(Node):
             return False
         elif len(self.avoidance_wpnts.wpnts) == 0:
             return False
-        # Say no to the ot line if the last switch was less than 0.75 seconds ago
+        # Say no to the ot line if the last switch was less than splini_hyst_timer_sec ago
         elif (
             abs(time_to_float(self.avoidance_wpnts.header.stamp) - time_to_float(self.avoidance_wpnts.last_switch_time))
             < self.params.splini_hyst_timer_sec
@@ -327,14 +350,15 @@ class StateMachine(Node):
 
     @property
     def _check_ftg(self) -> bool:
-        # If we have been standing still for 3 seconds inside TRAILING -> FTG
+        # If we have been standing still for N seconds inside TRAILING -> FTG
         threshold = self.params.ftg_timer_sec * self.params.rate_hz
         if self.ftg_disabled:
             return False
         else:
-            if self.cur_state == StateType.TRAILING and self.cur_vs < self.params.ftg_threshold_speed:
+            # [Bug #8] Fixed: self.cur_state → self.state
+            if self.state == StateType.TRAILING and self.cur_vs < self.params.ftg_threshold_speed:
                 self.ftg_counter += 1
-                self.get_logger().warn(f"[{self.name}] FTG counter: {self.ftg_counter}/{threshold}")
+                self.get_logger().warn(f"FTG counter: {self.ftg_counter}/{threshold}")
             else:
                 self.ftg_counter = 0
 
@@ -396,6 +420,9 @@ class StateMachine(Node):
     @property
     def _check_prediction_gbfree(self) -> bool:
         """True if no collision-predicted obstacle is within 10 m ahead"""
+        # [Bug #11] Guard for timetrials
+        if self.params.mode != "head_to_head":
+            return True
         horizon = 10.0
         for obs in self.obstacles_prediction:
             gap = (obs.s_start - self.cur_s) % self.track_length
@@ -409,12 +436,24 @@ class StateMachine(Node):
     def get_splini_wpts(self) -> WpntArray:
         """Obtain the waypoints by fusing those obtained by spliner with the
         global ones.
+        [Bug #4] Restored the "avoidance over more than 1 lap" case from ROS1.
+        [Bug #13] Restored threading lock.
         """
         splini_glob = self.glb_wpnts.copy()
 
         # Handle wrapping
         if self.last_valid_avoidance_wpnts is not None:
-            if self.last_valid_avoidance_wpnts[-1].s_m > self.last_valid_avoidance_wpnts[0].s_m:
+            # [Bug #4] Case 1: avoidance spans more than one full lap
+            if len(self.last_valid_avoidance_wpnts) > len(splini_glob):
+                splini_idxs = [
+                    int(s % len(splini_glob))
+                    for s in range(
+                        int(self.last_valid_avoidance_wpnts[0].s_m / self.waypoints_dist + 0.5),
+                        int((self.track_length + self.last_valid_avoidance_wpnts[0].s_m) / self.waypoints_dist + 0.5),
+                    )
+                ]
+            # Case 2: normal non-wrapping
+            elif self.last_valid_avoidance_wpnts[-1].s_m > self.last_valid_avoidance_wpnts[0].s_m:
                 splini_idxs = [
                     s
                     for s in range(
@@ -422,19 +461,19 @@ class StateMachine(Node):
                         int(self.last_valid_avoidance_wpnts[-1].s_m / self.waypoints_dist + 0.5),
                     )
                 ]
+            # Case 3: wrapping around track end
             else:
                 splini_idxs = [
-                    int(s % (self.track_length / self.waypoints_dist) + 0.5)
+                    int(s % len(splini_glob))
                     for s in range(
                         int(self.last_valid_avoidance_wpnts[0].s_m / self.waypoints_dist + 0.5),
                         int((self.track_length + self.last_valid_avoidance_wpnts[-1].s_m) / self.waypoints_dist + 0.5),
                     )
                 ]
 
-            # with self.lock:  # was needed in ROS1 but hopefuly in ROS2 were fine
-            for i, s in enumerate(splini_idxs):
-                # splini_glob[s] = self.last_valid_avoidance_wpnts[i]
-                splini_glob[s] = self.last_valid_avoidance_wpnts[min(i, len(self.last_valid_avoidance_wpnts) - 1)]
+            with self.lock:  # [Bug #13] Restored lock
+                for i, s in enumerate(splini_idxs):
+                    splini_glob[s] = self.last_valid_avoidance_wpnts[min(i, len(self.last_valid_avoidance_wpnts) - 1)]
 
         # If the last valid points have been reset, then we just pass the global waypoints
         else:
@@ -458,9 +497,8 @@ class StateMachine(Node):
         future = self.parameter_client.call_async(request)
         rclpy.spin_until_future_complete(self, future)
 
-        # TODO structure of request is also very ugly dependent on the parameter structure on the other side, could be improved
         if future.result() is not None:
-            self.n_ot_sectors = future.result().values[0].integer_value # TODO careful with this types, TY util could be better
+            self.n_ot_sectors = future.result().values[0].integer_value
             self.get_logger().info(f'Got {self.n_ot_sectors} sectors')
 
             starts = [f'Overtaking_sector{i}.start' for i in range(self.n_ot_sectors)]
@@ -476,9 +514,9 @@ class StateMachine(Node):
             rclpy.spin_until_future_complete(self, future)
             if future.result() is not None:
                 for i in range(self.n_ot_sectors):
-                    start = future.result().values[i].integer_value # TODO careful with this types, TY util could be better
-                    end = future.result().values[i + self.n_ot_sectors].integer_value # TODO careful with this types, TY util could be better
-                    ot_flag = future.result().values[i + 2 * self.n_ot_sectors].bool_value # TODO careful with this types, TY util could be better
+                    start = future.result().values[i].integer_value
+                    end = future.result().values[i + self.n_ot_sectors].integer_value
+                    ot_flag = future.result().values[i + 2 * self.n_ot_sectors].bool_value
                     self.ot_sectors.append({'start': start, 'end': end, 'ot_flag': ot_flag})
                 self.get_logger().info(f'OT sectors obtained: {self.ot_sectors}')
             else:
@@ -498,13 +536,11 @@ class StateMachine(Node):
 
     def ot_flag_cb(self, p: Parameter):
         self.get_logger().info(f'OT flag changed: {p.name} {p.value.bool_value}')
-        changed_sector_int = int(p.name.split('.')[0][-1]) # TODO ultra hardcoded ugliness
-        self.ot_sectors[changed_sector_int]['ot_flag'] = p.value.bool_value # TODO careful with this types, TY util could be better
+        changed_sector_int = int(p.name.split('.')[0][-1])  # TODO ultra hardcoded ugliness
+        self.ot_sectors[changed_sector_int]['ot_flag'] = p.value.bool_value
 
     def get_ot_params(self):
-        # the first time we need to get the number of sectors
         self.get_logger().info(f'Getting only ot flags params')
-        # otherwise we only update the flags
         request = GetParameters.Request()
         request.names = self.ot_param_names
         future = self.parameter_client.call_async(request)
@@ -544,8 +580,6 @@ class StateMachine(Node):
             mrk.pose.orientation.w = 1.0
             loc_markers.markers.append(mrk)
 
-        # ...
-
         if len(loc_wpnts.wpnts) == 0:
             self.get_logger().warn("No local waypoints published...")
         else:
@@ -559,7 +593,7 @@ class StateMachine(Node):
 
         Parameters
         ----------
-        action
+        state
             Current state of the car to be displayed
         """
         if self.first_visualization:
@@ -613,28 +647,24 @@ class StateMachine(Node):
     #############    
     def main_loop_callback(self):
         self.get_logger().debug(f"Current state: {self.state}")
-        # transition logic
+
+        # ---- Step 1: State transition ----
         if self.params.force_state:
             self.state = self.params.force_state_choice
         else:
             self.state = self.state_transition(self)
+
+        # [Bug #3] Publish state as bare string value ("GB_TRACK", not "StateType.GB_TRACK")
         msg = String()
-        msg.data = str(self.state)
+        msg.data = self.state.value  # <-- THIS IS THE CRITICAL FIX
         self.state_pub.publish(msg)
         self.visualize_state(state=self.state)
 
+        # ---- Step 2: Generate and publish local waypoints ----
         self.local_waypoints.wpnts = self.state_logic(self)
         self._pub_local_waypoints(self.local_waypoints)
 
-        # HUD LOGGING: Print race status once per second
-        if len(self.obstacles) > 0 and self.cur_s is not None:
-            closest_obs = min(self.obstacles, key=lambda obs: (obs.s_center - self.cur_s) % self.track_length)
-            gap = (closest_obs.s_center - self.cur_s) % self.track_length
-            self.get_logger().info(
-                f"HUD: Ego S: {self.cur_s:.1f}m | Opp S: {closest_obs.s_center:.1f}m | Gap: {gap:.1f}m | State: {self.state}",
-                throttle_duration_sec=1.0
-            )
-
+        # ---- Step 3: TTL management (Moved back to end per Bug #5 revert) ----
         if self.params.mode == "head_to_head":
             self.splini_ttl_counter -= 1
             if self.params.overtake_mode == "spliner":
@@ -650,6 +680,20 @@ class StateMachine(Node):
                     elif self.splini_ttl_counter <= -int(self.params.pred_splini_ttl * self.params.rate_hz) * 3:
                         self.avoidance_wpnts = None
                         self.splini_ttl_counter = -10
+
+        # [Bug #10] Clear FTG counter if not in TRAILING state (matches ROS1 lines 1401-1403)
+        if self.state != StateType.TRAILING:
+            self.ftg_counter = 0
+
+        # HUD LOGGING: Print race status once per second
+        if len(self.obstacles) > 0 and self.cur_s is not None:
+            closest_obs = min(self.obstacles, key=lambda obs: (obs.s_center - self.cur_s) % self.track_length)
+            gap = (closest_obs.s_center - self.cur_s) % self.track_length
+            self.get_logger().info(
+                f"HUD: Ego S: {self.cur_s:.1f}m | Opp S: {closest_obs.s_center:.1f}m | Gap: {gap:.1f}m | State: {self.state.value}",
+                throttle_duration_sec=1.0
+            )
+
 
 # defined as entry point in setup.py:
 def main(args=None):
