@@ -51,7 +51,7 @@ class FrenetConverter:
         dist_y = y - np.tile(self.waypoints_y, (lenx, 1)).T
         return np.argmin(np.linalg.norm([dist_x.T, dist_y.T], axis=0), axis=1)*self.waypoints_distance_m
     
-    def get_frenet_velocities(self, vx, vy, theta) -> np.array:
+    def get_frenet_velocities(self, vx, vy, theta, s=None) -> np.array:
         """
         Returns the Frenet velocities for the given Cartesian velocities.
         
@@ -59,13 +59,19 @@ class FrenetConverter:
             vx (float): x-velocity
             vy (float): y-velocity
             theta (float): orientation of the vehicle
+            s (float, optional): s-coordinate along the track. If provided, uses this to find the local heading.
             
         Returns:
             np.array: [s_dot, d_dot] Frenet velocities
         """
-        if self.closest_index is None:
-            raise ValueError("FRENET CONVERTER: closest index is None, call get_closest_index first.")
-        delta_psi = theta - self.waypoints_psi[self.closest_index]
+        if s is not None:
+            idx = self.get_closest_index_by_s(s)
+        else:
+            if self.closest_index is None:
+                raise ValueError("FRENET CONVERTER: closest index is None, call get_closest_index first.")
+            idx = self.closest_index
+
+        delta_psi = theta - self.waypoints_psi[idx]
         s_dot = vx * np.cos(delta_psi) - vy * np.sin(delta_psi)
         d_dot = vx * np.sin(delta_psi) + vy * np.cos(delta_psi)
         
@@ -88,6 +94,23 @@ class FrenetConverter:
         dist_y = y - np.tile(self.waypoints_y, (lenx, 1)).T
         self.closest_index = np.argmin(np.linalg.norm([dist_x.T, dist_y.T], axis=0), axis=1)
         return self.closest_index
+
+    def get_closest_index_by_s(self, s: float) -> int:
+        """
+        Finds the waypoint index closest to the given s-coordinate.
+        
+        Mirrors ROS1 C++ FrenetConverter::GetClosestIndex(const double s, int* idx).
+        
+        Args:
+            s (float): s-coordinate along the raceline
+            
+        Returns:
+            int: index of the closest waypoint
+        """
+        s = s % self.raceline_length
+        waypoints_s_arr = np.array(self.waypoints_s)
+        idx = np.argmin(np.abs(waypoints_s_arr - s))
+        return int(idx)
 
 
     def get_frenet_coord(self, x, y, s, eps_m=0.01) -> float:

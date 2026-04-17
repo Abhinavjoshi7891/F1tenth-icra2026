@@ -267,14 +267,13 @@ class StateMachine(Node):
         predictive_spliner, but filters with obs.is_static for predictive_spliner."""
         o_free = True
 
-        if self.params.overtake_mode in ("spliner", "predictive_spliner"):
+        if self.params.overtake_mode in ("spliner", "predictive_spliner", "frenet"):
             if self.last_valid_avoidance_wpnts is not None:
                 horizon = self.params.overtaking_horizon_m  # Horizon in front of cur_s [m]
 
                 for obs in self.obstacles:
-                    # For spliner: check all obstacles
-                    # For predictive_spliner: only check static obstacles (ROS1 line 909)
-                    if self.params.overtake_mode == "spliner" or (self.params.overtake_mode == "predictive_spliner" and obs.is_static == True):
+                    # For spliner and frenet: check all obstacles
+                    if self.params.overtake_mode in ("spliner", "frenet") or (self.params.overtake_mode == "predictive_spliner" and obs.is_static == True):
                         obs_s = obs.s_center
                         # Wrapping madness to check if infront
                         dist_to_obj = (obs_s - self.cur_s) % self.track_length
@@ -668,7 +667,7 @@ class StateMachine(Node):
         # ---- Step 3: TTL management (Moved back to end per Bug #5 revert) ----
         if self.params.mode == "head_to_head":
             self.splini_ttl_counter -= 1
-            if self.params.overtake_mode == "spliner":
+            if self.params.overtake_mode in ("spliner", "frenet"):
                 if self.splini_ttl_counter <= 0:
                     self.last_valid_avoidance_wpnts = None
                     self.avoidance_wpnts = None
@@ -691,7 +690,7 @@ class StateMachine(Node):
             closest_obs = min(self.obstacles, key=lambda obs: (obs.s_center - self.cur_s) % self.track_length)
             gap = (closest_obs.s_center - self.cur_s) % self.track_length
             self.get_logger().info(
-                f"HUD: Ego S: {self.cur_s:.1f}m | Opp S: {closest_obs.s_center:.1f}m | Gap: {gap:.1f}m | State: {self.state.value}",
+                f"HUD: Ego S: {self.cur_s:.1f}m | Opp S: {closest_obs.s_center:.1f}m | Gap: {gap:.1f}m | State: {self.state.value} | Planner: {self.params.overtake_mode}",
                 throttle_duration_sec=1.0
             )
 

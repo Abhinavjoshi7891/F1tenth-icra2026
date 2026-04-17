@@ -1,0 +1,3 @@
+<launch>
+    <include file="$(find-pkg-share frenet_planner)/launch/frenet_planner.launch.py" />
+</launch>
