@@ -1,0 +1,15 @@
+<launch>
+    <arg name="map_name"        default=""/>
+    <arg name="display_graph"   default="True"/>
+    <arg name="follow_mode"     default="0"/>
+    <arg name="racecar_version" default="NUC2"/>
+    <arg name="measure"         default="False"/>
+
+    <include file="$(find-pkg-share graph_based_planner)/launch/graph_based_planner.launch.py">
+        <arg name="map_name"        value="$(var map_name)"/>
+        <arg name="display_graph"   value="$(var display_graph)"/>
+        <arg name="follow_mode"     value="$(var follow_mode)"/>
+        <arg name="racecar_version" value="$(var racecar_version)"/>
+        <arg name="measure"         value="$(var measure)"/>
+    </include>
+</launch>

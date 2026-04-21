@@ -1,0 +1,19 @@
+GraphPlanner:
+  ros__parameters:
+    map_name: ""
+    display_graph: true
+    follow_mode: 0            # 0 brakes often, 2 aggressive follow
+    racecar_version: "NUC2"
+    measure: false
+    profile: false
+    rate_hz: 30.0
+    v_max: 15.0
+    trailing_distance: 1.0
+    examined_points: 80
+    waypoint_distance: 0.1
+    ax_max_machines_path: ""  # empty → use package-internal inputs/veh_dyn_info/ax_max_machines.csv
+
+path_publisher:
+  ros__parameters:
+    path_length: 80
+    loop_rate_hz: 80.0

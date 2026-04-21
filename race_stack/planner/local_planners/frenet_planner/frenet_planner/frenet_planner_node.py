@@ -14,8 +14,7 @@ import numpy as np
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Float64
 from visualization_msgs.msg import MarkerArray, Marker
-from f110_msgs.msg import WpntArray, Wpnt, ObstacleArray, OTWpntArray
-from builtin_interfaces.msg import Time
+from f110_msgs.msg import WpntArray, Wpnt, ObstacleArray
 
 from frenet_conversion.frenet_converter import FrenetConverter
 from frenet_planner.data_structs import FrenetInitialConditions, FrenetHyperparameters
@@ -52,6 +51,9 @@ class FrenetPlannerNode(Node):
         self.pub_global_track_advancement = self.get_parameter('pub_global_track_advancement').value
         self.replanning_distance = self.get_parameter('replanning_distance').value
 
+        # throttle counter for 1 Hz diagnostic logs
+        self._log_tick = 0
+
         # --- State ---
         self.odom_x = 0.0
         self.odom_y = 0.0
@@ -66,8 +68,6 @@ class FrenetPlannerNode(Node):
         self.max_gb_speed = 10.0
         self.wpnt_cnt = 0
         self.wpt_array = []
-        self.last_ot_side = "none"
-        self.last_switch_time = self.get_clock().now().to_msg()
 
         self.frenet_converter: Optional[FrenetConverter] = None
         self.frenet_solver = FrenetOptimalTrajectory(debug_mode=self.debug)
@@ -76,15 +76,15 @@ class FrenetPlannerNode(Node):
 
         # --- Subscribers ---
         self.create_subscription(
-            WpntArray, '/global_waypoints_scaled', self.global_trajectory_cb, 10)
+            WpntArray, '/global_waypoints', self.global_trajectory_cb, 10)
         self.create_subscription(
-            Odometry, '/odom', self.odom_cb, 10)
+            Odometry, '/car_state/odom', self.odom_cb, 10)
         self.create_subscription(
             ObstacleArray, '/perception/obstacles', self.obstacle_cb, 10)
 
         # --- Publishers ---
         self.local_trajectory_pub = self.create_publisher(
-            OTWpntArray, '/planner/avoidance/otwpnts', 1)
+            WpntArray, '/planner/waypoints', 1)
         self.local_trajectory_marker_pub = self.create_publisher(
             MarkerArray, 'planner/markers', 1)
         self.obstacle_marker_pub = self.create_publisher(
@@ -102,7 +102,13 @@ class FrenetPlannerNode(Node):
         period = 1.0 / self.max_rate
         self.timer = self.create_timer(period, self.main_loop)
 
-        self.get_logger().info('[Planner] Finished initializing Frenet Planner node.')
+        self.get_logger().info(
+            f'[Planner] Frenet Planner init: pub_only_if_obstacles={self.pub_only_if_obstacles} '
+            f'pub_global_track_advancement={self.pub_global_track_advancement} '
+            f'speed_scale={self.speed_scale} '
+            f'k_obstacles={self.fot_hp.k_obstacles} k_lat_dev={self.fot_hp.k_lat_dev} '
+            f'k_time={self.fot_hp.k_time} k_lon_dev={self.fot_hp.k_lon_dev}'
+        )
 
     # ==================== PARAMETER DECLARATION ====================
 
@@ -242,6 +248,10 @@ class FrenetPlannerNode(Node):
         if not self.has_global_trajectory:
             return
         if self.pub_only_if_obstacles and not self.has_obstacles:
+            self._log_tick += 1
+            if self._log_tick % int(self.max_rate) == 0:
+                self.get_logger().info(
+                    '[FOT] Skipping: pub_only_if_obstacles=True and has_obstacles=False')
             return
 
         start_time = time.perf_counter()
@@ -256,6 +266,8 @@ class FrenetPlannerNode(Node):
                 self._publish_local_trajectory(self.best_frenet_path)
             else:
                 self._publish_local_trajectory(self.best_frenet_path)
+
+        self._log_tick += 1
 
         if self.measure:
             elapsed = time.perf_counter() - start_time
@@ -332,6 +344,7 @@ class FrenetPlannerNode(Node):
         ic.c_speed = max(hp.min_speed, ic.c_speed)
 
         if abs(ic.c_d) > 3.0:
+            self.get_logger().warn(f'[FOT] IC lateral offset |c_d|={abs(ic.c_d):.2f} > 3.0m, skipping')
             return False
 
         # get target speed at end of horizon
@@ -343,14 +356,45 @@ class FrenetPlannerNode(Node):
 
         self.frenet_solver.update_current_position(ic)
 
+        if self._log_tick % int(self.max_rate) == 0:
+            n_obs = len(self.frenet_solver.obstacle_array)
+            obs_str = ''
+            for ob in self.frenet_solver.obstacle_array[:3]:
+                obs_str += f'(s=[{ob.s_start:.1f},{ob.s_end:.1f}] d=[{ob.d_right:.2f},{ob.d_left:.2f}]) '
+            self.get_logger().info(
+                f'[FOT IC] s0={ic.s0:.2f} c_d={ic.c_d:.3f} c_d_d={ic.c_d_d:.3f} '
+                f'c_speed={ic.c_speed:.2f} target_speed={ic.target_speed:.2f} '
+                f'n_obs={n_obs} obs={obs_str}'
+            )
+
         if self.debug:
             self._publish_initial_position()
 
         result = self.frenet_solver.update_optimal_trajectory(self.best_frenet_path)
+
+        # always log solver outcome at 1 Hz
+        if self._log_tick % int(self.max_rate) == 0:
+            stats = getattr(self.frenet_solver, 'last_debug_stats', None)
+            if stats:
+                self.get_logger().info(
+                    f'[FOT SOLVER] total={stats["n_total"]} valid={stats["n_valid"]} '
+                    f'rej_constraints={stats["n_reject_constraints"]} '
+                    f'rej_track={stats["n_reject_track"]} '
+                    f'rej_collision={stats["n_reject_collision"]} '
+                    f'rej_global={stats["n_reject_global"]} '
+                    f'n_obstacles_expanded={stats["n_obstacles"]} '
+                    f'best_avg_d={stats["best_avg_d"]} '
+                    f'best_cf={stats["best_cf"]} '
+                    f'best_c_obs={stats["best_c_obs"]} '
+                    f'best_c_lat={stats["best_c_lat"]}'
+                )
+
         if result is not None:
             self.best_frenet_path = result
             return True
         else:
+            if self._log_tick % int(self.max_rate) == 0:
+                self.get_logger().warn('[FOT] No valid trajectory found this tick')
             return False
 
     # ==================== PUBLISHERS ====================
@@ -361,17 +405,36 @@ class FrenetPlannerNode(Node):
         clearing.action = Marker.DELETEALL
         markers.markers.append(clearing)
 
-        wpts = OTWpntArray()
+        wpts = WpntArray()
         wpts.header.frame_id = 'map'
         wpts.header.stamp = self.get_clock().now().to_msg()
-        wpts.last_switch_time = self.last_switch_time
 
         self.local_trajectory_pub.publish(wpts)
         self.local_trajectory_marker_pub.publish(markers)
 
     def _publish_local_trajectory(self, path: FrenetPath):
+        # Publish gate: only emit waypoints when the path actually deviates from raceline.
+        # Deadband: require |avg_d| > 0.15m so noise near d=0 doesn't produce a spurious
+        # overtake line (and doesn't flip last_ot_side every tick).
+        D_DEADBAND = 0.15  # [m]
+
+        avg_d = sum(path.d) / len(path.d) if path.d else 0.0
+        n_pts = len(path.d)
+        d_min = min(path.d) if path.d else 0.0
+        d_max = max(path.d) if path.d else 0.0
+        if self._log_tick % int(self.max_rate) == 0:
+            self.get_logger().info(
+                f'[FOT PUB] avg_d={avg_d:.3f} d_min={d_min:.3f} d_max={d_max:.3f} '
+                f'n_pts={n_pts} deadband={D_DEADBAND} '
+                f'action={"PUBLISH" if abs(avg_d) >= D_DEADBAND else "EMPTY(deadband)"}'
+            )
+        if abs(avg_d) < D_DEADBAND:
+            # Path hugs raceline — nothing to overtake on, publish empty
+            self._publish_empty_trajectory()
+            return
+
         markers = MarkerArray()
-        wpts = OTWpntArray()
+        wpts = WpntArray()
 
         clearing = Marker()
         clearing.action = Marker.DELETEALL
@@ -421,25 +484,9 @@ class FrenetPlannerNode(Node):
             wpts.wpnts.append(wpt)
             local_advancement += path.ds[i]
 
-        # Populate OTWpntArray specific fields
-        # Determine side (simple heuristic based on average lateral displacement)
-        if len(path.d) > 0:
-            avg_d = sum(path.d) / len(path.d)
-            current_side = "left" if avg_d > 0.0 else "right"
-        else:
-            current_side = "none"
-
-        # Check for side switch for hysteresis logic in state machine
-        if current_side != self.last_ot_side and current_side != "none":
-            self.last_switch_time = self.get_clock().now().to_msg()
-            self.last_ot_side = current_side
-
         wpts.header.frame_id = 'map'
         wpts.header.stamp = self.get_clock().now().to_msg()
-        wpts.last_switch_time = self.last_switch_time
-        wpts.ot_side = current_side
-        wpts.side_switch = (current_side != self.last_ot_side)
-        
+
         self.local_trajectory_pub.publish(wpts)
         self.local_trajectory_marker_pub.publish(markers)
 

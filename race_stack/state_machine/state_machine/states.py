@@ -59,9 +59,36 @@ def Trailing(state_machine: StateMachine) -> List[Wpnt]:
         return [state_machine.glb_wpnts[(s + i)%state_machine.num_glb_wpnts] for i in range(state_machine.params.n_loc_wpnts)]
 
 def Overtaking(state_machine: StateMachine) -> List[Wpnt]:
-    splini_wpts = state_machine.get_splini_wpts()
-    s = int(state_machine.cur_s/state_machine.waypoints_dist + 0.5)
-    return [splini_wpts[(s + i)%state_machine.num_glb_wpnts] for i in range(state_machine.params.n_loc_wpnts)]
+    if state_machine.params.overtake_mode == "frenet":
+        # Frenet wpts are local (start at ego position, indexed from 0).
+        # Return them directly, then pad with global wpts for the remaining horizon.
+        frenet_wpts = state_machine.frenet_wpnts.wpnts if state_machine.frenet_wpnts is not None else []
+        n_loc = state_machine.params.n_loc_wpnts
+        if frenet_wpts:
+            result = list(frenet_wpts[:n_loc])
+            if len(result) < n_loc:
+                # pad tail with global wpts continuing from where frenet ends
+                n_frenet = len(result)
+                s_tail = int(state_machine.cur_s / state_machine.waypoints_dist + 0.5) + n_frenet
+                for i in range(n_loc - n_frenet):
+                    result.append(state_machine.glb_wpnts[(s_tail + i) % state_machine.num_glb_wpnts])
+            return result
+        else:
+            # no frenet wpts yet — fall back to global
+            s = int(state_machine.cur_s / state_machine.waypoints_dist + 0.5)
+            return [state_machine.glb_wpnts[(s + i) % state_machine.num_glb_wpnts] for i in range(n_loc)]
+    elif state_machine.params.overtake_mode == "graph_based":
+        graph_wpts = state_machine.get_graph_based_wpts().wpnts
+        if graph_wpts:
+            return list(graph_wpts)
+        # fallback to global if no graph wpts yet
+        s = int(state_machine.cur_s / state_machine.waypoints_dist + 0.5)
+        return [state_machine.glb_wpnts[(s + i) % state_machine.num_glb_wpnts]
+                for i in range(state_machine.params.n_loc_wpnts)]
+    else:
+        ot_wpts = state_machine.get_splini_wpts()
+        s = int(state_machine.cur_s/state_machine.waypoints_dist + 0.5)
+        return [ot_wpts[(s + i)%state_machine.num_glb_wpnts] for i in range(state_machine.params.n_loc_wpnts)]
 
 def FTGOnly(state_machine: StateMachine) -> List[Wpnt]:
     """No waypoints are generated in this follow the gap only state, all the 

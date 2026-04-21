@@ -4,6 +4,7 @@
     <arg name="planner" default="spliner" /> <!-- frenet / graph_based / spliner / predictive_spliner -->
     <arg name="ctrl_algo" default="MAP"/> <!-- MAP / PP -->
     <arg name="measure" default="False" />
+    <arg name="map_name" default="hangar_1905_v0" />
 
     <!-- launch controller manager -->
     <include file="$(find-pkg-share controller)/launch/controller_launch.xml">
@@ -30,8 +31,13 @@
 
     <!-- 3. Graph-Based Planner -->
     <group if="$(eval '\'$(var planner)\' == \'graph_based\'')">
-        <!-- Assuming graph_based_planner package exists -->
-        <include file="$(find-pkg-share graph_based_planner)/launch/graph_based_planner_launch.xml" />
+        <include file="$(find-pkg-share graph_based_planner)/launch/graph_based_planner_launch.xml">
+            <arg name="map_name"        value="$(var map_name)"/>
+            <arg name="display_graph"   value="True"/>
+            <arg name="follow_mode"     value="0"/>
+            <arg name="racecar_version" value="$(var racecar_version)"/>
+            <arg name="measure"         value="$(var measure)"/>
+        </include>
     </group>
 
     <!-- 4. Frenet-Based Planner -->

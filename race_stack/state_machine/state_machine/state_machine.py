@@ -100,6 +100,19 @@ class StateMachine(Node):
             self.avoidance_wpnts = None
             self.create_subscription(OTWpntArray, '/planner/avoidance/otwpnts', self.avoidance_cb, 10)
 
+            # Frenet planner waypoints (separate channel, WpntArray on /planner/waypoints)
+            self.frenet_wpnts = WpntArray()
+            if self.params.overtake_mode == "frenet":
+                self.create_subscription(WpntArray, '/planner/waypoints', self.frenet_wpnts_cb, 10)
+
+            # Graph-based planner waypoints (flattened Float32MultiArray on /planner/graph_based_wpnts)
+            self.graph_based_wpts = None         # np.ndarray, shape (N, 7): s, x, y, psi, kappa, vx, ax
+            self.graph_based_action = None       # str: 'straight'/'left'/'right'/'follow'
+            self.gb_wpnts_arr = None             # cached np view of glb_wpnts for d_left/d_right lookup
+            if self.params.overtake_mode == "graph_based":
+                self.create_subscription(Float32MultiArray, '/planner/graph_based_wpnts',
+                                         self.graph_based_cb, 10)
+
             # Perception obstacles (from /perception/obstacles)
             self.obstacles_perception = []
             self.create_subscription(ObstacleArray, "/perception/obstacles", self.obstacles_cb, 10)
@@ -175,6 +188,12 @@ class StateMachine(Node):
         # Get spacing between wpnts for rough approximations
         self.wpnt_dist = data.wpnts[1].s_m - data.wpnts[0].s_m
         self.gb_max_idx = data.wpnts[-1].id
+        if self.params.overtake_mode == "graph_based":
+            self.gb_wpnts_arr = np.array([
+                [w.s_m, w.d_m, w.x_m, w.y_m, w.d_right, w.d_left,
+                 w.psi_rad, w.kappa_radpm, w.vx_mps, w.ax_mps2]
+                for w in self.glb_wpnts
+            ])
 
     def glb_wpnts_cb(self, data: WpntArray):
         self.max_speed = max([wpnt.vx_mps for wpnt in data.wpnts])
@@ -183,6 +202,19 @@ class StateMachine(Node):
         self.cur_s = msg.pose.pose.position.x
         self.cur_d = msg.pose.pose.position.y
         self.cur_vs = msg.twist.twist.linear.x  # [Bug #2] Extract ego velocity
+
+    def frenet_wpnts_cb(self, data: WpntArray):
+        """Frenet planner waypoints — separate channel from spliner."""
+        self.frenet_wpnts = data
+
+    def graph_based_cb(self, data):
+        """Graph-based planner waypoints — flattened Float32MultiArray."""
+        arr = np.asarray(data.data)
+        if len(arr) == 0 or len(data.layout.dim) < 2:
+            self.graph_based_wpts = None
+            return
+        self.graph_based_wpts = arr.reshape(data.layout.dim[0].size, data.layout.dim[1].size)
+        self.graph_based_action = data.layout.dim[0].label
 
     def avoidance_cb(self, data: OTWpntArray):
         """Subscribes to avoidance waypoints (spliner or predictive_spliner)"""
@@ -262,24 +294,45 @@ class StateMachine(Node):
 
     @property
     def _check_ofree(self) -> bool:
-        """[Bug #1] Restored ROS1 behavior: for predictive_spliner, check STATIC obstacles
-        against the avoidance trajectory. ROS1 uses the same code path for both spliner and
-        predictive_spliner, but filters with obs.is_static for predictive_spliner."""
+        """Check if the overtaking line is free of obstacles.
+        Frenet: reads self.frenet_wpnts (WpntArray from /planner/waypoints).
+        Spliner/PS: reads self.last_valid_avoidance_wpnts (OTWpntArray from /planner/avoidance/otwpnts)."""
         o_free = True
 
-        if self.params.overtake_mode in ("spliner", "predictive_spliner", "frenet"):
+        if self.params.overtake_mode == "frenet":
+            # Frenet wpts use local arc-length (s_m starts at 0 = ego position).
+            # Convert obs global s → local s by subtracting cur_s.
+            frenet_wpts = self.frenet_wpnts.wpnts if self.frenet_wpnts is not None else []
+            if frenet_wpts:
+                horizon = self.params.overtaking_horizon_m
+                for obs in self.obstacles:
+                    obs_s_global = obs.s_center
+                    dist_to_obj = (obs_s_global - self.cur_s) % self.track_length
+                    if dist_to_obj < horizon:
+                        obs_s_local = dist_to_obj  # frenet s_m is distance from ego
+                        obs_d = obs.d_center
+                        avoid_wpnt_idx = np.argmin(
+                            np.array([abs(w.s_m - obs_s_local) for w in frenet_wpts])
+                        )
+                        ot_d = frenet_wpts[avoid_wpnt_idx].d_m
+                        ot_obs_dist = ot_d - obs_d
+                        if abs(ot_obs_dist) < self.params.lateral_width_ot_m:
+                            o_free = False
+                            self.get_logger().info(f"O_FREE False (frenet), obs dist to ot lane: {ot_obs_dist:.2f} m")
+                            break
+            # No frenet waypoints yet → path is free (don't block overtake)
+            return o_free
+
+        elif self.params.overtake_mode in ("spliner", "predictive_spliner"):
             if self.last_valid_avoidance_wpnts is not None:
-                horizon = self.params.overtaking_horizon_m  # Horizon in front of cur_s [m]
+                horizon = self.params.overtaking_horizon_m
 
                 for obs in self.obstacles:
-                    # For spliner and frenet: check all obstacles
-                    if self.params.overtake_mode in ("spliner", "frenet") or (self.params.overtake_mode == "predictive_spliner" and obs.is_static == True):
+                    if self.params.overtake_mode == "spliner" or obs.is_static:
                         obs_s = obs.s_center
-                        # Wrapping madness to check if infront
                         dist_to_obj = (obs_s - self.cur_s) % self.track_length
                         if dist_to_obj < horizon and len(self.last_valid_avoidance_wpnts):
                             obs_d = obs.d_center
-                            # Get d wrt to mincurv from the overtaking line
                             avoid_wpnt_idx = np.argmin(
                                 np.array([abs(avoid_s.s_m - obs_s) for avoid_s in self.last_valid_avoidance_wpnts])
                             )
@@ -289,12 +342,13 @@ class StateMachine(Node):
                                 o_free = False
                                 self.get_logger().info(f"O_FREE False, obs dist to ot lane: {ot_obs_dist} m")
                                 break
-            else:
-                o_free = True
             return o_free
+        elif self.params.overtake_mode == "graph_based":
+            # Graph-based planner owns action selection. If it has published a valid path, consider o_free True.
+            return self.graph_based_wpts is not None and len(self.graph_based_wpts) > 0
         else:
             self.get_logger().error(f"Unknown overtake planner: {self.params.overtake_mode}")
-            return True  # Fallback to True to avoid freezing the system
+            return True
 
     @property
     def _check_gbfree(self) -> bool:
@@ -347,6 +401,12 @@ class StateMachine(Node):
             # If the splinis are valid update the last valid ones
             self.last_valid_avoidance_wpnts = self.avoidance_wpnts.wpnts.copy()
             return True
+
+    @property
+    def _check_availability_graph_wpts(self) -> bool:
+        if self.graph_based_wpts is None:
+            return False
+        return len(self.graph_based_wpts) > 0
 
     @property
     def _check_ftg(self) -> bool:
@@ -479,6 +539,78 @@ class StateMachine(Node):
         else:
             self.get_logger().warn(f"No valid avoidance waypoints, passing global waypoints")
             pass
+
+        return splini_glob
+
+    def get_graph_based_wpts(self):
+        """Port of ROS1 state_machine_node.py get_graph_based_wpts (lines 791-816).
+        Converts the raw Float32MultiArray rows into a WpntArray, filling d_left/d_right
+        from the cached global waypoints array.
+        """
+        from f110_msgs.msg import WpntArray, Wpnt
+        arr = WpntArray()
+        if self.graph_based_wpts is None or self.gb_wpnts_arr is None:
+            return arr
+        for i, coord in enumerate(self.graph_based_wpts[:self.params.n_loc_wpnts, :]):
+            w = Wpnt()
+            w.s_m         = float((coord[0] + self.cur_s) % self.track_length)
+            w.x_m         = float(coord[1])
+            w.y_m         = float(coord[2])
+            w.d_m         = 0.0
+            w.psi_rad     = float(coord[3])
+            w.kappa_radpm = float(coord[4])
+            w.vx_mps      = float(coord[5])
+            w.ax_mps2     = float(coord[6])
+            w.id          = i
+            idx = int(np.abs(self.gb_wpnts_arr[:, 0] - w.s_m).argmin())
+            w.d_left  = float(self.gb_wpnts_arr[idx, 5] - w.d_m)
+            w.d_right = float(self.gb_wpnts_arr[idx, 4] + w.d_m)
+            arr.wpnts.append(w)
+        return arr
+
+    def get_frenet_wpts(self) -> list:
+        """Fuse frenet planner waypoints into the global array for the OVERTAKE state.
+        Frenet publishes with pub_global_track_advancement=false, so wpt.s_m is local arc-length
+        starting from 0. We anchor by adding ego's cur_s so indices map to the correct global slots.
+        Falls back to global if no frenet waypoints are available yet.
+        """
+        frenet_wpts = self.frenet_wpnts.wpnts if self.frenet_wpnts is not None else []
+        splini_glob = self.glb_wpnts.copy()
+
+        if not frenet_wpts:
+            self.get_logger().warn("No frenet waypoints available, passing global waypoints", throttle_duration_sec=1.0)
+            return splini_glob
+
+        n_fwpts = len(frenet_wpts)
+        avg_d = sum(w.d_m for w in frenet_wpts) / n_fwpts
+        d_min = min(w.d_m for w in frenet_wpts)
+        d_max = max(w.d_m for w in frenet_wpts)
+
+        # Anchor frenet local s to ego's current track position
+        # wpt.s_m is local arc-length from 0; add cur_s to get global s
+        ego_s = self.cur_s
+        s_start_global = (ego_s + frenet_wpts[0].s_m) % self.track_length
+        s_end_global   = (ego_s + frenet_wpts[-1].s_m) % self.track_length
+
+        self.get_logger().info(
+            f'[SM FRENET_WPTS] n={n_fwpts} local_s=[{frenet_wpts[0].s_m:.1f},{frenet_wpts[-1].s_m:.1f}] '
+            f'global_s=[{s_start_global:.1f},{s_end_global:.1f}] ego_s={ego_s:.1f} '
+            f'avg_d={avg_d:.3f} d_min={d_min:.3f} d_max={d_max:.3f}',
+            throttle_duration_sec=1.0
+        )
+
+        # Build global index list anchored at ego_s
+        n_wpts = len(frenet_wpts)
+        start_idx = int(s_start_global / self.waypoints_dist + 0.5)
+        splini_idxs = [
+            int((start_idx + i) % len(splini_glob))
+            for i in range(n_wpts)
+        ]
+
+        with self.lock:
+            for i, s in enumerate(splini_idxs):
+                if 0 <= s < len(splini_glob):
+                    splini_glob[s] = frenet_wpts[i]
 
         return splini_glob
 
@@ -693,6 +825,20 @@ class StateMachine(Node):
                 f"HUD: Ego S: {self.cur_s:.1f}m | Opp S: {closest_obs.s_center:.1f}m | Gap: {gap:.1f}m | State: {self.state.value} | Planner: {self.params.overtake_mode}",
                 throttle_duration_sec=1.0
             )
+
+        # OVERTAKE diagnostics: log what d-values are being sent to controller
+        if self.state == StateType.OVERTAKE and self.params.overtake_mode == "frenet":
+            wpts = self.local_waypoints.wpnts
+            frenet_n = len(self.frenet_wpnts.wpnts) if self.frenet_wpnts is not None else 0
+            if wpts:
+                d_vals = [w.d_m for w in wpts]
+                avg_d = sum(d_vals) / len(d_vals)
+                self.get_logger().info(
+                    f'[SM OVERTAKE] sending {len(wpts)} wpts (frenet_n={frenet_n}) '
+                    f'avg_d={avg_d:.3f} d_min={min(d_vals):.3f} d_max={max(d_vals):.3f} '
+                    f'd_first={d_vals[0]:.3f} d_last={d_vals[-1]:.3f}',
+                    throttle_duration_sec=1.0
+                )
 
 
 # defined as entry point in setup.py:

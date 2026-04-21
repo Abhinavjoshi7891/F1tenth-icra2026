@@ -16,8 +16,8 @@ frenet_planner:
     d_t_s: 0.25
     d_t_s_ot: 2.0
     n_s_sample: 12.0
-    track_clearance: 0.3
-    obstacle_clearance: 0.50
+    track_clearance: 0.2
+    obstacle_clearance: 0.35
 
     # Cost weights
     k_lat_dev: 0.6
@@ -39,8 +39,8 @@ frenet_planner:
     replanning_distance: 1.5
     ic_avoid_obstacles: false
     pub_only_if_obstacles: false
-    pub_global_track_advancement: true
+    pub_global_track_advancement: false
     debug: false
     measure: false
     max_frequency: 20.0
-    frenet_speed_scaling: 0.9
+    frenet_speed_scaling: 0.85

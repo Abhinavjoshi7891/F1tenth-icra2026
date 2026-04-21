@@ -42,6 +42,16 @@ def head_to_head_transition(state_machine: StateMachine)->str:
         trail_fn = PSTrailingTransition
         ot_fn   = PSOvertakingTransition
         ftg_fn  = PSFTGOnlyTransition
+    elif mode == "frenet":
+        gb_fn    = FrenetGlobalTrackingTransition
+        trail_fn = FrenetTrailingTransition
+        ot_fn    = FrenetOvertakingTransition
+        ftg_fn   = FrenetFTGOnlyTransition
+    elif mode == "graph_based":
+        gb_fn    = GBGlobalTrackingTransition
+        trail_fn = GBTrailingTransition
+        ot_fn    = GBOvertakingTransition
+        ftg_fn   = GBFTGOnlyTransition
     else:  # default: spliner
         gb_fn   = SpliniGlobalTrackingTransition
         trail_fn = SpliniTrailingTransition
@@ -241,3 +251,124 @@ def PSFTGOnlyTransition(state_machine: StateMachine) -> StateType:
             return StateType.GB_TRACK
         else:
             return StateType.FTGONLY
+
+
+######################
+# FRENET TRANSITIONS #
+######################
+def FrenetGlobalTrackingTransition(state_machine: StateMachine) -> StateType:
+    """Transitions for being in `StateType.GB_TRACK` with frenet planner.
+    Port of ROS1 FrenetGlobalTrackingTransition."""
+    if state_machine._check_only_ftg_zone:
+        return StateType.FTGONLY
+    if state_machine._check_gbfree:
+        return StateType.GB_TRACK
+    else:
+        return StateType.TRAILING
+
+
+def FrenetTrailingTransition(state_machine: StateMachine) -> StateType:
+    """Transitions for being in `StateType.TRAILING` with frenet planner.
+    ROS1 frenet does NOT gate on ot_sector — frenet handles avoidance anywhere on track.
+    Does NOT use _check_availability_splini_wpts — frenet has its own waypoint channel."""
+    if state_machine._check_only_ftg_zone:
+        return StateType.FTGONLY
+    if state_machine._check_ftg:
+        return StateType.FTGONLY
+
+    gb_free     = state_machine._check_gbfree
+    o_free      = state_machine._check_ofree
+    close_to_rl = state_machine._check_close_to_raceline
+    frenet_wpts = state_machine.frenet_wpnts.wpnts if state_machine.frenet_wpnts is not None else []
+
+    state_machine.get_logger().info(
+        f"FRENET_TRAIL: gb={gb_free} o_free={o_free} "
+        f"close={close_to_rl} frenet_wpts={len(frenet_wpts)}",
+        throttle_duration_sec=1.0
+    )
+
+    if gb_free and close_to_rl:
+        return StateType.GB_TRACK
+    elif not gb_free and o_free:
+        return StateType.OVERTAKE
+    else:
+        return StateType.TRAILING
+
+
+def FrenetOvertakingTransition(state_machine: StateMachine) -> StateType:
+    """Transitions for being in `StateType.OVERTAKE` with frenet planner.
+    ROS1 frenet does NOT use ot_sector — exits OVERTAKE only when gb is free and close to raceline."""
+    if state_machine._check_only_ftg_zone:
+        return StateType.FTGONLY
+
+    gb_free     = state_machine._check_gbfree
+    o_free      = state_machine._check_ofree
+    close_to_rl = state_machine._check_close_to_raceline
+    frenet_wpts = state_machine.frenet_wpnts.wpnts if state_machine.frenet_wpnts is not None else []
+
+    state_machine.get_logger().info(
+        f"FRENET_OT: gb={gb_free} o_free={o_free} "
+        f"close={close_to_rl} frenet_wpts={len(frenet_wpts)}",
+        throttle_duration_sec=1.0
+    )
+
+    if not o_free:
+        return StateType.TRAILING
+    elif gb_free and close_to_rl:
+        return StateType.GB_TRACK
+    else:
+        return StateType.OVERTAKE
+
+
+def FrenetFTGOnlyTransition(state_machine: StateMachine) -> StateType:
+    """Transitions for being in `StateType.FTGONLY` with frenet planner."""
+    if state_machine._check_only_ftg_zone:
+        return StateType.FTGONLY
+    if state_machine._check_close_to_raceline:
+        return StateType.GB_TRACK
+    return StateType.FTGONLY
+
+
+###########################
+# GRAPH-BASED TRANSITIONS #
+###########################
+def GBGlobalTrackingTransition(state_machine: StateMachine) -> StateType:
+    """Transitions for being in `StateType.GB_TRACK` with graph_based planner."""
+    if state_machine._check_only_ftg_zone:
+        return StateType.FTGONLY
+    return StateType.GB_TRACK if state_machine._check_gbfree else StateType.TRAILING
+
+
+def GBTrailingTransition(state_machine: StateMachine) -> StateType:
+    """Transitions for being in `StateType.TRAILING` with graph_based planner."""
+    if state_machine._check_only_ftg_zone:
+        return StateType.FTGONLY
+    gb_free   = state_machine._check_gbfree
+    ot_sector = state_machine._check_ot_sector
+    graph_ok  = state_machine._check_availability_graph_wpts
+    if not gb_free and not ot_sector:
+        return StateType.TRAILING
+    elif gb_free and state_machine._check_close_to_raceline:
+        return StateType.GB_TRACK
+    elif not gb_free and ot_sector and graph_ok:
+        return StateType.OVERTAKE
+    return StateType.TRAILING
+
+
+def GBOvertakingTransition(state_machine: StateMachine) -> StateType:
+    """Transitions for being in `StateType.OVERTAKE` with graph_based planner."""
+    if state_machine._check_only_ftg_zone:
+        return StateType.FTGONLY
+    ot_sector      = state_machine._check_ot_sector
+    graph_ok       = state_machine._check_availability_graph_wpts
+    enemy_in_front = state_machine._check_enemy_in_front
+    if ot_sector and graph_ok and enemy_in_front:
+        return StateType.OVERTAKE
+    return StateType.GB_TRACK
+
+
+def GBFTGOnlyTransition(state_machine: StateMachine) -> StateType:
+    """Transitions for being in `StateType.FTGONLY` with graph_based planner."""
+    if state_machine._check_only_ftg_zone:
+        return StateType.FTGONLY
+    return StateType.GB_TRACK if state_machine._check_close_to_raceline else StateType.FTGONLY
