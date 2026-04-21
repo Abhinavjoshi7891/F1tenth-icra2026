@@ -23,3 +23,41 @@ perception:
       process_var_vd: 8 # the variance of the process velocity noise in the d direction
       max_dist: 0.5 # max distance for association
       var_pub: 1 # obstacles with bigger variance are not published
+
+    norfair:
+      visualize: true
+      rate: 40.0
+      norfair_setup:
+        distance_function: euclidean
+        distance_threshold: 0.9
+        hit_counter_max: 15
+        initialization_delay: 9
+        pointwise_hit_counter_max: 4
+        past_detections_length: 4
+        reid_distance_threshold: 0.1
+        reid_hit_counter_max: 1000
+        kalman_filter:
+          R: 0.074
+          Q: 0.00017
+          pos_variance: 10.0
+          pos_vel_covariance: 0.0
+          vel_variance: 1.0
+
+    centerspeed:
+      measuring: false
+      tracking_enabled: false
+      using_raceline: true
+      visualize: false
+      rate: 40.0
+      pixel_size: 0.12
+      image_size: 64
+      feature_size: 3
+      num_opponents: 1
+      boundary_inflation: 0.3
+      using_coral: false
+      dense: true
+      quantize: false
+      publish_cartesian: false
+      publish_foxglove: false
+      detection_threshold: 0.2
+      max_viewing_distance: 9.0

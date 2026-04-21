@@ -5,6 +5,7 @@
     <arg name="ctrl_algo" default="MAP"/> <!-- MAP / PP -->
     <arg name="measure" default="False" />
     <arg name="map_name" default="hangar_1905_v0" />
+    <arg name="perception_algorithm" default="ABD" /> <!-- ABD / Norfair -->
 
     <!-- launch controller manager -->
     <include file="$(find-pkg-share controller)/launch/controller_launch.xml">
@@ -48,6 +49,7 @@
 
     <include file="$(find-pkg-share perception)/launch/perception_launch.xml">
         <arg name="param_file" value="$(find-pkg-share stack_master)/config/opponent_tracker_params.yaml" />
+        <arg name="perception_algorithm" value="$(var perception_algorithm)" />
     </include> 
 
     
