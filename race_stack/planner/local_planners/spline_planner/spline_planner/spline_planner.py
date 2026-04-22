@@ -96,18 +96,17 @@ class ObstacleSpliner(Node):
         self.pre_apex_0 = -4.0
         self.pre_apex_1 = -3.0
         self.pre_apex_2 = -1.5
-        # Post-apex: 8m max — 14m was wrapping past S=23m into tight S=9.3m section, aborting every evasion
-        self.post_apex_0 = 2.0
-        self.post_apex_1 = 3.0
-        self.post_apex_2 = 4.0
+        # Post-apex: ROS1 calibrated values for smoother return to raceline
+        self.post_apex_0 = 4.5
+        self.post_apex_1 = 5.0
+        self.post_apex_2 = 5.5
         # Using 0.40m offset: clears tight walls at S=9.3m while still passing safely
-        self.evasion_dist = 0.65
+        self.evasion_dist = 0.40 # Widened for 0.15m car half-width + safety margin
         # ROS1 cfg default is 1.0m. The 0.3m default was silently dropping obstacles not perfectly on the raceline.
-        self.obs_traj_tresh = 0.3
-        # 0.02m clearance — was 0.05m but that was aborting post-apex returns at S=3.4m
-        # where wall=0.53m, path=0.50m → 0.03m real clearance was being rejected
-        # On the return leg the car moves TOWARD center so 0.02m is safe here
-        self.spline_bound_mindist = 0.2
+        self.obs_traj_tresh = 1.0 # changed from 0.3
+        # 0.10m clearance — tighter than ROS1 (0.2m) but looser than previous (0.05m)
+        # At 0.05m we were aborting when d=0.32m and wall=0.37m (0.37-0.32=0.05, exact limit)
+        self.spline_bound_mindist = 0.10 # changed from 0.05
         self.fixed_pred_time = 0.15
         self.kd_obs_pred = 1.0
         
@@ -290,7 +289,7 @@ class ObstacleSpliner(Node):
         return FrenetConverter(np.array(waypoints_x), np.array(waypoints_y), np.array(waypoints_psi))
 
     #################### UTILS FUNCTIONS####################
-    def _predict_obs_movement(self, obs: Obstacle, mode: str = "adaptive") -> Obstacle:
+    def _predict_obs_movement(self, obs: Obstacle, mode: str = "constant") -> Obstacle:
         """
         Predicts the movement of an obstacle based on the current state and mode.
 
@@ -536,17 +535,30 @@ class ObstacleSpliner(Node):
                 x=gb_wpnts[gb_idxs[0]].x_m, y=gb_wpnts[gb_idxs[0]].y_m, opponent=False)
             self.closest_obs_pub.publish(mrk)
 
-            # Choose wpnts from global trajectory for splining with velocity
-            evasion_points = []
+            # Cap post-apex distances so the spline does not wrap past track end.
+            # On short tracks an obstacle near the end (e.g. S=17.7m, track=22.5m) would
+            # push post-apex control points past S_max, wrapping them into a completely
+            # different—often tight—section of the track and causing instant wall aborts.
+            track_remaining = (self.gb_max_s - s_apex) % self.gb_max_s
+            # Keep 0.5m of headroom inside the track so the final control point is firmly
+            # before the wrap boundary; also preserve the minimum 1m between post_apex_0
+            # and the apex so the spline has room to recover.
+            post_max = max(1.0, track_remaining - 0.5)
+            capped_post_apex_0 = min(self.post_apex_0, post_max * 0.60)
+            capped_post_apex_1 = min(self.post_apex_1, post_max * 0.80)
+            capped_post_apex_2 = min(self.post_apex_2, post_max)
+
             spline_params = [
                 self.pre_apex_0,
                 self.pre_apex_1,
                 self.pre_apex_2,
                 0,
-                self.post_apex_0,
-                self.post_apex_1,
-                self.post_apex_2,
+                capped_post_apex_0,
+                capped_post_apex_1,
+                capped_post_apex_2,
             ]
+            
+            evasion_points = []
             for i, dst in enumerate(spline_params):
                 # scale dst linearly between 1 and 1.5 depending on the speed normalised to the max speed
                 dst = dst * np.clip(1.0 + self.cur_vs / self.gb_vmax, 1, 1.5)

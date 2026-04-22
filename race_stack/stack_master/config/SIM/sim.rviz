@@ -9,10 +9,8 @@ Panels:
         - /Perception1/Detection1
         - /Perception1/Detection1/Breakpoints1/Topic1
         - /Perception1/Tracking1
-        - /Marker1
-        - /Marker2
-        - /MarkerArray1
-        - /MarkerArray2
+        - /MarkerArray6
+        - /MarkerArray6/Status1
       Splitter Ratio: 0.5
     Tree Height: 529
   - Class: rviz_common/Selection
@@ -520,13 +518,37 @@ Visualization Manager:
       Enabled: true
       Name: MarkerArray
       Namespaces:
-        "": true
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /planner/graph_based/candidate_trajs
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: MarkerArray
+      Namespaces:
+        {}
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /perception/static_dynamic_marker_pub
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: MarkerArray
+      Namespaces:
+        "": true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /perception/random_obstacle_markers
       Value: true
   Enabled: true
   Global Options:

@@ -140,7 +140,7 @@ class StateMachineParams:
             floating_point_range=[FloatingPointRange(
                 from_value=0.0,
                 to_value=5.0,
-                step=0.1)]
+                step=0.01)]
         )
         node.set_descriptor("lateral_width_gb_m", descriptor=descriptor)
         self.lateral_width_gb_m: float = node.get_parameter("lateral_width_gb_m").value
@@ -176,7 +176,7 @@ class StateMachineParams:
             floating_point_range=[FloatingPointRange(
                 from_value=0.0,
                 to_value=5.0,
-                step=0.1)]
+                step=0.01)]
         )
         node.set_descriptor("lateral_width_ot_m", descriptor=descriptor)
         self.lateral_width_ot_m: float = node.get_parameter("lateral_width_ot_m").value
@@ -188,7 +188,7 @@ class StateMachineParams:
             floating_point_range=[FloatingPointRange(
                 from_value=0.0,
                 to_value=2.0,
-                step=0.1)]
+                step=0.01)]
         )
         node.set_descriptor("splini_hyst_timer_sec", descriptor=descriptor)
         self.splini_hyst_timer_sec: float = node.get_parameter("splini_hyst_timer_sec").value

@@ -7,11 +7,11 @@ ot_interpolator:
     Overtaking_sector0:
       start: 0      # S=0-4.5m — tight right wall (0.35m), overtaking DISABLED
       end: 107
-      ot_flag: false
+      ot_flag: true
     Overtaking_sector1:
       start: 108    # S=4.5-10.5m — tight chicane (left wall 0.37m), overtaking DISABLED
       end: 250
-      ot_flag: false
+      ot_flag: true
     Overtaking_sector2:
       start: 251    # S=10.5-18m — WIDE zone, overtaking ENABLED (both walls > 0.65m)
       end: 429
@@ -19,4 +19,4 @@ ot_interpolator:
     Overtaking_sector3:
       start: 430    # S=18-23m — moderate width, overtaking DISABLED (post-apex hits S=3-4m tight zone)
       end: 547
-      ot_flag: false
+      ot_flag: true

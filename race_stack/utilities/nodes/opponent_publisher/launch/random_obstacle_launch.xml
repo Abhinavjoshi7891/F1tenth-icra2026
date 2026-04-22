@@ -1,0 +1,15 @@
+<launch>
+    <arg name="n_obstacles" default="5" />
+    <arg name="publish_at_lookahead" default="False" />
+    <arg name="lookahead_distance" default="8.0" />
+    <arg name="rnd_seed" default="42" />
+
+    <node pkg="opponent_publisher" name="random_obstacle_publisher" exec="random_obstacle_publisher" output="screen">
+        <param name="n_obstacles" value="$(var n_obstacles)" />
+        <param name="publish_at_lookahead" value="$(var publish_at_lookahead)" />
+        <param name="lookahead_distance" value="$(var lookahead_distance)" />
+        <param name="rnd_seed" value="$(var rnd_seed)" />
+        <param name="obstacle_width" value="0.25" />
+        <param name="obstacle_length" value="0.25" />
+    </node>
+</launch>

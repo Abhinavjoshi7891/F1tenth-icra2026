@@ -324,24 +324,46 @@ class StateMachine(Node):
             return o_free
 
         elif self.params.overtake_mode in ("spliner", "predictive_spliner"):
-            if self.last_valid_avoidance_wpnts is not None:
+            if self.last_valid_avoidance_wpnts is not None and len(self.last_valid_avoidance_wpnts):
                 horizon = self.params.overtaking_horizon_m
 
+                # Filter to only obstacles within horizon (and static-only for predictive_spliner)
+                candidates = []
                 for obs in self.obstacles:
                     if self.params.overtake_mode == "spliner" or obs.is_static:
-                        obs_s = obs.s_center
-                        dist_to_obj = (obs_s - self.cur_s) % self.track_length
-                        if dist_to_obj < horizon and len(self.last_valid_avoidance_wpnts):
-                            obs_d = obs.d_center
-                            avoid_wpnt_idx = np.argmin(
-                                np.array([abs(avoid_s.s_m - obs_s) for avoid_s in self.last_valid_avoidance_wpnts])
+                        dist_to_obj = (obs.s_center - self.cur_s) % self.track_length
+                        if dist_to_obj < horizon:
+                            candidates.append((dist_to_obj, obs))
+
+                # Only evaluate the CLOSEST obstacle — the one actively being evaded.
+                # Checking all obstacles causes false O_FREE=False when a second obstacle
+                # sits on the raceline in the evasion spline's post-apex return section (d→0),
+                # producing ot_obs_dist≈0 which is spuriously below lateral_width_ot_m.
+                if candidates:
+                    candidates.sort(key=lambda x: x[0])
+                    _, closest_obs = candidates[0]
+                    obs_s = closest_obs.s_center
+                    obs_d = closest_obs.d_center
+                    avoid_wpnt_idx = np.argmin(
+                        np.array([abs(avoid_s.s_m - obs_s) for avoid_s in self.last_valid_avoidance_wpnts])
+                    )
+                    
+                    # Longitudinal check: Ensure the waypoint found is actually near the obstacle in S.
+                    # If it's too far (e.g. > 1.0m), it's a stale path or outside the spline window.
+                    s_diff = abs(self.last_valid_avoidance_wpnts[avoid_wpnt_idx].s_m - obs_s)
+                    
+                    if s_diff < 1.0:
+                        ot_d = self.last_valid_avoidance_wpnts[avoid_wpnt_idx].d_m
+                        ot_obs_dist = ot_d - obs_d
+                        if abs(ot_obs_dist) < self.params.lateral_width_ot_m:
+                            o_free = False
+                            self.get_logger().info(
+                                f"O_FREE False, obs dist to ot lane: {ot_obs_dist:.4f} m "
+                                f"(closest obs @ s={obs_s:.1f}m d={obs_d:.2f}m | path_d={ot_d:.2f}m)"
                             )
-                            ot_d = self.last_valid_avoidance_wpnts[avoid_wpnt_idx].d_m
-                            ot_obs_dist = ot_d - obs_d
-                            if abs(ot_obs_dist) < self.params.lateral_width_ot_m:
-                                o_free = False
-                                self.get_logger().info(f"O_FREE False, obs dist to ot lane: {ot_obs_dist} m")
-                                break
+                    else:
+                        # Path doesn't cover this obstacle yet; assume global distance for now
+                        self.get_logger().debug(f"O_FREE: Nearest waypoint is {s_diff:.1f}m away from obstacle at S={obs_s:.1f}. Ignoring stale path.")
             return o_free
         elif self.params.overtake_mode == "graph_based":
             # Graph-based planner owns action selection. If it has published a valid path, consider o_free True.
@@ -366,7 +388,7 @@ class StateMachine(Node):
                 obs_d = obs.d_center
                 if abs(obs_d) < self.params.lateral_width_gb_m:
                     gb_free = False
-                    self.get_logger().info(f"GB_FREE False, obs dist to gb lane: {obs_d} m")
+                    self.get_logger().info(f"GB_FREE False, obs dist to gb lane: {obs_d} m", throttle_duration_sec=1.0)
                     break
 
         return gb_free
