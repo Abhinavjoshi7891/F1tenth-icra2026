@@ -102,6 +102,8 @@ class ObstacleSpliner(Node):
         self.post_apex_2 = 4.0
         # Using 0.40m offset: clears tight walls at S=9.3m while still passing safely
         self.evasion_dist = 0.40 # Widened for 0.15m car half-width + safety margin
+        # Floor for squeeze: car half-width (0.15m) + obstacle uncertainty + margin
+        self.evasion_dist_min = 0.20
         # ROS1 cfg default is 1.0m. The 0.3m default was silently dropping obstacles not perfectly on the raceline.
         self.obs_traj_tresh = 1.0 # changed from 0.3
         # 0.07m clearance — lowered from 0.10m because some track sections narrow 
@@ -122,6 +124,7 @@ class ObstacleSpliner(Node):
             {'name': 'post_apex_1', 'default': self.post_apex_1, 'descriptor': pd},
             {'name': 'post_apex_2', 'default': self.post_apex_2, 'descriptor': pd},
             {'name': 'evasion_dist', 'default': self.evasion_dist, 'descriptor': pd},
+            {'name': 'evasion_dist_min', 'default': self.evasion_dist_min, 'descriptor': pd},
             {'name': 'obs_traj_tresh', 'default': self.obs_traj_tresh, 'descriptor': pd},
             {'name': 'spline_bound_mindist', 'default': self.spline_bound_mindist, 'descriptor': pd},
             {'name': 'fixed_pred_time', 'default': self.fixed_pred_time, 'descriptor': pd},
@@ -172,6 +175,8 @@ class ObstacleSpliner(Node):
                 self.post_apex_2 = param.value
             elif param_name == 'evasion_dist':
                 self.evasion_dist = param.value
+            elif param_name == 'evasion_dist_min':
+                self.evasion_dist_min = param.value
             elif param_name == 'obs_traj_tresh':
                 self.obs_traj_tresh = param.value
             elif param_name == 'spline_bound_mindist':
@@ -423,6 +428,46 @@ class ObstacleSpliner(Node):
                     d_apex_right = 0
                 return "right", d_apex_right
 
+    def _compute_corridor_safe_evasion_dist(self, side: str, s_apex: float, gb_wpnts, wpnt_dist: float, obstacle: Obstacle) -> float:
+        """
+        Returns the max evasion_dist that keeps the spline within wall bounds across the
+        entire corridor (pre-apex approach + post-apex return).
+
+        Special case: if nominal d_apex is clamped to 0 (obstacle is off-side of raceline),
+        the path stays on the raceline and is trivially safe — return nominal evasion_dist.
+
+        Conservative: treats peak lateral as constant across the full corridor scan.
+        Caller must check against evasion_dist_min floor.
+        """
+        # If the path would stay on the raceline (clamped apex), no wall constraint applies
+        if self._compute_d_apex(side, self.evasion_dist, obstacle) == 0.0:
+            return self.evasion_dist
+
+        # Scan the full spline corridor: pre-apex approach + post-apex return.
+        # Use worst-case speed scale (1.5) so the scan always covers the full spline extent.
+        pre_apex_reach = self.pre_apex_2 * 1.5  # pre_apex_2 is negative, e.g. -2.25m
+        s_scan = np.arange(s_apex + pre_apex_reach, s_apex + self.post_apex_2 + 0.1, 0.1)
+        min_wall_dist = float('inf')
+        for s in s_scan:
+            idx = int((s % self.gb_max_s) / wpnt_dist) % self.gb_max_idx
+            wall_dist = gb_wpnts[idx].d_left if side == "left" else gb_wpnts[idx].d_right
+            min_wall_dist = min(min_wall_dist, abs(wall_dist))
+        max_safe_lateral = min_wall_dist - self.spline_bound_mindist
+        obs_edge = abs(obstacle.d_left) if side == "left" else abs(obstacle.d_right)
+        return max_safe_lateral - obs_edge
+
+    def _compute_d_apex(self, side: str, evasion_dist: float, obstacle: Obstacle) -> float:
+        """Compute the apex lateral offset for a given side and evasion distance."""
+        if side == "right":
+            d_apex = obstacle.d_right - evasion_dist
+            if d_apex > 0:
+                d_apex = 0
+        else:
+            d_apex = obstacle.d_left + evasion_dist
+            if d_apex < 0:
+                d_apex = 0
+        return d_apex
+
     #################### MAIN FUNCTIONS####################
     def spliner_loop(self):
         # Main loop for the spliner node
@@ -505,17 +550,10 @@ class ObstacleSpliner(Node):
             kappas = np.array(
                 [gb_wpnts[gb_idx].kappa_radpm for gb_idx in gb_idxs])
             outside = "left" if np.sum(kappas) < 0 else "right"
-            # Choose the correct side and compute the distance to the apex based on left of right of the obstacle
-            more_space, d_apex = self._more_space(
-                closest_obs, gb_wpnts, gb_idxs)
 
-            self.get_logger().info(
-                f"DEBUG SPACE: Obs S={closest_obs.s_center:.1f}m | LeftBound={closest_obs.d_left:.2f}m | RightBound={closest_obs.d_right:.2f}m | Result d_apex={d_apex:.2f}m on {more_space}",
-                throttle_duration_sec=0.5
-            )
-
-            # High-level deadband: only switch sides if the new side has significantly more clearance
-            if self.last_ot_side in ("left", "right") and more_space != self.last_ot_side:
+            # Step 1: Determine preferred side with deadband for stability
+            preferred_side, _ = self._more_space(closest_obs, gb_wpnts, gb_idxs)
+            if self.last_ot_side in ("left", "right") and preferred_side != self.last_ot_side:
                 left_gap_raw = abs(gb_wpnts[gb_idxs[0]].d_left - closest_obs.d_left)
                 right_gap_raw = abs(gb_wpnts[gb_idxs[0]].d_right + closest_obs.d_right)
                 if self.last_ot_side == "left":
@@ -523,109 +561,121 @@ class ObstacleSpliner(Node):
                 else:
                     switch_warranted = left_gap_raw > right_gap_raw + 0.1
                 if not switch_warranted:
-                    more_space = self.last_ot_side
-                    # Recompute d_apex for the sticky side
-                    if more_space == "left":
-                        d_apex = closest_obs.d_left + self.evasion_dist
-                        if d_apex < 0:
-                            d_apex = 0
-                    else:
-                        d_apex = closest_obs.d_right - self.evasion_dist
-                        if d_apex > 0:
-                            d_apex = 0
+                    preferred_side = self.last_ot_side
+            other_side = "left" if preferred_side == "right" else "right"
 
+            # Step 2: Corridor pre-screen — max safe evasion_dist for each side
+            primary_safe = self._compute_corridor_safe_evasion_dist(
+                preferred_side, s_apex, gb_wpnts, wpnt_dist, closest_obs)
+            other_safe = self._compute_corridor_safe_evasion_dist(
+                other_side, s_apex, gb_wpnts, wpnt_dist, closest_obs)
+
+            # Step 3: Planning hierarchy — find best feasible plan
+            chosen_side = None
+            chosen_evasion_dist = None
+            is_squeezed = False
+            danger_flag = False
+
+            if primary_safe >= self.evasion_dist:
+                chosen_side, chosen_evasion_dist = preferred_side, self.evasion_dist
+            elif other_safe >= self.evasion_dist:
+                chosen_side, chosen_evasion_dist = other_side, self.evasion_dist
+                self.get_logger().info(
+                    f"HIERARCHY: '{preferred_side}' blocked (safe={primary_safe:.2f}m), using '{other_side}' at nominal")
+            elif primary_safe >= self.evasion_dist_min:
+                chosen_side, chosen_evasion_dist, is_squeezed = preferred_side, primary_safe, True
+                self.get_logger().info(
+                    f"HIERARCHY: Squeeze '{preferred_side}' evasion_dist={primary_safe:.2f}m (nominal={self.evasion_dist:.2f}m)")
+            elif other_safe >= self.evasion_dist_min:
+                chosen_side, chosen_evasion_dist, is_squeezed = other_side, other_safe, True
+                self.get_logger().info(
+                    f"HIERARCHY: Squeeze '{other_side}' evasion_dist={other_safe:.2f}m (nominal={self.evasion_dist:.2f}m)")
+            else:
+                danger_flag = True
+                self.get_logger().warn(
+                    f"HIERARCHY: No feasible path — primary_safe={primary_safe:.2f}m other_safe={other_safe:.2f}m min={self.evasion_dist_min:.2f}m — HARD ABORT",
+                    throttle_duration_sec=2.0
+                )
+
+            # Step 4: Compute d_apex from chosen plan
+            if not danger_flag:
+                d_apex = self._compute_d_apex(chosen_side, chosen_evasion_dist, closest_obs)
+                more_space = chosen_side
 
             # Publish the point around which we are splining
             mrk = self.xy_to_point(
                 x=gb_wpnts[gb_idxs[0]].x_m, y=gb_wpnts[gb_idxs[0]].y_m, opponent=False)
             self.closest_obs_pub.publish(mrk)
 
-            # Cap post-apex distances so the spline does not wrap past track end.
-            # On short tracks an obstacle near the end (e.g. S=17.7m, track=22.5m) would
-            # push post-apex control points past S_max, wrapping them into a completely
-            # different—often tight—section of the track and causing instant wall aborts.
-            track_remaining = (self.gb_max_s - s_apex) % self.gb_max_s
-            # Keep 0.5m of headroom inside the track so the final control point is firmly
-            # before the wrap boundary; also preserve the minimum 1m between post_apex_0
-            # and the apex so the spline has room to recover.
-            post_max = max(1.0, track_remaining - 0.5)
-            capped_post_apex_0 = min(self.post_apex_0, post_max * 0.60)
-            capped_post_apex_1 = min(self.post_apex_1, post_max * 0.80)
-            capped_post_apex_2 = min(self.post_apex_2, post_max)
-
-            spline_params = [
-                self.pre_apex_0,
-                self.pre_apex_1,
-                self.pre_apex_2,
-                0,
-                capped_post_apex_0,
-                capped_post_apex_1,
-                capped_post_apex_2,
-            ]
-            
-            evasion_points = []
-            for i, dst in enumerate(spline_params):
-                # scale dst linearly between 1 and 1.5 depending on the speed normalised to the max speed
-                dst = dst * np.clip(1.0 + self.cur_vs / self.gb_vmax, 1, 1.5)
-                # If we overtake on the outside, we smoothen the spline
-                if outside == more_space:
-                    si = s_apex + dst * 1.75  # TODO make parameter
-                else:
-                    si = s_apex + dst
-                di = d_apex if dst == 0 else 0
-                evasion_points.append([si, di])
-            # Convert to nump
-            evasion_points = np.array(evasion_points)
-
-            # Spline spatialy for d with s as base
-            # TODO read from ros params to make consistent in case it changes
-            spline_resolution = 0.1
-            spatial_spline = Spline(
-                x=evasion_points[:, 0], y=evasion_points[:, 1])
-            evasion_s = np.arange(
-                evasion_points[0, 0], evasion_points[-1, 0], spline_resolution)
-            # Clipe the d to the apex distance
-            if d_apex < 0:
-                evasion_d = np.clip(spatial_spline(evasion_s), d_apex, 0)
-            else:
-                evasion_d = np.clip(spatial_spline(evasion_s), 0, d_apex)
-
-            # Handle Wrapping of s
-            evasion_s = evasion_s % self.gb_max_s
-
-            # Do frenet conversion via conversion service for spline and create markers and wpnts
-            danger_flag = False
-            resp = self.converter.get_cartesian(evasion_s, evasion_d)
-
-            # Check if a side switch is safe — abort the whole manoeuvre if not
-            dist_to_opponent = (closest_obs.s_center - self.cur_s) % self.gb_max_s
-            if not self._check_ot_side_possible(more_space, dist_to_opponent):
-                self.get_logger().warn(f"Side switch to '{more_space}' not safe at {dist_to_opponent:.1f}m gap (cur_d={self.cur_d:.2f}m) — aborting evasion, reverting to global raceline")
-                danger_flag = True
+            # Check if a side switch is safe — abort if not
+            if not danger_flag:
+                dist_to_opponent = (closest_obs.s_center - self.cur_s) % self.gb_max_s
+                if not self._check_ot_side_possible(more_space, dist_to_opponent):
+                    self.get_logger().warn(
+                        f"Side switch to '{more_space}' not safe at {dist_to_opponent:.1f}m gap (cur_d={self.cur_d:.2f}m) — aborting")
+                    danger_flag = True
 
             if not danger_flag:
+                # Cap post-apex distances so the spline does not wrap past track end
+                track_remaining = (self.gb_max_s - s_apex) % self.gb_max_s
+                post_max = max(1.0, track_remaining - 0.5)
+                capped_post_apex_0 = min(self.post_apex_0, post_max * 0.60)
+                capped_post_apex_1 = min(self.post_apex_1, post_max * 0.80)
+                capped_post_apex_2 = min(self.post_apex_2, post_max)
+
+                spline_params = [
+                    self.pre_apex_0,
+                    self.pre_apex_1,
+                    self.pre_apex_2,
+                    0,
+                    capped_post_apex_0,
+                    capped_post_apex_1,
+                    capped_post_apex_2,
+                ]
+
+                evasion_points = []
+                for i, dst in enumerate(spline_params):
+                    dst = dst * np.clip(1.0 + self.cur_vs / self.gb_vmax, 1, 1.5)
+                    if outside == more_space:
+                        si = s_apex + dst * 1.75
+                    else:
+                        si = s_apex + dst
+                    di = d_apex if dst == 0 else 0
+                    evasion_points.append([si, di])
+                evasion_points = np.array(evasion_points)
+
+                spline_resolution = 0.1
+                spatial_spline = Spline(x=evasion_points[:, 0], y=evasion_points[:, 1])
+                evasion_s = np.arange(evasion_points[0, 0], evasion_points[-1, 0], spline_resolution)
+                if d_apex < 0:
+                    evasion_d = np.clip(spatial_spline(evasion_s), d_apex, 0)
+                else:
+                    evasion_d = np.clip(spatial_spline(evasion_s), 0, d_apex)
+
+                evasion_s = evasion_s % self.gb_max_s
+                resp = self.converter.get_cartesian(evasion_s, evasion_d)
+
+                # Speed factor: scale down proportionally when squeezing
+                squeeze_speed_factor = (chosen_evasion_dist / self.evasion_dist) if is_squeezed else 1.0
+
+                # Safety-net wall check (pre-screen should have prevented violations)
                 for i in range(evasion_s.shape[0]):
                     gb_wpnt_i = int((evasion_s[i] / wpnt_dist) % self.gb_max_idx)
-                    # Check if wpnt is too close to the trackbounds but only if spline is actually off the raceline
                     if abs(evasion_d[i]) > spline_resolution:
                         tb_dist = gb_wpnts[gb_wpnt_i].d_left if more_space == "left" else gb_wpnts[gb_wpnt_i].d_right
                         if abs(evasion_d[i]) > abs(tb_dist) - self.spline_bound_mindist:
-                            # SAFETY ABORT: path too close to wall
                             self.get_logger().warn(
-                                f"Evasion at S={evasion_s[i]:.1f}m is {abs(evasion_d[i]):.2f}m lateral, wall at {abs(tb_dist):.2f}m — ABORTING (min clearance={self.spline_bound_mindist}m)",
+                                f"SAFETY NET: S={evasion_s[i]:.1f}m lateral={abs(evasion_d[i]):.2f}m wall={abs(tb_dist):.2f}m — pre-screen missed this",
                                 throttle_duration_sec=2.0
                             )
                             danger_flag = True
                             break
-                    # Get V from gb wpnts and go slower if we are going through the inside
                     vi = gb_wpnts[gb_wpnt_i].vx_mps if outside == more_space else gb_wpnts[gb_wpnt_i].vx_mps * 0.9
+                    vi *= squeeze_speed_factor
                     wpnts.wpnts.append(
-                        self.xyv_to_wpnts(
-                            x=resp[0, i], y=resp[1, i], s=evasion_s[i], d=evasion_d[i], v=vi, wpnts=wpnts)
+                        self.xyv_to_wpnts(x=resp[0, i], y=resp[1, i], s=evasion_s[i], d=evasion_d[i], v=vi, wpnts=wpnts)
                     )
-                    mrks.markers.append(self.xyv_to_markers(
-                        x=resp[0, i], y=resp[1, i], v=vi, mrks=mrks))
-
+                    mrks.markers.append(self.xyv_to_markers(x=resp[0, i], y=resp[1, i], v=vi, mrks=mrks))
 
             # Fill the rest of OTWpnts
             wpnts.header.stamp = self.get_clock().now().to_msg()
@@ -636,19 +686,18 @@ class ObstacleSpliner(Node):
                 wpnts.side_switch = True if self.last_ot_side != more_space else False
                 wpnts.last_switch_time = self.last_switch_time
 
-                # Update the last switch time and the last side
                 if self.last_ot_side != more_space:
                     self.last_switch_time = self.get_clock().now().to_msg()
                 self.last_ot_side = more_space
 
+                squeeze_str = f" [SQUEEZED to {chosen_evasion_dist:.2f}m]" if is_squeezed else ""
                 self.get_logger().info(
-                    f">>> EVASION ACTIVE: side={more_space} | apex_d={d_apex:.2f}m | apex_s={s_apex:.1f}m | {len(wpnts.wpnts)} path points generated",
+                    f">>> EVASION ACTIVE: side={more_space} | apex_d={d_apex:.2f}m | apex_s={s_apex:.1f}m | {len(wpnts.wpnts)} pts{squeeze_str}",
                     throttle_duration_sec=1.0
                 )
             else:
                 wpnts.wpnts = []
                 mrks.markers = []
-                # This fools the statemachine to cool down
                 wpnts.side_switch = True
                 self.last_switch_time = self.get_clock().now().to_msg()
                 self.get_logger().info(

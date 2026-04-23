@@ -50,7 +50,7 @@ class StateMachine(Node):
         # PARAMETER DECLARATION
         self.params = StateMachineParams(self)
         
-        self.ftg_disabled = True # TODO fix with global params?
+        self.ftg_disabled = False
         self.lock = threading.Lock()  # [Bug #13] Lock for concurrent waypoint access
 
         # update on parameter changes for rate
@@ -437,14 +437,21 @@ class StateMachine(Node):
         if self.ftg_disabled:
             return False
         else:
-            # [Bug #8] Fixed: self.cur_state → self.state
             if self.state == StateType.TRAILING and self.cur_vs < self.params.ftg_threshold_speed:
+                if self.ftg_counter == 0:
+                    self.get_logger().info(f"FTG: Speed {self.cur_vs:.2f}m/s below threshold {self.params.ftg_threshold_speed}m/s. Starting timer...")
+                
                 self.ftg_counter += 1
-                self.get_logger().warn(f"FTG counter: {self.ftg_counter}/{threshold}")
+                
+                # Log timer every second (at rate_hz frequency)
+                if self.ftg_counter % int(self.params.rate_hz) == 0:
+                    remaining_sec = self.params.ftg_timer_sec - (self.ftg_counter / self.params.rate_hz)
+                    self.get_logger().info(f"FTG: timer-- > {remaining_sec:.1f}s remaining")
             else:
                 self.ftg_counter = 0
 
             if self.ftg_counter > threshold:
+                self.get_logger().warn("FTG: Kicked in!")
                 return True
             else:
                 return False
@@ -801,12 +808,17 @@ class StateMachine(Node):
     #############    
     def main_loop_callback(self):
         self.get_logger().debug(f"Current state: {self.state}")
+        old_state = self.state
 
         # ---- Step 1: State transition ----
         if self.params.force_state:
             self.state = self.params.force_state_choice
         else:
             self.state = self.state_transition(self)
+        
+        # Log when returning from FTG back to spliner/raceline states
+        if old_state == StateType.FTGONLY and self.state in (StateType.GB_TRACK, StateType.TRAILING, StateType.OVERTAKE):
+            self.get_logger().info(f"FTG: Back to spliner (new state: {self.state.value})")
 
         # [Bug #3] Publish state as bare string value ("GB_TRACK", not "StateType.GB_TRACK")
         msg = String()

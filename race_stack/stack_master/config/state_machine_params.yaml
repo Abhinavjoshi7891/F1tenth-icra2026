@@ -22,6 +22,6 @@ state_machine:
     lateral_width_ot_m: 0.2 # [m] disabled — check was comparing evasion path D at obs_s (always 0) vs. obs_d (always 0) = always False
     splini_hyst_timer_sec: 0.25 # [s] time we have to wait between switching from overtaking on one side to the other -> NOW DYNAMIC RECONFIGURABLE
 
-    ftg_threshold_speed: 0.1 # [m/s] speed threshold below which we start a timer for activating FTG
+    ftg_threshold_speed: 1.0 # [m/s] speed threshold below which we start a timer for activating FTG
     ftg_timer_sec: 3. # [s] time we have to stay slower than the `ftg_threshold_speed` threshold before we activate FTG
 
