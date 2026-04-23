@@ -97,16 +97,16 @@ class ObstacleSpliner(Node):
         self.pre_apex_1 = -3.0
         self.pre_apex_2 = -1.5
         # Post-apex: ROS1 calibrated values for smoother return to raceline
-        self.post_apex_0 = 4.5
-        self.post_apex_1 = 5.0
-        self.post_apex_2 = 5.5
+        self.post_apex_0 = 3.0
+        self.post_apex_1 = 3.5
+        self.post_apex_2 = 4.0
         # Using 0.40m offset: clears tight walls at S=9.3m while still passing safely
         self.evasion_dist = 0.40 # Widened for 0.15m car half-width + safety margin
         # ROS1 cfg default is 1.0m. The 0.3m default was silently dropping obstacles not perfectly on the raceline.
         self.obs_traj_tresh = 1.0 # changed from 0.3
-        # 0.10m clearance — tighter than ROS1 (0.2m) but looser than previous (0.05m)
-        # At 0.05m we were aborting when d=0.32m and wall=0.37m (0.37-0.32=0.05, exact limit)
-        self.spline_bound_mindist = 0.10 # changed from 0.05
+        # 0.07m clearance — lowered from 0.10m because some track sections narrow 
+        # sharply right after obstacles, and 0.1m is too conservative for those spots.
+        self.spline_bound_mindist = 0.07 # changed from 0.10
         self.fixed_pred_time = 0.15
         self.kd_obs_pred = 1.0
         
@@ -506,11 +506,16 @@ class ObstacleSpliner(Node):
                 [gb_wpnts[gb_idx].kappa_radpm for gb_idx in gb_idxs])
             outside = "left" if np.sum(kappas) < 0 else "right"
             # Choose the correct side and compute the distance to the apex based on left of right of the obstacle
-            more_space_candidate, d_apex_candidate = self._more_space(
+            more_space, d_apex = self._more_space(
                 closest_obs, gb_wpnts, gb_idxs)
 
+            self.get_logger().info(
+                f"DEBUG SPACE: Obs S={closest_obs.s_center:.1f}m | LeftBound={closest_obs.d_left:.2f}m | RightBound={closest_obs.d_right:.2f}m | Result d_apex={d_apex:.2f}m on {more_space}",
+                throttle_duration_sec=0.5
+            )
+
             # High-level deadband: only switch sides if the new side has significantly more clearance
-            if self.last_ot_side in ("left", "right") and more_space_candidate != self.last_ot_side:
+            if self.last_ot_side in ("left", "right") and more_space != self.last_ot_side:
                 left_gap_raw = abs(gb_wpnts[gb_idxs[0]].d_left - closest_obs.d_left)
                 right_gap_raw = abs(gb_wpnts[gb_idxs[0]].d_right + closest_obs.d_right)
                 if self.last_ot_side == "left":
@@ -518,17 +523,17 @@ class ObstacleSpliner(Node):
                 else:
                     switch_warranted = left_gap_raw > right_gap_raw + 0.1
                 if not switch_warranted:
-                    more_space_candidate = self.last_ot_side
+                    more_space = self.last_ot_side
                     # Recompute d_apex for the sticky side
-                    if more_space_candidate == "left":
-                        d_apex_candidate = closest_obs.d_left + self.evasion_dist
-                        if d_apex_candidate < 0:
-                            d_apex_candidate = 0
+                    if more_space == "left":
+                        d_apex = closest_obs.d_left + self.evasion_dist
+                        if d_apex < 0:
+                            d_apex = 0
                     else:
-                        d_apex_candidate = closest_obs.d_right - self.evasion_dist
-                        if d_apex_candidate > 0:
-                            d_apex_candidate = 0
-            more_space, d_apex = more_space_candidate, d_apex_candidate
+                        d_apex = closest_obs.d_right - self.evasion_dist
+                        if d_apex > 0:
+                            d_apex = 0
+
 
             # Publish the point around which we are splining
             mrk = self.xy_to_point(
