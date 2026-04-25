@@ -581,15 +581,18 @@ class ObstacleSpliner(Node):
             elif other_safe >= self.evasion_dist:
                 chosen_side, chosen_evasion_dist = other_side, self.evasion_dist
                 self.get_logger().info(
-                    f"HIERARCHY: '{preferred_side}' blocked (safe={primary_safe:.2f}m), using '{other_side}' at nominal")
+                    f"HIERARCHY: '{preferred_side}' blocked (safe={primary_safe:.2f}m), using '{other_side}' at nominal",
+                    throttle_duration_sec=2.0)
             elif primary_safe >= self.evasion_dist_min:
                 chosen_side, chosen_evasion_dist, is_squeezed = preferred_side, primary_safe, True
                 self.get_logger().info(
-                    f"HIERARCHY: Squeeze '{preferred_side}' evasion_dist={primary_safe:.2f}m (nominal={self.evasion_dist:.2f}m)")
+                    f"HIERARCHY: Squeeze '{preferred_side}' evasion_dist={primary_safe:.2f}m (nominal={self.evasion_dist:.2f}m)",
+                    throttle_duration_sec=2.0)
             elif other_safe >= self.evasion_dist_min:
                 chosen_side, chosen_evasion_dist, is_squeezed = other_side, other_safe, True
                 self.get_logger().info(
-                    f"HIERARCHY: Squeeze '{other_side}' evasion_dist={other_safe:.2f}m (nominal={self.evasion_dist:.2f}m)")
+                    f"HIERARCHY: Squeeze '{other_side}' evasion_dist={other_safe:.2f}m (nominal={self.evasion_dist:.2f}m)",
+                    throttle_duration_sec=2.0)
             else:
                 danger_flag = True
                 self.get_logger().warn(

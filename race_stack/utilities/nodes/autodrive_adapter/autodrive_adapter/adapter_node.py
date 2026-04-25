@@ -62,8 +62,14 @@ CTRL_QOS = QoSProfile(
     depth=10
 )
 
-SENSOR_QOS = QoSProfile(
+SENSOR_SUB_QOS = QoSProfile(
     reliability=QoSReliabilityPolicy.BEST_EFFORT,
+    history=QoSHistoryPolicy.KEEP_LAST,
+    depth=5
+)
+
+SENSOR_PUB_QOS = QoSProfile(
+    reliability=QoSReliabilityPolicy.RELIABLE,
     history=QoSHistoryPolicy.KEEP_LAST,
     depth=5
 )
@@ -122,7 +128,7 @@ class AutoDRIVEAdapter(Node):
 
         # ── Publishers ────────────────────────────────────────────────────────
         self._odom_pub     = self.create_publisher(Odometry,   '/odom',                                   CTRL_QOS)
-        self._scan_pub = self.create_publisher(LaserScan, '/scan', SENSOR_QOS)
+        self._scan_pub = self.create_publisher(LaserScan, '/scan', SENSOR_PUB_QOS)
         self._imu_pub      = self.create_publisher(Imu,        '/sensors/imu/raw',                        RELIABLE_QOS)
         self._throttle_pub = self.create_publisher(Float32,    '/autodrive/roboracer_1/throttle_command',  CTRL_QOS)
         self._steering_pub = self.create_publisher(Float32,    '/autodrive/roboracer_1/steering_command',  CTRL_QOS)
@@ -132,7 +138,7 @@ class AutoDRIVEAdapter(Node):
         self.create_subscription(JointState,            '/autodrive/roboracer_1/left_encoder',  self._left_enc_cb,  RELIABLE_QOS)
         self.create_subscription(JointState,            '/autodrive/roboracer_1/right_encoder', self._right_enc_cb, RELIABLE_QOS)
         self.create_subscription(Float32,               '/autodrive/roboracer_1/steering',      self._steering_cb,  RELIABLE_QOS)
-        self.create_subscription(LaserScan,             '/autodrive/roboracer_1/lidar',         self._lidar_cb,     RELIABLE_QOS)
+        self.create_subscription(LaserScan,             '/autodrive/roboracer_1/lidar',         self._lidar_cb,     SENSOR_SUB_QOS)
         self.create_subscription(Imu,                   '/autodrive/roboracer_1/imu',           self._imu_cb,       RELIABLE_QOS)
         self.create_subscription(Float32,               '/autodrive/roboracer_1/speed',         self._speed_cb,     RELIABLE_QOS)
         self.create_subscription(AckermannDriveStamped, '/drive',                               self._drive_cb,     CTRL_QOS)

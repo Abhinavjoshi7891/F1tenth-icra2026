@@ -682,6 +682,8 @@ class Controller(Node):
         self.kmpc_controller.kmpc_config = self.kmpc_config
 
     def state_cb(self, data):
+        if data.data == "FTGONLY" and self.state != "FTGONLY":
+            self.waypoint_safety_counter = 0
         self.state = data.data
 
     def map_cycle(self):
@@ -701,7 +703,7 @@ class Controller(Node):
         self.waypoint_safety_counter += 1
         print(self.waypoint_safety_counter, self.rate, self.state_machine_rate)
         if self.waypoint_safety_counter >= self.rate/self.state_machine_rate* 10: #we can use the same waypoints for 5 cycles
-            self.get_logger().warning("[controller_manager] Received no local wpnts. STOPPING!!")
+            self.get_logger().warning("[controller_manager] Received no local wpnts. STOPPING!!", throttle_duration_sec=3.0)
             speed = 0.0
             steering_angle = 0.0
         # Publish PID data of the Trailing controller for tuning
@@ -754,7 +756,7 @@ class Controller(Node):
         
         self.waypoint_safety_counter += 1
         if self.waypoint_safety_counter >= self.rate/self.state_machine_rate* 10: #we can use the same waypoints for 5 cycles
-            self.get_logger().warning("[controller_manager] Received no local wpnts. STOPPING!!")
+            self.get_logger().warning("[controller_manager] Received no local wpnts. STOPPING!!", throttle_duration_sec=3.0)
             speed = 0.0
             steering_angle = 0.0
         # Publish PID data of the Trailing controller for tuning
@@ -789,9 +791,89 @@ class Controller(Node):
         # ─────────────────────────────────────────────────────────────────
         return speed, steering_angle
 
+    def _emergency_wall_detected(self) -> bool:
+        """Forward-sector LiDAR wall check with hysteresis.
+        Arms when min distance < 0.40m, disarms after 10 consecutive ticks > 0.60m."""
+        ARM_DIST    = 0.40
+        CLEAR_DIST  = 0.60
+        CLEAR_TICKS = 10
+
+        if not hasattr(self, '_ew_active'):
+            self._ew_active = False
+            self._ew_clear_ticks = 0
+
+        if not hasattr(self, 'scan') or self.scan is None or len(self.scan.ranges) == 0:
+            self.get_logger().warn("WALL_CHECK: no scan data", throttle_duration_sec=2.0)
+            return self._ew_active
+
+        ranges = np.array(self.scan.ranges, dtype=float)
+        n = len(ranges)
+        lo, hi = n // 2 - n // 12, n // 2 + n // 12  # ±22.5° dead-ahead only
+        fwd = ranges[lo:hi]
+        valid_mask = np.isfinite(fwd) & (fwd > 0.01)
+        n_valid = int(valid_mask.sum())
+
+        if n_valid == 0:
+            self.get_logger().warn(
+                "WALL_CHECK: zero valid readings in forward sector", throttle_duration_sec=2.0)
+            return self._ew_active
+
+        fwd_inf = np.where(valid_mask, fwd, np.inf)
+        local_idx = int(np.argmin(fwd_inf))
+        min_fwd   = float(fwd_inf[local_idx])
+        global_idx = lo + local_idx
+        angle_deg  = -135.0 + global_idx * (270.0 / max(n - 1, 1))
+
+        if not self._ew_active:
+            if min_fwd < ARM_DIST:
+                self._ew_active = True
+                self._ew_clear_ticks = 0
+                self.get_logger().warn(
+                    f"WALL_EMERGENCY ARM: {min_fwd:.3f}m @ {angle_deg:.1f}° "
+                    f"[sector idx {lo}-{hi}, {n_valid}/{hi-lo} valid]",
+                    throttle_duration_sec=0.1)
+            else:
+                self.get_logger().info(
+                    f"WALL_CHECK OK: min={min_fwd:.3f}m @ {angle_deg:.1f}° "
+                    f"({n_valid}/{hi-lo} valid, armed=False)",
+                    throttle_duration_sec=1.0)
+        else:
+            if min_fwd > CLEAR_DIST:
+                self._ew_clear_ticks += 1
+                self.get_logger().warn(
+                    f"WALL_EMERGENCY clearing: {min_fwd:.3f}m "
+                    f"[{self._ew_clear_ticks}/{CLEAR_TICKS} ticks clear]",
+                    throttle_duration_sec=0.2)
+                if self._ew_clear_ticks >= CLEAR_TICKS:
+                    self._ew_active = False
+                    self._ew_clear_ticks = 0
+                    self.get_logger().warn("WALL_EMERGENCY DISARM: path clear")
+            else:
+                self._ew_clear_ticks = 0
+                self.get_logger().warn(
+                    f"WALL_EMERGENCY ACTIVE: {min_fwd:.3f}m @ {angle_deg:.1f}° "
+                    f"({n_valid}/{hi-lo} valid)",
+                    throttle_duration_sec=0.2)
+
+        return self._ew_active
+
     def ftg_cycle(self):
+        if not hasattr(self, 'ftg_controller'):
+            self.get_logger().warn("FTG: lazy-init with defaults (mode != FTG at launch)")
+            self.ftg_controller = FTG_Controller(
+                node=self,
+                mapping=self.mapping,
+                debug=False,
+                safety_radius=20,
+                max_lidar_dist=3.0,
+                max_speed=3.0,
+                range_offset=1,
+                track_width=0.5)
+        if not hasattr(self, 'scan') or len(self.scan.ranges) == 0:
+            self.get_logger().warn("FTG: no scan data yet, holding")
+            return 0.0, 0.0
         speed, steer = self.ftg_controller.process_lidar(self.scan.ranges)
-        self.get_logger().warning("[STATE MACHINE] FTGONLY!!!")
+        self.get_logger().warning("[STATE MACHINE] FTGONLY!!!", throttle_duration_sec=3.0)
         return speed, steer
 
     def kmpc_cycle(self):
@@ -815,7 +897,7 @@ class Controller(Node):
 
         self.waypoint_safety_counter += 1
         if self.waypoint_safety_counter >= self.rate / self.state_machine_rate * 10:
-            self.get_logger().warn("[controller_manager] No local waypoints. STOPPING!")
+            self.get_logger().warn("[controller_manager] No local waypoints. STOPPING!", throttle_duration_sec=3.0)
             return 0.0, 0.0
 
         if self.kmpc_controller.flag1:
@@ -875,7 +957,7 @@ class Controller(Node):
 
         self.waypoint_safety_counter += 1
         if self.waypoint_safety_counter >= self.rate / self.state_machine_rate * 10:
-            self.get_logger().warn("[controller_manager] No local waypoints. STOPPING!")
+            self.get_logger().warn("[controller_manager] No local waypoints. STOPPING!", throttle_duration_sec=3.0)
             return 0.0, 0.0
 
         if self.stmpc_controller.flag1:
@@ -912,7 +994,11 @@ class Controller(Node):
     # MAIN LOOP #
     #############
     def control_loop(self):
-        if self.mode == "MAP":
+        if self.state == "FTGONLY":
+            speed, steer = self.ftg_cycle()
+        elif self._emergency_wall_detected():
+            speed, steer = self.ftg_cycle()
+        elif self.mode == "MAP":
             speed, steer = self.map_cycle()
         elif self.mode == "PP":
             speed, steer = self.pp_cycle()

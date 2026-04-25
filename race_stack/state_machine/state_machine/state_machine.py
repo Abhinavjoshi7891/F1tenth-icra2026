@@ -318,7 +318,7 @@ class StateMachine(Node):
                         ot_obs_dist = ot_d - obs_d
                         if abs(ot_obs_dist) < self.params.lateral_width_ot_m:
                             o_free = False
-                            self.get_logger().info(f"O_FREE False (frenet), obs dist to ot lane: {ot_obs_dist:.2f} m")
+                            self.get_logger().info(f"O_FREE False (frenet), obs dist to ot lane: {ot_obs_dist:.2f} m", throttle_duration_sec=2.0)
                             break
             # No frenet waypoints yet → path is free (don't block overtake)
             return o_free
@@ -359,7 +359,8 @@ class StateMachine(Node):
                             o_free = False
                             self.get_logger().info(
                                 f"O_FREE False, obs dist to ot lane: {ot_obs_dist:.4f} m "
-                                f"(closest obs @ s={obs_s:.1f}m d={obs_d:.2f}m | path_d={ot_d:.2f}m)"
+                                f"(closest obs @ s={obs_s:.1f}m d={obs_d:.2f}m | path_d={ot_d:.2f}m)",
+                                throttle_duration_sec=2.0
                             )
                     else:
                         # Path doesn't cover this obstacle yet; assume global distance for now
@@ -742,7 +743,7 @@ class StateMachine(Node):
             loc_markers.markers.append(mrk)
 
         if len(loc_wpnts.wpnts) == 0:
-            self.get_logger().warn("No local waypoints published...")
+            self.get_logger().warn("No local waypoints published...", throttle_duration_sec=3.0)
         else:
             self.loc_wpnt_pub.publish(loc_wpnts)
 

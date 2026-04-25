@@ -142,10 +142,13 @@ def SpliniFTGOnlyTransition(state_machine: StateMachine) -> StateType:
     if state_machine._check_only_ftg_zone:
         return StateType.FTGONLY
     else:
-        if state_machine._check_close_to_raceline and state_machine._check_gbfree:
-            return StateType.GB_TRACK
-        else:
+        # Stay in FTGONLY until FTG has actually moved the car past the obstacle.
+        # Speed-based hysteresis: exit only when cur_vs >= ftg_threshold_speed.
+        # ftg_counter resets to 0 while in FTGONLY, so TRAILING gets a clean
+        # ftg_timer_sec window before FTG can re-fire.
+        if state_machine.cur_vs < state_machine.params.ftg_threshold_speed:
             return StateType.FTGONLY
+        return StateType.TRAILING
 
 
 #######################################

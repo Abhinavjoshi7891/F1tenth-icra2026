@@ -75,7 +75,7 @@ class FTG_Controller:
         # we won't use the LiDAR data from directly behind us
         # full angle is -135 135
         # every point in the array is
-        proc_ranges = np.array(ranges[self.range_offset:-self.range_offset])
+        proc_ranges = np.array(ranges[self.range_offset:] if self.range_offset == 0 else ranges[self.range_offset:-self.range_offset])
         # sets each value to the mean over a given window to smoothen the signal
         proc_ranges = np.convolve(proc_ranges, np.ones(self.PREPROCESS_CONV_SIZE)/self.PREPROCESS_CONV_SIZE, 'valid') 
         # clip the ranges between 0 and your maximum lidar distance
