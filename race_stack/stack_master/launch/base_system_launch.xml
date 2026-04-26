@@ -18,15 +18,23 @@
 
   <!-- launch simulator -->
   <group if="$(var sim)">
+    <!-- gym must NOT publish map -> base_link when synpf owns that edge,
+         otherwise the TF tree has two writers for the same parent->child. -->
     <include file="$(find-pkg-share f1tenth_gym_ros)/launch/gym_bridge_launch.py">
       <arg name="map_yaml_path" value="$(var map_path)/$(var map_name).yaml" />
+      <arg name="publish_tf"
+           value="$(eval '\'false\' if \'$(var loc_algorithm)\' == \'synpf\' else \'true\'')" />
     </include>
-    <!-- only needed in sim -->
-    <include
-      file="$(find-pkg-share frenet_odom_republisher)/launch/frenet_odom_republisher_launch.xml" />
+    <!-- frenet_odom_republisher disabled when synpf is on so the controller
+         actually closes the loop on PF-localized data (not gym ground truth).
+         carstate_node owns /car_state/frenet/odom via its frenet_state_loop. -->
+    <group unless="$(eval '\'$(var loc_algorithm)\' == \'synpf\'')">
+      <include
+        file="$(find-pkg-share frenet_odom_republisher)/launch/frenet_odom_republisher_launch.xml" />
+    </group>
   </group>
 
-  <!-- launch real car system -->
+  <!-- launch real car system hardware (Skip in Sim) -->
   <group unless="$(var sim)">
     <!-- launch teleop -->
     <include file="$(find-pkg-share f1tenth_stack)/launch/bringup_launch.py">
@@ -35,15 +43,17 @@
       <arg name="sensors_config" value="$(var sensors_config)" />
       <arg name="mux_config" value="$(var mux_config)" />
     </include>
-
-    <!-- launch SE -->
-    <include file="$(find-pkg-share state_estimation)/launch/state_estimation_launch.xml">
-      <arg name="racecar_version" value="$(var racecar_version)" />
-      <arg name="mapping_bool" value="False" />
-      <arg name="map_name" value="$(var map_name)" />
-      <arg name="frenet_bool" value="True" />
-    </include>
   </group>
+
+  <!-- State Estimation (Always active: SynPF or SLAM) -->
+  <include file="$(find-pkg-share state_estimation)/launch/state_estimation_launch.xml">
+    <arg name="racecar_version" value="$(var racecar_version)" />
+    <arg name="mapping_bool" value="False" />
+    <arg name="map_name" value="$(var map_name)" />
+    <arg name="frenet_bool" value="True" />
+    <arg name="loc_algorithm" value="$(var loc_algorithm)" />
+    <arg name="use_sim_time" value="$(var sim)" />
+  </include>
 
   <!-- launch global parameter node -->
   <node pkg="stack_master" name="global_parameters" exec="global_parameter_node">

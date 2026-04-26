@@ -23,6 +23,9 @@ setup(
     license='MIT',
     tests_require=['pytest'],
     entry_points={
-        'console_scripts': ['carstate_node = state_estimation.carstate_node:main'],
+        'console_scripts': [
+            'carstate_node = state_estimation.carstate_node:main',
+            'synpf_node = state_estimation.synpf_node:main',
+        ],
     },
 )

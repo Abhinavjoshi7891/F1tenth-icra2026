@@ -1,0 +1,994 @@
+[INFO] [launch]: All log files can be found below /home/abhinav/.ros/log/2026-04-24-04-41-06-730792-abhinav-LOQ-3705
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [controller-1]: process started with pid [3707]
+[INFO] [state_machine-2]: process started with pid [3709]
+[INFO] [spline_planner-3]: process started with pid [3711]
+[INFO] [detect-4]: process started with pid [3713]
+[INFO] [tracking-5]: process started with pid [3715]
+[state_machine-2] [INFO] [1777005667.422030971] [state_machine]: Waiting for global waypoints message
+[spline_planner-3] [INFO] [1777005667.450904276] [spline_planner]: Spliner Node waiting for essential messages...
+[spline_planner-3] [INFO] [1777005667.452314659] [spline_planner]: Received State message.
+[detect-4] [INFO] [1777005667.474887929] [detect]: Measuring: False
+[detect-4] [INFO] [1777005667.475266972] [detect]: From Bag: False
+[spline_planner-3] [INFO] [1777005667.830473337] [spline_planner]: Received Scaled Global Waypoints message.
+[state_machine-2] [INFO] [1777005668.230460298] [state_machine]: Waiting for global waypoints message
+[controller-1] [INFO] [1777005668.274562656] [controller]: Using NUC6_glc_pacejka
+[controller-1] [INFO] [1777005668.322775140] [controller]: Initializing MAP  controller
+[controller-1] [INFO] [1777005668.334313583] [controller]: Controller Manager waiting for messages...
+[controller-1] [INFO] [1777005668.344404773] [controller]: Received car state messages
+[spline_planner-3] [INFO] [1777005676.307044323] [spline_planner]: Received Global Waypoints message.
+[controller-1] [INFO] [1777005676.307559278] [controller]: Received track length
+[spline_planner-3] [INFO] [1777005676.307702012] [spline_planner]: All required messages received. Continuing...
+[state_machine-2] [INFO] [1777005676.308193854] [state_machine]: Waiting for scaled global waypoints message
+[detect-4] [INFO] [1777005676.311407912] [detect]: [Opponent Detection]: initialized FrenetConverter object
+[detect-4] [INFO] [1777005676.311788517] [detect]: [Opponent Detection]: received global path
+[state_machine-2] [INFO] [1777005676.332882938] [state_machine]: Waiting for car state frenet message
+[state_machine-2] [INFO] [1777005676.335780118] [state_machine]: Waiting for car state pose message
+[state_machine-2] [INFO] [1777005676.384497701] [state_machine]: Got 2 sectors
+[state_machine-2] [INFO] [1777005676.385080220] [state_machine]: Getting OT params: ['Overtaking_sector0.start', 'Overtaking_sector1.start', 'Overtaking_sector0.end', 'Overtaking_sector1.end', 'Overtaking_sector0.ot_flag', 'Overtaking_sector1.ot_flag']
+[state_machine-2] [INFO] [1777005676.386761297] [state_machine]: OT sectors obtained: [{'start': 0, 'end': 97, 'ot_flag': True}, {'start': 98, 'end': 228, 'ot_flag': True}]
+[controller-1] [INFO] [1777005676.400935239] [controller]: Received waypoint array
+[controller-1] [INFO] [1777005676.401462166] [controller]: All required messages received. Continuing...
+[controller-1] [INFO] [1777005676.408826366] [controller]: Controller ready
+[controller-1] [INFO] [1777005676.409366047] [controller]: [Plotter] Logging to ~/plot_datas/ — set FLUSH_EVERY in plotter.py to tune I/O frequency
+[controller-1] [INFO] [1777005676.410196877] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.411453686] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.412168852] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.413797330] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.415764306] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.416938032] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.417772659] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.418589133] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.419405616] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.420223853] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.421226391] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.422117112] [controller]: WALL_CHECK OK: min=1.021m @ -32.9° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005676.424177722] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.424975751] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.426239634] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.427448124] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.428058836] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.428688904] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.429294356] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.429907031] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.430512213] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.431106685] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.431738757] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.432449053] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.433421856] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.435873240] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.437167309] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.437999812] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.439196330] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.439830996] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.440439013] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.441032754] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.441687888] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.442411920] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.443106568] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.443909136] [controller]: Updated parameters
+[controller-1] [INFO] [1777005676.444878823] [controller]: Updated parameters
+[controller-1] [INFO] [1777005677.434011110] [controller]: WALL_CHECK OK: min=0.530m @ -42.9° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005678.434408896] [controller]: WALL_CHECK OK: min=1.148m @ 44.9° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005679.446528609] [controller]: WALL_CHECK OK: min=1.866m @ -43.4° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005680.446694940] [controller]: WALL_CHECK OK: min=1.380m @ 44.9° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005681.459049543] [controller]: WALL_CHECK OK: min=0.794m @ -40.4° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005682.459276741] [controller]: WALL_CHECK OK: min=0.840m @ -32.4° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005683.471501329] [controller]: WALL_CHECK OK: min=0.908m @ -40.2° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005684.471521787] [controller]: WALL_CHECK OK: min=0.475m @ 44.4° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005685.471606680] [controller]: WALL_CHECK OK: min=0.525m @ -41.7° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005686.484173152] [controller]: WALL_CHECK OK: min=1.341m @ -44.7° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005687.484311025] [controller]: WALL_CHECK OK: min=2.167m @ -42.7° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005688.496932133] [controller]: WALL_CHECK OK: min=1.601m @ 44.9° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005689.508984873] [controller]: WALL_CHECK OK: min=0.868m @ -44.9° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005690.509008373] [controller]: WALL_CHECK OK: min=1.132m @ -30.4° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005691.509263999] [controller]: WALL_CHECK OK: min=0.977m @ -44.7° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005692.521728942] [controller]: WALL_CHECK OK: min=0.668m @ 38.9° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005693.522826922] [controller]: WALL_CHECK OK: min=0.537m @ -44.4° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005694.534362714] [controller]: WALL_CHECK OK: min=0.992m @ -44.4° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005695.546558758] [controller]: WALL_CHECK OK: min=2.261m @ 44.9° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005696.559201436] [controller]: WALL_CHECK OK: min=1.434m @ -43.7° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005697.571763851] [controller]: WALL_CHECK OK: min=0.961m @ -35.4° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005698.584316284] [controller]: WALL_CHECK OK: min=1.385m @ -29.2° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005699.596503706] [controller]: WALL_CHECK OK: min=1.011m @ 44.4° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005700.596763108] [controller]: WALL_CHECK OK: min=0.915m @ 41.2° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005701.609016663] [controller]: WALL_CHECK OK: min=0.616m @ -34.9° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005702.609104857] [controller]: WALL_CHECK OK: min=0.778m @ -44.2° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005703.621498092] [controller]: WALL_CHECK OK: min=1.029m @ 44.4° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005704.621565646] [controller]: WALL_CHECK OK: min=1.298m @ -42.7° (360/360 valid, armed=False)
+[controller-1] [INFO] [1777005705.634111213] [controller]: WALL_CHECK OK: min=1.148m @ -42.2° (360/360 valid, armed=False)
+[state_machine-2] [INFO] [1777005706.332296587] [state_machine]: GB_FREE False, obs dist to gb lane: -0.10733415755578424 m
+[state_machine-2] [INFO] [1777005706.338031727] [state_machine]: HUD: Ego S: 1.0m | Opp S: 6.4m | Gap: 5.5m | State: TRAILING | Planner: spliner
+[spline_planner-3] [INFO] [1777005706.360296584] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 6.4m
+[spline_planner-3] [INFO] [1777005706.361262937] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 6.4m
+[spline_planner-3] [INFO] [1777005706.361726627] [spline_planner]: SPACE CHECK: LeftGap=0.65m (Wall=0.66m) | RightGap=0.46m (Wall=0.69m) | Required=0.30m -> CHOICE: left (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005706.362194375] [spline_planner]: CORRIDOR[left]: scan 4.2→10.4m | bottleneck @ S=9.9m wall=0.349m | obs_edge=0.018m | safe=0.171m
+[spline_planner-3] [INFO] [1777005706.363034183] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005706.369922462] [spline_planner]: >>> EVASION ACTIVE: side=left | apex_d=0.19m | apex_s=6.4m | 102 pts [SQUEEZED to 0.17m]
+[spline_planner-3] [INFO] [1777005706.413136766] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005706.463334796] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005706.512984038] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005706.562998638] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005706.613139262] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[controller-1] [INFO] [1777005706.646504012] [controller]: WALL_CHECK OK: min=1.304m @ -44.9° (360/360 valid, armed=False)
+[spline_planner-3] [INFO] [1777005706.663682352] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005706.713236698] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005706.764158231] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005706.813251692] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005706.862876960] [spline_planner]: CORRIDOR[left]: scan 4.2→10.4m | bottleneck @ S=9.9m wall=0.349m | obs_edge=0.018m | safe=0.171m
+[spline_planner-3] [INFO] [1777005706.864056398] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005706.914266130] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005706.966056454] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005707.013363020] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005707.063650970] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005707.113778703] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005707.164197656] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005707.214288470] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005707.264211031] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005707.315197377] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005707.350352801] [state_machine]: HUD: Ego S: 2.4m | Opp S: 6.4m | Gap: 4.0m | State: OVERTAKE | Planner: spliner
+[spline_planner-3] [INFO] [1777005707.360426731] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 6.4m
+[spline_planner-3] [INFO] [1777005707.361993849] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 6.4m
+[spline_planner-3] [INFO] [1777005707.362416253] [spline_planner]: SPACE CHECK: LeftGap=0.65m (Wall=0.66m) | RightGap=0.46m (Wall=0.69m) | Required=0.30m -> CHOICE: left (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005707.362900100] [spline_planner]: CORRIDOR[left]: scan 4.2→10.4m | bottleneck @ S=9.9m wall=0.349m | obs_edge=0.018m | safe=0.171m
+[spline_planner-3] [INFO] [1777005707.363702419] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005707.370024218] [spline_planner]: >>> EVASION ACTIVE: side=left | apex_d=0.19m | apex_s=6.4m | 90 pts [SQUEEZED to 0.17m]
+[spline_planner-3] [INFO] [1777005707.413965613] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005707.463570635] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005707.513411406] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005707.562910051] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005707.613495924] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[controller-1] [INFO] [1777005707.646563504] [controller]: WALL_CHECK OK: min=0.890m @ -34.7° (360/360 valid, armed=False)
+[spline_planner-3] [INFO] [1777005707.664136487] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005707.714226350] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005707.763885082] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005707.813606190] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005707.863183922] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005707.913587637] [spline_planner]: CORRIDOR[left]: scan 4.2→10.4m | bottleneck @ S=9.9m wall=0.349m | obs_edge=0.018m | safe=0.171m
+[spline_planner-3] [INFO] [1777005707.914610124] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005707.964575004] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005708.012889073] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005708.063235223] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005708.114588342] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005708.163071896] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005708.214566127] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005708.264437266] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005708.313610981] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005708.350413664] [state_machine]: HUD: Ego S: 3.5m | Opp S: 6.4m | Gap: 2.9m | State: OVERTAKE | Planner: spliner
+[spline_planner-3] [INFO] [1777005708.360452419] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 6.4m
+[spline_planner-3] [INFO] [1777005708.363346218] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005708.412417964] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 6.4m
+[spline_planner-3] [INFO] [1777005708.413264314] [spline_planner]: SPACE CHECK: LeftGap=0.65m (Wall=0.66m) | RightGap=0.46m (Wall=0.69m) | Required=0.30m -> CHOICE: left (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005708.413782245] [spline_planner]: CORRIDOR[left]: scan 4.2→10.4m | bottleneck @ S=9.9m wall=0.349m | obs_edge=0.018m | safe=0.171m
+[spline_planner-3] [INFO] [1777005708.414607937] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005708.419735771] [spline_planner]: >>> EVASION ACTIVE: side=left | apex_d=0.19m | apex_s=6.4m | 91 pts [SQUEEZED to 0.17m]
+[spline_planner-3] [INFO] [1777005708.463813982] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005708.513600114] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005708.564722875] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005708.613536863] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[controller-1] [INFO] [1777005708.659281706] [controller]: WALL_CHECK OK: min=0.936m @ 44.2° (360/360 valid, armed=False)
+[spline_planner-3] [INFO] [1777005708.665019302] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005708.713760264] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005708.763804113] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005708.813590886] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005708.863732437] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005708.914239656] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005708.962600814] [spline_planner]: CORRIDOR[left]: scan 4.3→10.4m | bottleneck @ S=9.9m wall=0.349m | obs_edge=0.018m | safe=0.171m
+[spline_planner-3] [INFO] [1777005708.963474635] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005709.013827639] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005709.063577275] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005709.113141057] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005709.164335955] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005709.213949328] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005709.263449071] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[controller-1] [WARN] [1777005709.284606226] [controller]: WALL_EMERGENCY ARM: 0.384m @ 43.9° [sector idx 360-720, 360/360 valid]
+[controller-1] [WARN] [1777005709.285147671] [controller]: FTG: lazy-init with defaults (mode != FTG at launch)
+[controller-1] [WARN] [1777005709.288164488] [controller]: [STATE MACHINE] FTGONLY!!!
+[controller-1] [WARN] [1777005709.296596333] [controller]: WALL_EMERGENCY ACTIVE: 0.390m @ 44.4° (360/360 valid)
+[spline_planner-3] [INFO] [1777005709.313037779] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005709.360529726] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 10.5m
+[spline_planner-3] [INFO] [1777005709.363546393] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005709.365109163] [state_machine]: HUD: Ego S: 4.8m | Opp S: 6.4m | Gap: 1.6m | State: OVERTAKE | Planner: spliner
+[spline_planner-3] [INFO] [1777005709.414007119] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005709.419854628] [spline_planner]: >>> EVASION ACTIVE: side=left | apex_d=0.19m | apex_s=6.4m | 95 pts [SQUEEZED to 0.17m]
+[controller-1] [WARN] [1777005709.421650541] [controller]: WALL_EMERGENCY clearing: 0.643m [1/10 ticks clear]
+[spline_planner-3] [INFO] [1777005709.462533936] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 6.4m
+[spline_planner-3] [INFO] [1777005709.463035056] [spline_planner]: SPACE CHECK: LeftGap=0.65m (Wall=0.66m) | RightGap=0.46m (Wall=0.69m) | Required=0.30m -> CHOICE: left (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005709.463688268] [spline_planner]: CORRIDOR[left]: scan 5.0→10.4m | bottleneck @ S=9.9m wall=0.349m | obs_edge=0.018m | safe=0.171m
+[spline_planner-3] [INFO] [1777005709.464891761] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005709.513222405] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005709.564798800] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[controller-1] [WARN] [1777005709.584475990] [controller]: WALL_EMERGENCY DISARM: path clear
+[spline_planner-3] [INFO] [1777005709.613161544] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005709.663475768] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[controller-1] [INFO] [1777005709.671498122] [controller]: WALL_CHECK OK: min=0.890m @ 44.7° (360/360 valid, armed=False)
+[spline_planner-3] [INFO] [1777005709.714027332] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005709.764614672] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005709.814742130] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005709.864321220] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005709.914772859] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005709.963905230] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005710.013227734] [spline_planner]: CORRIDOR[left]: scan 5.8→10.4m | bottleneck @ S=9.9m wall=0.349m | obs_edge=0.018m | safe=0.171m
+[spline_planner-3] [INFO] [1777005710.014158842] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005710.063284122] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005710.113294655] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005710.164670742] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005710.214042059] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005710.263267175] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005710.313843798] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005710.360708835] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 6.4m
+[spline_planner-3] [INFO] [1777005710.363971549] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005710.375633958] [state_machine]: HUD: Ego S: 6.4m | Opp S: 6.4m | Gap: 0.0m | State: OVERTAKE | Planner: spliner
+[state_machine-2] [INFO] [1777005710.407680420] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[spline_planner-3] [WARN] [1777005710.413455044] [spline_planner]: HIERARCHY: No feasible path — primary_safe=0.09m other_safe=0.07m min=0.14m — HARD ABORT
+[spline_planner-3] [INFO] [1777005710.414152448] [spline_planner]: >>> EVASION ABORTED: handing back to global planner
+[state_machine-2] [INFO] [1777005710.419914289] [state_machine]: GB_FREE False, obs dist to gb lane: 0.03913573692074823 m
+[state_machine-2] [INFO] [1777005710.420434755] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.433191084] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.445516313] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.458151658] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.470511882] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.483245659] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.495430377] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.508269961] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[spline_planner-3] [INFO] [1777005710.511200879] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 10.5m
+[spline_planner-3] [INFO] [1777005710.511751881] [spline_planner]: SPACE CHECK: LeftGap=0.36m (Wall=0.53m) | RightGap=0.66m (Wall=0.75m) | Required=0.30m -> CHOICE: right (Tie/Both Open | Deadband applied)
+[state_machine-2] [INFO] [1777005710.520600409] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.532926821] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.545491484] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.558054364] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[spline_planner-3] [INFO] [1777005710.561975680] [spline_planner]: CORRIDOR[right]: scan 8.2→14.5m | bottleneck @ S=12.1m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[state_machine-2] [INFO] [1777005710.570903656] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.583418116] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.595198253] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.595566667] [state_machine]: FTG: Speed 0.99m/s below threshold 1.0m/s. Starting timer...
+[state_machine-2] [INFO] [1777005710.608394920] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.620182762] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.633402440] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.645795505] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.658433765] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.670672173] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[controller-1] [INFO] [1777005710.672018762] [controller]: WALL_CHECK OK: min=0.856m @ -44.9° (360/360 valid, armed=False)
+[state_machine-2] [INFO] [1777005710.683147020] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.695360361] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.708038395] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.720508062] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.733182499] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.745196200] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.758202563] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.770566214] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.783462502] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.795176437] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.808157142] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.820656805] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.833323578] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.845342379] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.858056760] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.870360679] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.883321117] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.895508500] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.908214997] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.920466189] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.932988614] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.945157232] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.958357024] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.970673888] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.983085197] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005710.995810608] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.008027186] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.020220060] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.033266939] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.045314463] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.059211680] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[spline_planner-3] [INFO] [1777005711.062339414] [spline_planner]: CORRIDOR[right]: scan 8.2→14.5m | bottleneck @ S=12.1m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[state_machine-2] [INFO] [1777005711.070517027] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.082911425] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.095239330] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.108436818] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.120885778] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.132673500] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.145125625] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.170139579] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.183192670] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.195270581] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.208168914] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.220643060] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.233413676] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.245804047] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.257707534] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.270134502] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.283971447] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.295279910] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.307593498] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.320907343] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.333090028] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.345690378] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.357700543] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[spline_planner-3] [INFO] [1777005711.361130097] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 11.8m
+[state_machine-2] [INFO] [1777005711.370512226] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.377715812] [state_machine]: HUD: Ego S: 7.3m | Opp S: 10.5m | Gap: 3.2m | State: TRAILING | Planner: spliner
+[state_machine-2] [INFO] [1777005711.383434103] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.395419822] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.408075195] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.420119012] [state_machine]: GB_FREE False, obs dist to gb lane: 0.03913573692074823 m
+[state_machine-2] [INFO] [1777005711.420662190] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.433031151] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.445406845] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.458115616] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[spline_planner-3] [INFO] [1777005711.463595203] [spline_planner]: >>> EVASION ABORTED: handing back to global planner
+[state_machine-2] [INFO] [1777005711.470392346] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.483506950] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.495331120] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.508294304] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[spline_planner-3] [INFO] [1777005711.511391470] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 10.5m
+[spline_planner-3] [INFO] [1777005711.511888232] [spline_planner]: SPACE CHECK: LeftGap=0.36m (Wall=0.53m) | RightGap=0.66m (Wall=0.75m) | Required=0.30m -> CHOICE: right (Tie/Both Open | Deadband applied)
+[state_machine-2] [INFO] [1777005711.520290994] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.532918695] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.545599394] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.558330247] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[spline_planner-3] [INFO] [1777005711.562421378] [spline_planner]: CORRIDOR[left]: scan 8.2→14.5m | bottleneck @ S=10.0m wall=0.349m | obs_edge=0.164m | safe=0.072m
+[state_machine-2] [INFO] [1777005711.570769217] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.583010612] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.595310514] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.595818767] [state_machine]: FTG: timer-- > 2.0s remaining
+[state_machine-2] [INFO] [1777005711.607697088] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.620828874] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.633349156] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.645517535] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.658172697] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.670910412] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[controller-1] [INFO] [1777005711.672385268] [controller]: WALL_CHECK OK: min=0.615m @ -43.7° (360/360 valid, armed=False)
+[state_machine-2] [INFO] [1777005711.683571986] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.695141143] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.708169006] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.720655655] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.732861674] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.745176254] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.757993667] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.770368950] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.783158020] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.795493439] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.808199034] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.820465365] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.832839235] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.845314723] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.858717743] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.870705276] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.883137034] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.895842589] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.908016047] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.920830414] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.933127672] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.945349450] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.957706238] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.970502673] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.983323542] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005711.995329049] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.007645352] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.020847650] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.033029264] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.045444071] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.057752460] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[spline_planner-3] [INFO] [1777005712.062726570] [spline_planner]: CORRIDOR[right]: scan 8.2→14.5m | bottleneck @ S=12.1m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[state_machine-2] [INFO] [1777005712.070523087] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.083289676] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.095595140] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.108461234] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.120759114] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.132858806] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.145667553] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.158136610] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.170995371] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.183177065] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.195295672] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.207664493] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.220936480] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.233344174] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.246057334] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.258091414] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.270530205] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.283444699] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.295367182] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.307716437] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.320682307] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.332831430] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.345221591] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.358045176] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[spline_planner-3] [INFO] [1777005712.361288725] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 17.7m
+[state_machine-2] [INFO] [1777005712.381084698] [state_machine]: HUD: Ego S: 7.9m | Opp S: 10.5m | Gap: 2.6m | State: TRAILING | Planner: spliner
+[state_machine-2] [INFO] [1777005712.382238719] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[state_machine-2] [INFO] [1777005712.388759198] [state_machine]: O_FREE False, obs dist to ot lane: -0.0391 m (closest obs @ s=10.5m d=0.04m | path_d=0.00m)
+[spline_planner-3] [WARN] [1777005712.414053043] [spline_planner]: HIERARCHY: No feasible path — primary_safe=0.09m other_safe=0.07m min=0.14m — HARD ABORT
+[state_machine-2] [INFO] [1777005712.432827000] [state_machine]: GB_FREE False, obs dist to gb lane: 0.03913573692074823 m
+[spline_planner-3] [INFO] [1777005712.464211987] [spline_planner]: >>> EVASION ABORTED: handing back to global planner
+[spline_planner-3] [INFO] [1777005712.511686019] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 10.5m
+[spline_planner-3] [INFO] [1777005712.512095929] [spline_planner]: SPACE CHECK: LeftGap=0.36m (Wall=0.53m) | RightGap=0.66m (Wall=0.75m) | Required=0.30m -> CHOICE: right (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005712.563914373] [spline_planner]: CORRIDOR[right]: scan 8.2→14.5m | bottleneck @ S=12.1m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[state_machine-2] [INFO] [1777005712.595488360] [state_machine]: FTG: timer-- > 1.0s remaining
+[controller-1] [INFO] [1777005712.684695712] [controller]: WALL_CHECK OK: min=0.512m @ -43.9° (360/360 valid, armed=False)
+[spline_planner-3] [INFO] [1777005713.064058101] [spline_planner]: CORRIDOR[left]: scan 8.2→14.5m | bottleneck @ S=10.0m wall=0.349m | obs_edge=0.164m | safe=0.072m
+[spline_planner-3] [INFO] [1777005713.361526733] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 11.8m
+[state_machine-2] [INFO] [1777005713.387778827] [state_machine]: HUD: Ego S: 8.3m | Opp S: 10.5m | Gap: 2.2m | State: TRAILING | Planner: spliner
+[state_machine-2] [INFO] [1777005713.444773148] [state_machine]: GB_FREE False, obs dist to gb lane: 0.03913573692074823 m
+[spline_planner-3] [INFO] [1777005713.464383497] [spline_planner]: >>> EVASION ABORTED: handing back to global planner
+[spline_planner-3] [INFO] [1777005713.511975831] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 10.5m
+[spline_planner-3] [INFO] [1777005713.512402032] [spline_planner]: SPACE CHECK: LeftGap=0.36m (Wall=0.53m) | RightGap=0.66m (Wall=0.75m) | Required=0.30m -> CHOICE: right (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005713.564624397] [spline_planner]: CORRIDOR[left]: scan 8.3→14.5m | bottleneck @ S=10.0m wall=0.349m | obs_edge=0.164m | safe=0.075m
+[state_machine-2] [INFO] [1777005713.595226554] [state_machine]: FTG: timer-- > 0.0s remaining
+[state_machine-2] [WARN] [1777005713.608418653] [state_machine]: FTG: Kicked in!
+[state_machine-2] [WARN] [1777005713.609169987] [state_machine]: No local waypoints published...
+[controller-1] [WARN] [1777005713.622304931] [controller]: [STATE MACHINE] FTGONLY!!!
+[state_machine-2] [INFO] [1777005713.782822132] [state_machine]: FTG: Back to spliner (new state: TRAILING)
+[controller-1] [INFO] [1777005713.784772471] [controller]: WALL_CHECK OK: min=1.001m @ 40.7° (360/360 valid, armed=False)
+[state_machine-2] [INFO] [1777005713.808193011] [state_machine]: FTG: Speed 1.00m/s below threshold 1.0m/s. Starting timer...
+[spline_planner-3] [INFO] [1777005714.112866859] [spline_planner]: CORRIDOR[right]: scan 8.6→14.5m | bottleneck @ S=12.1m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[state_machine-2] [INFO] [1777005714.388439294] [state_machine]: HUD: Ego S: 8.6m | Opp S: 10.5m | Gap: 1.9m | State: TRAILING | Planner: spliner
+[spline_planner-3] [INFO] [1777005714.410546638] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 10.5m
+[state_machine-2] [INFO] [1777005714.444921256] [state_machine]: GB_FREE False, obs dist to gb lane: 0.03913573692074823 m
+[spline_planner-3] [WARN] [1777005714.463360354] [spline_planner]: HIERARCHY: No feasible path — primary_safe=0.09m other_safe=0.08m min=0.14m — HARD ABORT
+[spline_planner-3] [INFO] [1777005714.512072277] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 10.5m
+[spline_planner-3] [INFO] [1777005714.512557708] [spline_planner]: SPACE CHECK: LeftGap=0.36m (Wall=0.53m) | RightGap=0.66m (Wall=0.75m) | Required=0.30m -> CHOICE: right (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005714.514932625] [spline_planner]: >>> EVASION ABORTED: handing back to global planner
+[spline_planner-3] [INFO] [1777005714.612885795] [spline_planner]: CORRIDOR[left]: scan 8.7→14.5m | bottleneck @ S=10.1m wall=0.349m | obs_edge=0.164m | safe=0.082m
+[state_machine-2] [INFO] [1777005714.795047680] [state_machine]: FTG: timer-- > 2.0s remaining
+[controller-1] [INFO] [1777005714.796645034] [controller]: WALL_CHECK OK: min=0.873m @ 42.9° (360/360 valid, armed=False)
+[spline_planner-3] [INFO] [1777005715.113075936] [spline_planner]: CORRIDOR[right]: scan 8.7→14.5m | bottleneck @ S=12.1m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[state_machine-2] [INFO] [1777005715.399759225] [state_machine]: HUD: Ego S: 8.8m | Opp S: 10.5m | Gap: 1.7m | State: TRAILING | Planner: spliner
+[spline_planner-3] [INFO] [1777005715.411062080] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 11.8m
+[state_machine-2] [INFO] [1777005715.445155729] [state_machine]: GB_FREE False, obs dist to gb lane: 0.03913573692074823 m
+[spline_planner-3] [INFO] [1777005715.561411819] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 10.5m
+[spline_planner-3] [INFO] [1777005715.561825827] [spline_planner]: SPACE CHECK: LeftGap=0.36m (Wall=0.53m) | RightGap=0.66m (Wall=0.75m) | Required=0.30m -> CHOICE: right (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005715.563626299] [spline_planner]: >>> EVASION ABORTED: handing back to global planner
+[spline_planner-3] [INFO] [1777005715.662534707] [spline_planner]: CORRIDOR[right]: scan 8.8→14.5m | bottleneck @ S=12.1m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[state_machine-2] [INFO] [1777005715.795727497] [state_machine]: FTG: timer-- > 1.0s remaining
+[controller-1] [INFO] [1777005715.796654157] [controller]: WALL_CHECK OK: min=1.831m @ -44.2° (360/360 valid, armed=False)
+[spline_planner-3] [INFO] [1777005716.162613259] [spline_planner]: CORRIDOR[right]: scan 8.8→14.5m | bottleneck @ S=12.1m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[spline_planner-3] [INFO] [1777005716.411059192] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 17.7m
+[state_machine-2] [INFO] [1777005716.412103380] [state_machine]: HUD: Ego S: 8.9m | Opp S: 10.5m | Gap: 1.6m | State: TRAILING | Planner: spliner
+[state_machine-2] [INFO] [1777005716.457256304] [state_machine]: GB_FREE False, obs dist to gb lane: 0.03913573692074823 m
+[spline_planner-3] [WARN] [1777005716.464071832] [spline_planner]: HIERARCHY: No feasible path — primary_safe=0.09m other_safe=0.09m min=0.14m — HARD ABORT
+[spline_planner-3] [INFO] [1777005716.562484205] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 10.5m
+[spline_planner-3] [INFO] [1777005716.563030900] [spline_planner]: SPACE CHECK: LeftGap=0.36m (Wall=0.53m) | RightGap=0.66m (Wall=0.75m) | Required=0.30m -> CHOICE: right (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005716.565633479] [spline_planner]: >>> EVASION ABORTED: handing back to global planner
+[spline_planner-3] [INFO] [1777005716.662717236] [spline_planner]: CORRIDOR[left]: scan 8.9→14.5m | bottleneck @ S=10.1m wall=0.349m | obs_edge=0.164m | safe=0.093m
+[state_machine-2] [INFO] [1777005716.795160693] [state_machine]: FTG: timer-- > 0.0s remaining
+[controller-1] [INFO] [1777005716.796736688] [controller]: WALL_CHECK OK: min=1.805m @ -43.2° (360/360 valid, armed=False)
+[state_machine-2] [WARN] [1777005716.807765215] [state_machine]: FTG: Kicked in!
+[state_machine-2] [WARN] [1777005716.808547477] [state_machine]: No local waypoints published...
+[controller-1] [WARN] [1777005716.810265936] [controller]: [STATE MACHINE] FTGONLY!!!
+[state_machine-2] [INFO] [1777005716.994738258] [state_machine]: FTG: Back to spliner (new state: TRAILING)
+[state_machine-2] [INFO] [1777005717.033316913] [state_machine]: FTG: Speed 0.91m/s below threshold 1.0m/s. Starting timer...
+[spline_planner-3] [INFO] [1777005717.163091023] [spline_planner]: CORRIDOR[left]: scan 9.1→14.5m | bottleneck @ S=10.2m wall=0.367m | obs_edge=0.164m | safe=0.104m
+[spline_planner-3] [INFO] [1777005717.411285663] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 17.7m
+[state_machine-2] [INFO] [1777005717.413265427] [state_machine]: HUD: Ego S: 9.1m | Opp S: 10.5m | Gap: 1.4m | State: TRAILING | Planner: spliner
+[state_machine-2] [INFO] [1777005717.458950671] [state_machine]: GB_FREE False, obs dist to gb lane: 0.03913573692074823 m
+[spline_planner-3] [INFO] [1777005717.611769409] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 10.5m
+[spline_planner-3] [INFO] [1777005717.612199327] [spline_planner]: SPACE CHECK: LeftGap=0.36m (Wall=0.53m) | RightGap=0.66m (Wall=0.75m) | Required=0.30m -> CHOICE: right (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005717.614063717] [spline_planner]: >>> EVASION ABORTED: handing back to global planner
+[spline_planner-3] [INFO] [1777005717.663840124] [spline_planner]: CORRIDOR[right]: scan 9.1→14.5m | bottleneck @ S=12.2m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[controller-1] [INFO] [1777005717.809917841] [controller]: WALL_CHECK OK: min=1.734m @ -42.7° (360/360 valid, armed=False)
+[state_machine-2] [INFO] [1777005718.020654055] [state_machine]: FTG: timer-- > 2.0s remaining
+[spline_planner-3] [INFO] [1777005718.212171812] [spline_planner]: CORRIDOR[right]: scan 9.1→14.5m | bottleneck @ S=12.2m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[spline_planner-3] [INFO] [1777005718.411870551] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 17.7m
+[state_machine-2] [INFO] [1777005718.425629917] [state_machine]: HUD: Ego S: 9.1m | Opp S: 10.5m | Gap: 1.4m | State: TRAILING | Planner: spliner
+[state_machine-2] [INFO] [1777005718.470072308] [state_machine]: GB_FREE False, obs dist to gb lane: 0.03913573692074823 m
+[spline_planner-3] [WARN] [1777005718.513885671] [spline_planner]: HIERARCHY: No feasible path — primary_safe=0.09m other_safe=0.10m min=0.14m — HARD ABORT
+[spline_planner-3] [INFO] [1777005718.612850128] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 10.5m
+[spline_planner-3] [INFO] [1777005718.613434262] [spline_planner]: SPACE CHECK: LeftGap=0.36m (Wall=0.53m) | RightGap=0.66m (Wall=0.75m) | Required=0.30m -> CHOICE: right (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005718.615456525] [spline_planner]: >>> EVASION ABORTED: handing back to global planner
+[spline_planner-3] [INFO] [1777005718.712597248] [spline_planner]: CORRIDOR[right]: scan 9.1→14.5m | bottleneck @ S=12.2m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[controller-1] [INFO] [1777005718.821525418] [controller]: WALL_CHECK OK: min=1.733m @ -43.9° (360/360 valid, armed=False)
+[state_machine-2] [INFO] [1777005719.020431397] [state_machine]: FTG: timer-- > 1.0s remaining
+[spline_planner-3] [INFO] [1777005719.262908752] [spline_planner]: CORRIDOR[right]: scan 9.1→14.5m | bottleneck @ S=12.2m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[state_machine-2] [INFO] [1777005719.425830997] [state_machine]: HUD: Ego S: 9.1m | Opp S: 10.5m | Gap: 1.4m | State: TRAILING | Planner: spliner
+[spline_planner-3] [INFO] [1777005719.460114906] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 10.5m
+[state_machine-2] [INFO] [1777005719.470101471] [state_machine]: GB_FREE False, obs dist to gb lane: 0.03913573692074823 m
+[spline_planner-3] [INFO] [1777005719.662012147] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 10.5m
+[spline_planner-3] [INFO] [1777005719.662506594] [spline_planner]: SPACE CHECK: LeftGap=0.36m (Wall=0.53m) | RightGap=0.66m (Wall=0.75m) | Required=0.30m -> CHOICE: right (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005719.664522817] [spline_planner]: >>> EVASION ABORTED: handing back to global planner
+[spline_planner-3] [INFO] [1777005719.762943660] [spline_planner]: CORRIDOR[right]: scan 9.1→14.5m | bottleneck @ S=12.2m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[controller-1] [INFO] [1777005719.821855417] [controller]: WALL_CHECK OK: min=1.723m @ -44.4° (360/360 valid, armed=False)
+[state_machine-2] [INFO] [1777005720.020779411] [state_machine]: FTG: timer-- > 0.0s remaining
+[state_machine-2] [WARN] [1777005720.032768422] [state_machine]: FTG: Kicked in!
+[state_machine-2] [WARN] [1777005720.033648446] [state_machine]: No local waypoints published...
+[controller-1] [WARN] [1777005720.034837533] [controller]: [STATE MACHINE] FTGONLY!!!
+[state_machine-2] [INFO] [1777005720.232738757] [state_machine]: FTG: Back to spliner (new state: TRAILING)
+[state_machine-2] [INFO] [1777005720.270479384] [state_machine]: FTG: Speed 0.92m/s below threshold 1.0m/s. Starting timer...
+[spline_planner-3] [INFO] [1777005720.312647327] [spline_planner]: CORRIDOR[right]: scan 9.2→14.5m | bottleneck @ S=12.1m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[state_machine-2] [INFO] [1777005720.439150126] [state_machine]: HUD: Ego S: 9.3m | Opp S: 10.5m | Gap: 1.2m | State: TRAILING | Planner: spliner
+[spline_planner-3] [INFO] [1777005720.460442836] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 10.5m
+[state_machine-2] [INFO] [1777005720.470260337] [state_machine]: GB_FREE False, obs dist to gb lane: 0.03913573692074823 m
+[spline_planner-3] [WARN] [1777005720.564501358] [spline_planner]: HIERARCHY: No feasible path — primary_safe=0.09m other_safe=0.12m min=0.14m — HARD ABORT
+[spline_planner-3] [INFO] [1777005720.662660151] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 10.5m
+[spline_planner-3] [INFO] [1777005720.663279991] [spline_planner]: SPACE CHECK: LeftGap=0.36m (Wall=0.53m) | RightGap=0.66m (Wall=0.75m) | Required=0.30m -> CHOICE: right (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005720.665524407] [spline_planner]: >>> EVASION ABORTED: handing back to global planner
+[spline_planner-3] [INFO] [1777005720.813201535] [spline_planner]: CORRIDOR[right]: scan 9.3→14.5m | bottleneck @ S=12.2m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[controller-1] [INFO] [1777005720.834003694] [controller]: WALL_CHECK OK: min=1.663m @ 12.9° (360/360 valid, armed=False)
+[state_machine-2] [INFO] [1777005721.258206618] [state_machine]: FTG: timer-- > 2.0s remaining
+[spline_planner-3] [INFO] [1777005721.313448079] [spline_planner]: CORRIDOR[left]: scan 9.3→14.5m | bottleneck @ S=10.2m wall=0.367m | obs_edge=0.164m | safe=0.117m
+[state_machine-2] [INFO] [1777005721.450454860] [state_machine]: HUD: Ego S: 9.3m | Opp S: 10.5m | Gap: 1.2m | State: TRAILING | Planner: spliner
+[spline_planner-3] [INFO] [1777005721.461134542] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 11.8m
+[state_machine-2] [INFO] [1777005721.482670715] [state_machine]: GB_FREE False, obs dist to gb lane: 0.03913573692074823 m
+[spline_planner-3] [INFO] [1777005721.711548333] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 10.5m
+[spline_planner-3] [INFO] [1777005721.711985264] [spline_planner]: SPACE CHECK: LeftGap=0.36m (Wall=0.53m) | RightGap=0.66m (Wall=0.75m) | Required=0.30m -> CHOICE: right (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005721.714314277] [spline_planner]: >>> EVASION ABORTED: handing back to global planner
+[spline_planner-3] [INFO] [1777005721.813798555] [spline_planner]: CORRIDOR[right]: scan 9.3→14.5m | bottleneck @ S=12.2m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[controller-1] [INFO] [1777005721.834646901] [controller]: WALL_CHECK OK: min=1.658m @ 13.1° (360/360 valid, armed=False)
+[state_machine-2] [INFO] [1777005722.257849920] [state_machine]: FTG: timer-- > 1.0s remaining
+[spline_planner-3] [INFO] [1777005722.362562798] [spline_planner]: CORRIDOR[right]: scan 9.3→14.5m | bottleneck @ S=12.2m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[spline_planner-3] [INFO] [1777005722.461159033] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 11.8m
+[state_machine-2] [INFO] [1777005722.462684164] [state_machine]: HUD: Ego S: 9.3m | Opp S: 10.5m | Gap: 1.2m | State: TRAILING | Planner: spliner
+[state_machine-2] [INFO] [1777005722.494861288] [state_machine]: GB_FREE False, obs dist to gb lane: 0.03913573692074823 m
+[spline_planner-3] [WARN] [1777005722.613792036] [spline_planner]: HIERARCHY: No feasible path — primary_safe=0.09m other_safe=0.12m min=0.14m — HARD ABORT
+[spline_planner-3] [INFO] [1777005722.711648978] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 10.5m
+[spline_planner-3] [INFO] [1777005722.712121786] [spline_planner]: SPACE CHECK: LeftGap=0.36m (Wall=0.53m) | RightGap=0.66m (Wall=0.75m) | Required=0.30m -> CHOICE: right (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005722.714307453] [spline_planner]: >>> EVASION ABORTED: handing back to global planner
+[controller-1] [INFO] [1777005722.846486992] [controller]: WALL_CHECK OK: min=1.660m @ 14.9° (360/360 valid, armed=False)
+[spline_planner-3] [INFO] [1777005722.862607413] [spline_planner]: CORRIDOR[right]: scan 9.3→14.5m | bottleneck @ S=12.2m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[state_machine-2] [INFO] [1777005723.257961965] [state_machine]: FTG: timer-- > 0.0s remaining
+[state_machine-2] [WARN] [1777005723.270744411] [state_machine]: FTG: Kicked in!
+[state_machine-2] [WARN] [1777005723.271442868] [state_machine]: No local waypoints published...
+[controller-1] [WARN] [1777005723.273054419] [controller]: [STATE MACHINE] FTGONLY!!!
+[spline_planner-3] [INFO] [1777005723.362798768] [spline_planner]: CORRIDOR[right]: scan 9.3→14.5m | bottleneck @ S=12.1m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[spline_planner-3] [INFO] [1777005723.363954424] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.15m (nominal=0.40m)
+[spline_planner-3] [WARN] [1777005723.366910851] [spline_planner]: SAFETY NET: S=9.9m lateral=0.22m wall=0.35m limit=0.19m
+[spline_planner-3] [INFO] [1777005723.461373498] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 17.7m
+[state_machine-2] [INFO] [1777005723.470042129] [state_machine]: FTG: Back to spliner (new state: TRAILING)
+[state_machine-2] [INFO] [1777005723.477191128] [state_machine]: HUD: Ego S: 9.4m | Opp S: 10.5m | Gap: 1.1m | State: TRAILING | Planner: spliner
+[state_machine-2] [INFO] [1777005723.507490649] [state_machine]: GB_FREE False, obs dist to gb lane: 0.03913573692074823 m
+[state_machine-2] [INFO] [1777005723.507914115] [state_machine]: FTG: Speed 0.90m/s below threshold 1.0m/s. Starting timer...
+[spline_planner-3] [INFO] [1777005723.513661193] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.16m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005723.563890135] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.15m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005723.614780616] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005723.664136228] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005723.711942814] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 10.5m
+[spline_planner-3] [INFO] [1777005723.712388010] [spline_planner]: SPACE CHECK: LeftGap=0.36m (Wall=0.53m) | RightGap=0.66m (Wall=0.75m) | Required=0.30m -> CHOICE: right (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005723.713764846] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005723.717545303] [spline_planner]: >>> EVASION ABORTED: handing back to global planner
+[spline_planner-3] [INFO] [1777005723.764150570] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005723.814336022] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[controller-1] [INFO] [1777005723.859212299] [controller]: WALL_CHECK OK: min=1.458m @ 11.4° (360/360 valid, armed=False)
+[spline_planner-3] [INFO] [1777005723.863200692] [spline_planner]: CORRIDOR[right]: scan 9.5→14.5m | bottleneck @ S=12.2m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[spline_planner-3] [INFO] [1777005723.864181593] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005723.914626977] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005723.963978161] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005724.013433929] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005724.063542531] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005724.114946367] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005724.163645954] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005724.214445759] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005724.264883391] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005724.313928930] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005724.363457766] [spline_planner]: CORRIDOR[left]: scan 9.5→14.5m | bottleneck @ S=10.2m wall=0.367m | obs_edge=0.164m | safe=0.140m
+[spline_planner-3] [INFO] [1777005724.363897823] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005724.414168125] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005724.462171419] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 17.7m
+[spline_planner-3] [INFO] [1777005724.465115934] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005724.488384947] [state_machine]: HUD: Ego S: 9.5m | Opp S: 10.5m | Gap: 1.0m | State: TRAILING | Planner: spliner
+[state_machine-2] [INFO] [1777005724.495592375] [state_machine]: FTG: timer-- > 2.0s remaining
+[state_machine-2] [INFO] [1777005724.507786640] [state_machine]: GB_FREE False, obs dist to gb lane: 0.03913573692074823 m
+[spline_planner-3] [INFO] [1777005724.514557799] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005724.564618963] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005724.614121049] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005724.663710928] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005724.713312348] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 10.5m
+[spline_planner-3] [INFO] [1777005724.713777572] [spline_planner]: SPACE CHECK: LeftGap=0.36m (Wall=0.53m) | RightGap=0.66m (Wall=0.75m) | Required=0.30m -> CHOICE: right (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005724.715195995] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005724.718348747] [spline_planner]: >>> EVASION ABORTED: handing back to global planner
+[spline_planner-3] [INFO] [1777005724.763933462] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005724.813818188] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[controller-1] [INFO] [1777005724.859820498] [controller]: WALL_CHECK OK: min=1.445m @ 13.6° (360/360 valid, armed=False)
+[spline_planner-3] [INFO] [1777005724.863477506] [spline_planner]: CORRIDOR[left]: scan 9.5→14.5m | bottleneck @ S=10.2m wall=0.367m | obs_edge=0.164m | safe=0.140m
+[spline_planner-3] [INFO] [1777005724.863916671] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005724.914044289] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005724.964071389] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005725.014961042] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005725.065196612] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005725.114082537] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005725.164317145] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005725.215333204] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005725.263943808] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005725.314218992] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005725.364034122] [spline_planner]: CORRIDOR[right]: scan 9.5→14.5m | bottleneck @ S=12.2m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[spline_planner-3] [INFO] [1777005725.365152929] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [WARN] [1777005725.368209913] [spline_planner]: SAFETY NET: S=9.9m lateral=0.19m wall=0.35m limit=0.19m
+[spline_planner-3] [INFO] [1777005725.415300585] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005725.463727308] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005725.495288734] [state_machine]: FTG: timer-- > 1.0s remaining
+[state_machine-2] [INFO] [1777005725.501735591] [state_machine]: HUD: Ego S: 9.5m | Opp S: 10.5m | Gap: 1.0m | State: TRAILING | Planner: spliner
+[spline_planner-3] [INFO] [1777005725.510212306] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 10.5m
+[spline_planner-3] [INFO] [1777005725.513633848] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005725.519727158] [state_machine]: GB_FREE False, obs dist to gb lane: 0.03913573692074823 m
+[spline_planner-3] [INFO] [1777005725.564173843] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005725.613405960] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005725.663998894] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005725.714964940] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005725.718504100] [spline_planner]: >>> EVASION ABORTED: handing back to global planner
+[spline_planner-3] [INFO] [1777005725.762596547] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 10.5m
+[spline_planner-3] [INFO] [1777005725.763202932] [spline_planner]: SPACE CHECK: LeftGap=0.36m (Wall=0.53m) | RightGap=0.66m (Wall=0.75m) | Required=0.30m -> CHOICE: right (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005725.764445679] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005725.814479956] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005725.863526769] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[controller-1] [INFO] [1777005725.871673893] [controller]: WALL_CHECK OK: min=1.457m @ 11.4° (360/360 valid, armed=False)
+[spline_planner-3] [INFO] [1777005725.913552530] [spline_planner]: CORRIDOR[right]: scan 9.5→14.5m | bottleneck @ S=12.2m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[spline_planner-3] [INFO] [1777005725.914417135] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005725.964086975] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005726.015345495] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005726.064688832] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005726.113684914] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005726.166277432] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005726.214408238] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005726.263568434] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005726.314609412] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005726.364480628] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005726.413734138] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005726.463389554] [spline_planner]: CORRIDOR[right]: scan 9.5→14.5m | bottleneck @ S=12.2m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[spline_planner-3] [INFO] [1777005726.464171215] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005726.495210253] [state_machine]: FTG: timer-- > 0.0s remaining
+[state_machine-2] [WARN] [1777005726.508292368] [state_machine]: FTG: Kicked in!
+[state_machine-2] [WARN] [1777005726.509066966] [state_machine]: No local waypoints published...
+[state_machine-2] [INFO] [1777005726.509456839] [state_machine]: HUD: Ego S: 9.5m | Opp S: 10.5m | Gap: 1.0m | State: FTGONLY | Planner: spliner
+[spline_planner-3] [INFO] [1777005726.510667877] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 10.5m
+[spline_planner-3] [INFO] [1777005726.515298443] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[controller-1] [WARN] [1777005726.522115398] [controller]: [STATE MACHINE] FTGONLY!!!
+[spline_planner-3] [INFO] [1777005726.563677860] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.14m (nominal=0.40m)
+[spline_planner-3] [WARN] [1777005726.614694082] [spline_planner]: HIERARCHY: No feasible path — primary_safe=0.09m other_safe=0.14m min=0.14m — HARD ABORT
+[spline_planner-3] [INFO] [1777005726.664045915] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005726.713693616] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.16m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005726.732655646] [state_machine]: FTG: Back to spliner (new state: TRAILING)
+[state_machine-2] [INFO] [1777005726.744750498] [state_machine]: GB_FREE False, obs dist to gb lane: 0.03913573692074823 m
+[spline_planner-3] [INFO] [1777005726.763366545] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 10.5m
+[spline_planner-3] [INFO] [1777005726.763956259] [spline_planner]: SPACE CHECK: LeftGap=0.36m (Wall=0.53m) | RightGap=0.66m (Wall=0.75m) | Required=0.30m -> CHOICE: right (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005726.765297659] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.19m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005726.770283675] [spline_planner]: >>> EVASION ABORTED: handing back to global planner
+[state_machine-2] [INFO] [1777005726.783513384] [state_machine]: FTG: Speed 0.93m/s below threshold 1.0m/s. Starting timer...
+[spline_planner-3] [INFO] [1777005726.814805772] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005726.864122158] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[controller-1] [INFO] [1777005726.884363042] [controller]: WALL_CHECK OK: min=1.227m @ 9.1° (360/360 valid, armed=False)
+[spline_planner-3] [INFO] [1777005726.914282712] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005726.964291384] [spline_planner]: CORRIDOR[right]: scan 9.7→14.5m | bottleneck @ S=12.2m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[spline_planner-3] [INFO] [1777005726.965401655] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005727.013640361] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005727.063908778] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005727.114483062] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005727.164646013] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005727.213987528] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005727.264580287] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005727.314072412] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005727.364601943] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005727.413974587] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [WARN] [1777005727.416921587] [spline_planner]: SAFETY NET: S=9.9m lateral=0.21m wall=0.35m limit=0.19m
+[spline_planner-3] [INFO] [1777005727.463842510] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005727.510752502] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 11.8m
+[state_machine-2] [INFO] [1777005727.512887164] [state_machine]: HUD: Ego S: 9.7m | Opp S: 10.5m | Gap: 0.8m | State: TRAILING | Planner: spliner
+[spline_planner-3] [INFO] [1777005727.513044807] [spline_planner]: CORRIDOR[right]: scan 9.7→14.5m | bottleneck @ S=12.2m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[spline_planner-3] [INFO] [1777005727.513881711] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005727.563397460] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005727.614002030] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005727.664227807] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005727.713476100] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005727.744762739] [state_machine]: GB_FREE False, obs dist to gb lane: 0.03913573692074823 m
+[spline_planner-3] [INFO] [1777005727.765141971] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005727.770176116] [state_machine]: FTG: timer-- > 2.0s remaining
+[spline_planner-3] [INFO] [1777005727.812346780] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 10.5m
+[spline_planner-3] [INFO] [1777005727.812850695] [spline_planner]: SPACE CHECK: LeftGap=0.36m (Wall=0.53m) | RightGap=0.66m (Wall=0.75m) | Required=0.30m -> CHOICE: right (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005727.814133346] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005727.817319802] [spline_planner]: >>> EVASION ABORTED: handing back to global planner
+[spline_planner-3] [INFO] [1777005727.864332013] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[controller-1] [INFO] [1777005727.896476275] [controller]: WALL_CHECK OK: min=1.236m @ 11.4° (360/360 valid, armed=False)
+[spline_planner-3] [INFO] [1777005727.914329417] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005727.963882585] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005728.013331130] [spline_planner]: CORRIDOR[right]: scan 9.7→14.5m | bottleneck @ S=12.2m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[spline_planner-3] [INFO] [1777005728.014239477] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005728.064806931] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005728.114646884] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005728.164399005] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005728.213801436] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005728.264478744] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005728.314151397] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005728.363999025] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005728.413667781] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005728.465509511] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005728.511338608] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 11.8m
+[state_machine-2] [INFO] [1777005728.512937426] [state_machine]: HUD: Ego S: 9.7m | Opp S: 10.5m | Gap: 0.8m | State: TRAILING | Planner: spliner
+[spline_planner-3] [INFO] [1777005728.513867433] [spline_planner]: CORRIDOR[right]: scan 9.7→14.5m | bottleneck @ S=12.2m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[spline_planner-3] [INFO] [1777005728.514648152] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005728.565041874] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005728.614758719] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005728.663990724] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005728.713863438] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005728.744887983] [state_machine]: GB_FREE False, obs dist to gb lane: 0.03913573692074823 m
+[spline_planner-3] [INFO] [1777005728.764651081] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005728.770117018] [state_machine]: FTG: timer-- > 1.0s remaining
+[spline_planner-3] [INFO] [1777005728.812922493] [spline_planner]: SPACE CHECK: LeftGap=0.36m (Wall=0.53m) | RightGap=0.66m (Wall=0.75m) | Required=0.30m -> CHOICE: right (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005728.814134122] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005728.817787825] [spline_planner]: >>> EVASION ABORTED: handing back to global planner
+[spline_planner-3] [INFO] [1777005728.862497064] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 10.5m
+[spline_planner-3] [INFO] [1777005728.864299700] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[controller-1] [INFO] [1777005728.896721729] [controller]: WALL_CHECK OK: min=1.223m @ 7.9° (360/360 valid, armed=False)
+[spline_planner-3] [INFO] [1777005728.914862426] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005728.964111031] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005729.013861439] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005729.063713438] [spline_planner]: CORRIDOR[right]: scan 9.7→14.5m | bottleneck @ S=12.2m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[spline_planner-3] [INFO] [1777005729.064784276] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005729.114354030] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005729.164099151] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005729.214429467] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005729.264564611] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005729.314030723] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005729.365286808] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005729.413475179] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005729.464386403] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [WARN] [1777005729.467141238] [spline_planner]: SAFETY NET: S=9.9m lateral=0.21m wall=0.35m limit=0.19m
+[spline_planner-3] [INFO] [1777005729.511790898] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 17.7m
+[spline_planner-3] [INFO] [1777005729.514861398] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005729.526561028] [state_machine]: HUD: Ego S: 9.7m | Opp S: 10.5m | Gap: 0.8m | State: TRAILING | Planner: spliner
+[spline_planner-3] [INFO] [1777005729.563717418] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005729.612827519] [spline_planner]: CORRIDOR[right]: scan 9.7→14.5m | bottleneck @ S=12.2m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[spline_planner-3] [INFO] [1777005729.613911121] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005729.664251837] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005729.714379627] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005729.757279289] [state_machine]: GB_FREE False, obs dist to gb lane: 0.03913573692074823 m
+[spline_planner-3] [INFO] [1777005729.764133894] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005729.770064154] [state_machine]: FTG: timer-- > 0.0s remaining
+[state_machine-2] [WARN] [1777005729.783369064] [state_machine]: FTG: Kicked in!
+[state_machine-2] [WARN] [1777005729.784218591] [state_machine]: No local waypoints published...
+[controller-1] [WARN] [1777005729.797125532] [controller]: [STATE MACHINE] FTGONLY!!!
+[spline_planner-3] [INFO] [1777005729.813252361] [spline_planner]: SPACE CHECK: LeftGap=0.36m (Wall=0.53m) | RightGap=0.66m (Wall=0.75m) | Required=0.30m -> CHOICE: right (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005729.814811015] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005729.818999691] [spline_planner]: >>> EVASION ABORTED: handing back to global planner
+[spline_planner-3] [INFO] [1777005729.864446451] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.16m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005729.912119725] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 10.5m
+[spline_planner-3] [INFO] [1777005729.913964369] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005729.964564326] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.19m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005730.014331448] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005730.019792096] [state_machine]: FTG: Back to spliner (new state: TRAILING)
+[controller-1] [INFO] [1777005730.021495107] [controller]: WALL_CHECK OK: min=1.106m @ 8.4° (360/360 valid, armed=False)
+[state_machine-2] [INFO] [1777005730.045391261] [state_machine]: FTG: Speed 0.98m/s below threshold 1.0m/s. Starting timer...
+[spline_planner-3] [INFO] [1777005730.064622654] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005730.113413365] [spline_planner]: CORRIDOR[right]: scan 9.8→14.5m | bottleneck @ S=12.1m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[spline_planner-3] [INFO] [1777005730.114533675] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.19m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005730.165037216] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005730.214434773] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005730.264829141] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005730.313929647] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005730.363718882] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005730.415083651] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005730.463548216] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005730.512466865] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 19.4m
+[spline_planner-3] [INFO] [1777005730.515270790] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005730.537803012] [state_machine]: HUD: Ego S: 9.8m | Opp S: 10.5m | Gap: 0.6m | State: TRAILING | Planner: spliner
+[spline_planner-3] [INFO] [1777005730.564449902] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005730.613482312] [spline_planner]: CORRIDOR[right]: scan 9.8→14.5m | bottleneck @ S=12.1m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[spline_planner-3] [INFO] [1777005730.614518676] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005730.664354587] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005730.715244064] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005730.757548443] [state_machine]: GB_FREE False, obs dist to gb lane: 0.03913573692074823 m
+[spline_planner-3] [INFO] [1777005730.765275879] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005730.813288054] [spline_planner]: SPACE CHECK: LeftGap=0.36m (Wall=0.53m) | RightGap=0.66m (Wall=0.75m) | Required=0.30m -> CHOICE: right (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005730.814561699] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005730.863558702] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005730.867373535] [spline_planner]: >>> EVASION ABORTED: handing back to global planner
+[spline_planner-3] [INFO] [1777005730.912813926] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 10.5m
+[spline_planner-3] [INFO] [1777005730.914689037] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005730.964643077] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005731.013822971] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[controller-1] [INFO] [1777005731.021668597] [controller]: WALL_CHECK OK: min=0.982m @ 9.4° (360/360 valid, armed=False)
+[state_machine-2] [INFO] [1777005731.032921279] [state_machine]: FTG: timer-- > 2.0s remaining
+[spline_planner-3] [INFO] [1777005731.064261404] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005731.113514074] [spline_planner]: CORRIDOR[right]: scan 9.8→14.5m | bottleneck @ S=12.1m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[spline_planner-3] [INFO] [1777005731.114497060] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005731.164419043] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005731.213643722] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005731.263405208] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005731.314693157] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005731.363591550] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005731.414450994] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005731.464570524] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [WARN] [1777005731.468117430] [spline_planner]: SAFETY NET: S=10.0m lateral=0.24m wall=0.35m limit=0.19m
+[spline_planner-3] [INFO] [1777005731.513903955] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005731.538655619] [state_machine]: HUD: Ego S: 9.8m | Opp S: 10.5m | Gap: 0.6m | State: TRAILING | Planner: spliner
+[spline_planner-3] [INFO] [1777005731.560402373] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 10.5m
+[spline_planner-3] [INFO] [1777005731.564246279] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005731.614298054] [spline_planner]: CORRIDOR[right]: scan 9.8→14.5m | bottleneck @ S=12.1m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[spline_planner-3] [INFO] [1777005731.615181163] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005731.664609871] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005731.714148844] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005731.764839765] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005731.769747586] [state_machine]: GB_FREE False, obs dist to gb lane: 0.03913573692074823 m
+[spline_planner-3] [INFO] [1777005731.813498914] [spline_planner]: SPACE CHECK: LeftGap=0.36m (Wall=0.53m) | RightGap=0.66m (Wall=0.75m) | Required=0.30m -> CHOICE: right (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005731.815028924] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005731.863949128] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005731.867588274] [spline_planner]: >>> EVASION ABORTED: handing back to global planner
+[spline_planner-3] [INFO] [1777005731.913391150] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 10.5m
+[spline_planner-3] [INFO] [1777005731.915218393] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005731.965056781] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005732.014387367] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005732.033424151] [state_machine]: FTG: timer-- > 1.0s remaining
+[controller-1] [INFO] [1777005732.034684261] [controller]: WALL_CHECK OK: min=0.995m @ 5.1° (360/360 valid, armed=False)
+[spline_planner-3] [INFO] [1777005732.064897285] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005732.114232963] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005732.163963543] [spline_planner]: CORRIDOR[right]: scan 9.8→14.5m | bottleneck @ S=12.1m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[spline_planner-3] [INFO] [1777005732.164761495] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005732.213852228] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005732.265086881] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005732.315196195] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005732.364556738] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005732.413360859] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005732.464671734] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005732.514406232] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005732.549593120] [state_machine]: HUD: Ego S: 9.8m | Opp S: 10.5m | Gap: 0.6m | State: TRAILING | Planner: spliner
+[spline_planner-3] [INFO] [1777005732.561150789] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 11.8m
+[spline_planner-3] [INFO] [1777005732.565086085] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005732.613816048] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005732.664069469] [spline_planner]: CORRIDOR[left]: scan 9.8→14.5m | bottleneck @ S=10.4m wall=0.480m | obs_edge=0.164m | safe=0.181m
+[spline_planner-3] [INFO] [1777005732.664475874] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005732.714323702] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005732.764337289] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005732.782296011] [state_machine]: GB_FREE False, obs dist to gb lane: 0.03913573692074823 m
+[spline_planner-3] [INFO] [1777005732.814518235] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005732.862436732] [spline_planner]: SPACE CHECK: LeftGap=0.36m (Wall=0.53m) | RightGap=0.66m (Wall=0.75m) | Required=0.30m -> CHOICE: right (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005732.863638954] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005732.914660962] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005732.918416655] [spline_planner]: >>> EVASION ABORTED: handing back to global planner
+[spline_planner-3] [INFO] [1777005732.962663916] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 10.5m
+[spline_planner-3] [INFO] [1777005732.964717589] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005733.014507771] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[controller-1] [INFO] [1777005733.035009906] [controller]: WALL_CHECK OK: min=0.990m @ 6.6° (360/360 valid, armed=False)
+[state_machine-2] [INFO] [1777005733.045365503] [state_machine]: FTG: timer-- > 0.0s remaining
+[state_machine-2] [WARN] [1777005733.058324183] [state_machine]: FTG: Kicked in!
+[state_machine-2] [WARN] [1777005733.059066401] [state_machine]: No local waypoints published...
+[spline_planner-3] [INFO] [1777005733.063871122] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[controller-1] [WARN] [1777005733.072542943] [controller]: [STATE MACHINE] FTGONLY!!!
+[spline_planner-3] [INFO] [1777005733.114100071] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005733.163339572] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005733.213364752] [spline_planner]: CORRIDOR[right]: scan 9.9→14.5m | bottleneck @ S=12.1m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[spline_planner-3] [INFO] [1777005733.214189263] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.16m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005733.264184308] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005733.313626666] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.19m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005733.344899659] [state_machine]: FTG: Back to spliner (new state: TRAILING)
+[spline_planner-3] [INFO] [1777005733.364695975] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005733.370245719] [state_machine]: FTG: Speed 0.97m/s below threshold 1.0m/s. Starting timer...
+[spline_planner-3] [INFO] [1777005733.413514414] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005733.464282845] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005733.513878748] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [WARN] [1777005733.516444802] [spline_planner]: SAFETY NET: S=9.8m lateral=0.22m wall=0.37m limit=0.21m
+[spline_planner-3] [INFO] [1777005733.561244270] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 11.8m
+[state_machine-2] [INFO] [1777005733.564690518] [state_machine]: HUD: Ego S: 10.0m | Opp S: 10.5m | Gap: 0.5m | State: TRAILING | Planner: spliner
+[spline_planner-3] [INFO] [1777005733.564915937] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005733.613923498] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005733.663493413] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005733.713518783] [spline_planner]: CORRIDOR[right]: scan 10.0→14.5m | bottleneck @ S=12.1m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[spline_planner-3] [INFO] [1777005733.714640045] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005733.763615707] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005733.782694760] [state_machine]: GB_FREE False, obs dist to gb lane: 0.03913573692074823 m
+[spline_planner-3] [INFO] [1777005733.814990162] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005733.862878305] [spline_planner]: SPACE CHECK: LeftGap=0.36m (Wall=0.53m) | RightGap=0.66m (Wall=0.75m) | Required=0.30m -> CHOICE: right (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005733.864065609] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005733.914775240] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005733.964266439] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005733.967243376] [spline_planner]: >>> EVASION ABORTED: handing back to global planner
+[spline_planner-3] [INFO] [1777005734.012593106] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 10.5m
+[spline_planner-3] [INFO] [1777005734.014701040] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[controller-1] [INFO] [1777005734.046490905] [controller]: WALL_CHECK OK: min=0.669m @ 6.6° (360/360 valid, armed=False)
+[spline_planner-3] [INFO] [1777005734.064050388] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005734.114501281] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005734.164454821] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005734.213621129] [spline_planner]: CORRIDOR[left]: scan 10.0→14.5m | bottleneck @ S=10.5m wall=0.526m | obs_edge=0.164m | safe=0.202m
+[spline_planner-3] [INFO] [1777005734.214093346] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005734.264937439] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005734.313869192] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005734.357606770] [state_machine]: FTG: timer-- > 2.0s remaining
+[spline_planner-3] [INFO] [1777005734.363726313] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005734.413991231] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005734.464580040] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005734.514756093] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005734.561727886] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 19.4m
+[spline_planner-3] [INFO] [1777005734.564289673] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005734.574940578] [state_machine]: HUD: Ego S: 10.0m | Opp S: 10.5m | Gap: 0.5m | State: TRAILING | Planner: spliner
+[spline_planner-3] [INFO] [1777005734.613670279] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005734.664249520] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005734.713691009] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005734.763740798] [spline_planner]: CORRIDOR[right]: scan 10.0→14.5m | bottleneck @ S=12.1m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[spline_planner-3] [INFO] [1777005734.764634677] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005734.795154785] [state_machine]: GB_FREE False, obs dist to gb lane: 0.03913573692074823 m
+[spline_planner-3] [INFO] [1777005734.814282439] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005734.862906170] [spline_planner]: SPACE CHECK: LeftGap=0.36m (Wall=0.53m) | RightGap=0.66m (Wall=0.75m) | Required=0.30m -> CHOICE: right (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005734.864395075] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005734.914623725] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005734.964554623] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005734.968146292] [spline_planner]: >>> EVASION ABORTED: handing back to global planner
+[spline_planner-3] [INFO] [1777005735.014293415] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[controller-1] [INFO] [1777005735.046565196] [controller]: WALL_CHECK OK: min=0.669m @ 5.1° (360/360 valid, armed=False)
+[spline_planner-3] [INFO] [1777005735.063016102] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 10.5m
+[spline_planner-3] [INFO] [1777005735.065341149] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005735.115138471] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005735.164410067] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005735.214172464] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005735.263850575] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005735.313661062] [spline_planner]: CORRIDOR[right]: scan 10.0→14.5m | bottleneck @ S=12.1m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[spline_planner-3] [INFO] [1777005735.314558538] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005735.358389022] [state_machine]: FTG: timer-- > 1.0s remaining
+[spline_planner-3] [INFO] [1777005735.363381451] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005735.414185293] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005735.463326226] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005735.514930664] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [WARN] [1777005735.517752654] [spline_planner]: SAFETY NET: S=9.9m lateral=0.23m wall=0.35m limit=0.19m
+[spline_planner-3] [INFO] [1777005735.564074703] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005735.575129960] [state_machine]: HUD: Ego S: 10.0m | Opp S: 10.5m | Gap: 0.5m | State: TRAILING | Planner: spliner
+[spline_planner-3] [INFO] [1777005735.610514341] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 10.5m
+[spline_planner-3] [INFO] [1777005735.614442735] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005735.664139871] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005735.714291952] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005735.764137063] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005735.807642623] [state_machine]: GB_FREE False, obs dist to gb lane: 0.03913573692074823 m
+[spline_planner-3] [INFO] [1777005735.814031155] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005735.863291951] [spline_planner]: CORRIDOR[right]: scan 10.0→14.5m | bottleneck @ S=12.1m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[spline_planner-3] [INFO] [1777005735.864288722] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005735.912704779] [spline_planner]: SPACE CHECK: LeftGap=0.36m (Wall=0.53m) | RightGap=0.66m (Wall=0.75m) | Required=0.30m -> CHOICE: right (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005735.914018539] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005735.964668194] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005736.013578930] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005736.017006254] [spline_planner]: >>> EVASION ABORTED: handing back to global planner
+[controller-1] [INFO] [1777005736.058977147] [controller]: WALL_CHECK OK: min=0.678m @ 4.9° (360/360 valid, armed=False)
+[spline_planner-3] [INFO] [1777005736.064391210] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005736.112815485] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 10.5m
+[spline_planner-3] [INFO] [1777005736.115027633] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005736.164198254] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005736.214144114] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005736.263448313] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005736.315423542] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005736.358176437] [state_machine]: FTG: timer-- > 0.0s remaining
+[spline_planner-3] [INFO] [1777005736.363380490] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[state_machine-2] [WARN] [1777005736.370894442] [state_machine]: FTG: Kicked in!
+[state_machine-2] [WARN] [1777005736.371865234] [state_machine]: No local waypoints published...
+[controller-1] [WARN] [1777005736.385225111] [controller]: [STATE MACHINE] FTGONLY!!!
+[spline_planner-3] [INFO] [1777005736.413772178] [spline_planner]: CORRIDOR[right]: scan 10.0→14.5m | bottleneck @ S=12.1m wall=0.337m | obs_edge=0.086m | safe=0.091m
+[spline_planner-3] [INFO] [1777005736.414722553] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005736.464054984] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.19m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005736.513821131] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005736.564926214] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.17m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005736.583403363] [state_machine]: HUD: Ego S: 10.1m | Opp S: 10.5m | Gap: 0.4m | State: FTGONLY | Planner: spliner
+[spline_planner-3] [INFO] [1777005736.610914086] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 17.7m
+[spline_planner-3] [INFO] [1777005736.613606124] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005736.664486009] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005736.713981984] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.18m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005736.732642864] [state_machine]: FTG: Back to spliner (new state: TRAILING)
+[controller-1] [WARN] [1777005736.734254036] [controller]: WALL_EMERGENCY ARM: 0.374m @ 8.4° [sector idx 360-720, 360/360 valid]
+[controller-1] [WARN] [1777005736.746824778] [controller]: WALL_EMERGENCY ACTIVE: 0.315m @ 12.9° (360/360 valid)
+[spline_planner-3] [INFO] [1777005736.763844921] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005736.814099154] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[state_machine-2] [INFO] [1777005736.819712848] [state_machine]: GB_FREE False, obs dist to gb lane: 0.03913573692074823 m
+[state_machine-2] [INFO] [1777005736.845430902] [state_machine]: FTG: Speed 0.00m/s below threshold 1.0m/s. Starting timer...
+[spline_planner-3] [INFO] [1777005736.864717874] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005736.912844948] [spline_planner]: SPACE CHECK: LeftGap=0.36m (Wall=0.53m) | RightGap=0.66m (Wall=0.75m) | Required=0.30m -> CHOICE: right (Tie/Both Open | Deadband applied)
+[spline_planner-3] [INFO] [1777005736.914088126] [spline_planner]: CORRIDOR[left]: scan 10.2→14.5m | bottleneck @ S=10.5m wall=0.526m | obs_edge=0.164m | safe=0.202m
+[spline_planner-3] [INFO] [1777005736.914619543] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[controller-1] [WARN] [1777005736.959394322] [controller]: WALL_EMERGENCY ACTIVE: 0.184m @ 13.4° (360/360 valid)
+[spline_planner-3] [INFO] [1777005736.963642660] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005737.013797770] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005737.017226456] [spline_planner]: >>> EVASION ABORTED: handing back to global planner
+[spline_planner-3] [INFO] [1777005737.064019485] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005737.113366947] [spline_planner]: PLANNER: Starting EVASION for obstacle at S: 10.5m
+[spline_planner-3] [INFO] [1777005737.115751755] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005737.164345147] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[controller-1] [WARN] [1777005737.171875680] [controller]: WALL_EMERGENCY ACTIVE: 0.178m @ 15.1° (360/360 valid)
+[spline_planner-3] [INFO] [1777005737.215099001] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005737.265365679] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005737.314008884] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005737.365005698] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[controller-1] [WARN] [1777005737.384350529] [controller]: WALL_EMERGENCY ACTIVE: 0.184m @ 14.4° (360/360 valid)
+[spline_planner-3] [INFO] [1777005737.414131098] [spline_planner]: CORRIDOR[left]: scan 10.2→14.5m | bottleneck @ S=10.5m wall=0.526m | obs_edge=0.164m | safe=0.202m
+[spline_planner-3] [INFO] [1777005737.414717126] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005737.464777221] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005737.514001014] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005737.564486459] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [WARN] [1777005737.567285186] [spline_planner]: SAFETY NET: S=9.9m lateral=0.23m wall=0.35m limit=0.19m
+[controller-1] [WARN] [1777005737.584416256] [controller]: WALL_EMERGENCY ACTIVE: 0.181m @ 15.1° (360/360 valid)
+[state_machine-2] [INFO] [1777005737.588527089] [state_machine]: HUD: Ego S: 10.2m | Opp S: 10.5m | Gap: 0.2m | State: TRAILING | Planner: spliner
+[spline_planner-3] [INFO] [1777005737.611234364] [spline_planner]: PLANNER: Obstacle detected within 10m lookahead at S: 17.7m
+[spline_planner-3] [INFO] [1777005737.614132415] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005737.664405125] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005737.714964217] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[spline_planner-3] [INFO] [1777005737.763630604] [spline_planner]: HIERARCHY: Squeeze 'left' evasion_dist=0.20m (nominal=0.40m)
+[controller-1] [WARN] [1777005737.784524151] [controller]: WALL_EMERGENCY ACTIVE: 0.177m @ 17.1° (360/360 valid)

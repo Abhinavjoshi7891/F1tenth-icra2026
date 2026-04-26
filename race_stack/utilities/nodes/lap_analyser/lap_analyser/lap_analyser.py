@@ -69,6 +69,10 @@ class LapAnalyser(Node):
 
         self.NUM_LAPS_ANALYSED = 10
         '''The number of laps to analyse and compute statistics for'''
+        self.MIN_LAP_TIME_SEC = 2.0
+        '''Reject lap detections firing under this elapsed time. Defends against
+        FrenetConverter argmin flips at the start/finish boundary that produce
+        instantaneous s-jumps of ~track_length without the car actually moving.'''
         self.lap_time_acc = deque(maxlen=self.NUM_LAPS_ANALYSED)
         self.lat_err_acc = deque(maxlen=self.NUM_LAPS_ANALYSED)
         self.max_lat_err_acc = deque(maxlen=self.NUM_LAPS_ANALYSED)
@@ -112,6 +116,7 @@ class LapAnalyser(Node):
             self.global_lateral_waypoints = np.array([
                 [w.s_m, w.d_right, w.d_left] for w in data.wpnts
             ])
+            self.track_length = self.global_lateral_waypoints[-1, 0]
             self.wp_flag = True
         else:
             pass
@@ -201,7 +206,17 @@ class LapAnalyser(Node):
 
     def check_for_finish_line_pass(self, current_s):
         # detect wrapping of the track, should happen exactly once per round
-        if (self.last_s - current_s) > 1.0:
+        # threshold = half track length: wrap-around always ~track_length drop,
+        # jitter/backward motion always << track_length
+        threshold = self.track_length * 0.5 if self.wp_flag else 1.0
+        if (self.last_s - current_s) > threshold:
+            # Reject ghost laps that fire faster than physically plausible.
+            # FrenetConverter argmin can flip between s≈0 and s≈track_length
+            # when the car sits near the start/finish seam, generating
+            # repeated wrap-magnitude jumps every couple of frames.
+            elapsed = (self.get_clock().now() - self.lap_start_time).nanoseconds / 1e9
+            if elapsed < self.MIN_LAP_TIME_SEC:
+                return False
             return True
         else:
             return False

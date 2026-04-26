@@ -22,6 +22,7 @@
 
 from launch import LaunchDescription
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 from launch.substitutions import Command, LaunchConfiguration
 from launch.actions import DeclareLaunchArgument
 from ament_index_python.packages import get_package_share_directory
@@ -35,6 +36,11 @@ def generate_launch_description():
     map_yaml_path = LaunchConfiguration('map_yaml_path')
     map_yaml_path_arg = DeclareLaunchArgument(
         'map_yaml_path', description="Path to map YAML file. Passed in via top-level launchfile.")
+
+    publish_tf = LaunchConfiguration('publish_tf')
+    publish_tf_arg = DeclareLaunchArgument(
+        'publish_tf', default_value='true',
+        description="Whether gym_bridge publishes map -> <ego_namespace>/base_link TF. Set false when an external localizer (e.g. synpf) owns that edge.")
 
     sim_setup_params = os.path.join(
         get_package_share_directory('stack_master'),
@@ -51,7 +57,8 @@ def generate_launch_description():
         name='bridge',
         parameters=[sim_setup_params,
                     {'map_path': map_yaml_path},
-                    {'sim_params': os.path.join(get_package_share_directory('stack_master'), 'config', 'SIM', 'sim_params.yaml')}]
+                    {'sim_params': os.path.join(get_package_share_directory('stack_master'), 'config', 'SIM', 'sim_params.yaml')},
+                    {'publish_tf': ParameterValue(publish_tf, value_type=bool)}]
     )
     rviz_node = Node(
         package='rviz2',
@@ -98,6 +105,7 @@ def generate_launch_description():
 
     # finalize
     ld.add_action(map_yaml_path_arg)
+    ld.add_action(publish_tf_arg)
     ld.add_action(rviz_node)
     ld.add_action(bridge_node)
     ld.add_action(nav_lifecycle_node)

@@ -24,13 +24,12 @@ class Carstate(Node):
         self.get_logger().info("Carstate node started")
 
         # ros params
-        self.declare_parameter('/carstate_node/odom_topic', "/early_fusion/odom")
-        self.declare_parameter('/carstate_node/odom_out_topic', "/car_state/odom")
-        self.declare_parameter('/carstate_node/pose_out_topic', "/car_state/pose")
-        self.odom_in_topic = self.get_parameter('/carstate_node/odom_topic').value
-        self.odom_out_topic = self.get_parameter('/carstate_node/odom_out_topic').value
-        self.pose_out_topic = self.get_parameter('/carstate_node/pose_out_topic').value
-        self.frenet_bool = self.get_parameter('frenet_bool').get_parameter_value().bool_value # Bool if we want frenet on or off
+        # ros params - these are automatically declared from overrides
+        self.odom_in_topic = self.get_parameter('odom_topic').get_parameter_value().string_value
+        self.odom_out_topic = self.get_parameter('odom_out_topic').get_parameter_value().string_value
+        self.pose_out_topic = self.get_parameter('pose_out_topic').get_parameter_value().string_value
+        self.frenet_bool = self.get_parameter('frenet_bool').get_parameter_value().bool_value
+        self.base_frame_id = self.get_parameter('base_frame_id').get_parameter_value().string_value
 
         # Wait until the requried tf transforms exist
         self.tf_buffer = tf2_ros.Buffer()
@@ -41,6 +40,8 @@ class Carstate(Node):
         self.frenet_converter = None
         self.gb_wpnts = None
         self.car_state_odom = None
+        self._cartesian_first_log = False
+        self._frenet_first_log = False
 
         # subscribers
         self.ekf_odom_sub = self.create_subscription(Odometry, self.odom_in_topic, self.ekf_odom_cb, 10)
@@ -67,7 +68,7 @@ class Carstate(Node):
         self.gb_wpnts = data
 
     def get_slam_tf(self) -> TransformStamped:
-        trans = self.tf_buffer.lookup_transform("map", "base_link", rclpy.time.Time(), rclpy.duration.Duration(seconds=6.9))
+        trans = self.tf_buffer.lookup_transform("map", self.base_frame_id, rclpy.time.Time(), rclpy.duration.Duration(seconds=6.9))
         return trans
 
 
@@ -92,75 +93,101 @@ class Carstate(Node):
 
 
     def cartesian_state_loop(self):
-        # publish SLAM cartesian positional and velocity data
         carstate_pose_msg = PoseStamped()
         carstate_odom_msg = Odometry()
 
         try:
-            trans = self.tf_buffer.lookup_transform("map", "base_link", rclpy.time.Time(), rclpy.duration.Duration(seconds=6.9))
+            trans = self.tf_buffer.lookup_transform(
+                "map", self.base_frame_id,
+                rclpy.time.Time(), rclpy.duration.Duration(seconds=6.9))
         except Exception as e:
-            self.get_logger().warn(f"{e}")
+            self.get_logger().warn(
+                f"cartesian_state_loop TF lookup failed: {e}",
+                throttle_duration_sec=2.0)
             return
 
-        # build pose message
+        x = trans.transform.translation.x
+        y = trans.transform.translation.y
+        if not (np.isfinite(x) and np.isfinite(y)):
+            self.get_logger().warn(
+                f"cartesian_state_loop got NaN/Inf TF: x={x}, y={y}",
+                throttle_duration_sec=2.0)
+            return
+
         carstate_pose_msg.header = trans.header
-        carstate_pose_msg.pose.position.x = trans.transform.translation.x
-        carstate_pose_msg.pose.position.y = trans.transform.translation.y
+        carstate_pose_msg.pose.position.x = x
+        carstate_pose_msg.pose.position.y = y
         carstate_pose_msg.pose.position.z = trans.transform.translation.z
         carstate_pose_msg.pose.orientation = trans.transform.rotation
 
-        # build odometry message
         carstate_odom_msg.header = carstate_pose_msg.header
         carstate_odom_msg.pose.pose = carstate_pose_msg.pose
-
-        # handle speed from EKF
-        carstate_odom_msg.twist.twist = self.ekf_odom.twist.twist  # Make sure to use twist.twist
+        carstate_odom_msg.twist.twist = self.ekf_odom.twist.twist
         self.car_state_odom = carstate_odom_msg
 
-        # publish
+        if not self._cartesian_first_log:
+            self.get_logger().info(
+                f"cartesian_state_loop publishing (first sample x={x:.2f}, y={y:.2f})")
+            self._cartesian_first_log = True
+
         self.state_odom_pub.publish(carstate_odom_msg)
         self.state_pose_pub.publish(carstate_pose_msg)
 
 
     def frenet_state_loop(self):
         if self.car_state_odom is None:
+            self.get_logger().warn(
+                "frenet_state_loop: car_state_odom is None — cartesian_state_loop hasn't produced data yet",
+                throttle_duration_sec=2.0)
             return
 
-        odom_cart = self.car_state_odom
-        x_cart = odom_cart.pose.pose.position.x
-        y_cart = odom_cart.pose.pose.position.y
-        vx = odom_cart.twist.twist.linear.x
-        vy = odom_cart.twist.twist.linear.y
-        q_cart = odom_cart.pose.pose.orientation
-        theta = euler_from_quaternion([q_cart.x, q_cart.y, q_cart.z, q_cart.w])[2]
+        try:
+            odom_cart = self.car_state_odom
+            x_cart = odom_cart.pose.pose.position.x
+            y_cart = odom_cart.pose.pose.position.y
+            vx = odom_cart.twist.twist.linear.x
+            vy = odom_cart.twist.twist.linear.y
+            q_cart = odom_cart.pose.pose.orientation
+            theta = euler_from_quaternion([q_cart.x, q_cart.y, q_cart.z, q_cart.w])[2]
 
-        # get frenet coordinates and velocities
-        frenet_pos = self.frenet_converter.get_frenet([x_cart], [y_cart])
-        frenet_vel = self.frenet_converter.get_frenet_velocities(vx, vy, theta)
+            frenet_pos = self.frenet_converter.get_frenet([x_cart], [y_cart])
+            frenet_vel = self.frenet_converter.get_frenet_velocities(vx, vy, theta)
 
-        s = frenet_pos[0, 0]
-        d = frenet_pos[1, 0]
-        vs = frenet_vel[0][0]
-        vd = frenet_vel[1][0]
+            s = float(frenet_pos[0, 0])
+            d = float(frenet_pos[1, 0])
+            vs = float(frenet_vel[0][0])
+            vd = float(frenet_vel[1][0])
 
-        #frenet pose msg
-        frenet_pose_msg = PoseStamped()
-        frenet_pose_msg.header.stamp = odom_cart.header.stamp
-        frenet_pose_msg.header.frame_id = "frenet"
-        frenet_pose_msg.pose.position.x = s
-        frenet_pose_msg.pose.position.y = d
+            if not all(np.isfinite([s, d, vs, vd])):
+                self.get_logger().warn(
+                    f"frenet_state_loop produced non-finite values: s={s}, d={d}, vs={vs}, vd={vd} "
+                    f"from x_cart={x_cart}, y_cart={y_cart}",
+                    throttle_duration_sec=2.0)
+                return
 
-        #frenet odom msg
-        frenet_odom_msg = Odometry()
-        frenet_odom_msg.header = frenet_pose_msg.header
-        frenet_odom_msg.pose.pose = frenet_pose_msg.pose
-        frenet_odom_msg.twist.twist.linear.x = vs
-        frenet_odom_msg.twist.twist.linear.y = vd
-        #TODO handle speed from EKF
+            frenet_pose_msg = PoseStamped()
+            frenet_pose_msg.header.stamp = odom_cart.header.stamp
+            frenet_pose_msg.header.frame_id = "frenet"
+            frenet_pose_msg.pose.position.x = s
+            frenet_pose_msg.pose.position.y = d
 
-        #publish
-        self.frenet_state_odom_pub.publish(frenet_odom_msg)
-        self.frenet_state_pose_pub.publish(frenet_pose_msg)
+            frenet_odom_msg = Odometry()
+            frenet_odom_msg.header = frenet_pose_msg.header
+            frenet_odom_msg.pose.pose = frenet_pose_msg.pose
+            frenet_odom_msg.twist.twist.linear.x = vs
+            frenet_odom_msg.twist.twist.linear.y = vd
+
+            if not self._frenet_first_log:
+                self.get_logger().info(
+                    f"frenet_state_loop publishing (first sample s={s:.2f}, d={d:.2f})")
+                self._frenet_first_log = True
+
+            self.frenet_state_odom_pub.publish(frenet_odom_msg)
+            self.frenet_state_pose_pub.publish(frenet_pose_msg)
+        except Exception as e:
+            self.get_logger().error(
+                f"frenet_state_loop crashed: {type(e).__name__}: {e}",
+                throttle_duration_sec=2.0)
 
 def main():
     rclpy.init()

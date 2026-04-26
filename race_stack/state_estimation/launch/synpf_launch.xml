@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<!-- Standalone SynPF launch for testing without the full base_system stack -->
+<launch>
+  <arg name="map_name"          default="hangar_1905_v0"/>
+  <arg name="racecar_version"   default="NUC2"/>
+  <arg name="viz"               default="true"/>
+  <arg name="debug"             default="false"/>
+  <arg name="pub_covariance"    default="false"/>
+  <arg name="motion_model"      default="tum"/>
+  <arg name="range_method"      default="glt"/>
+  <arg name="initial_pose_x"    default="0.0"/>
+  <arg name="initial_pose_y"    default="0.0"/>
+  <arg name="initial_pose_theta" default="0.0"/>
+
+  <let name="map_path" value="$(find-pkg-share stack_master)/maps/$(var map_name)" />
+
+  <node pkg="state_estimation" exec="synpf_node" name="synpf_node" output="screen">
+    <!-- Map -->
+    <param name="map_yaml_path" value="$(var map_path)/pf_map.yaml"/>
+
+    <!-- Visualization -->
+    <param name="viz"             value="$(var viz)"/>
+    <param name="debug"           value="$(var debug)"/>
+    <param name="pub_covariance"  value="$(var pub_covariance)"/>
+    <param name="range_method"    value="$(var range_method)"/>
+    <param name="motion_model"    value="$(var motion_model)"/>
+
+    <!-- Initial pose (present = pose init, absent = global/lost-robot init) -->
+    <param name="initial_pose_x"     value="$(var initial_pose_x)"/>
+    <param name="initial_pose_y"     value="$(var initial_pose_y)"/>
+    <param name="initial_pose_theta" value="$(var initial_pose_theta)"/>
+
+    <!-- Default params from shared yaml -->
+    <param from="$(find-pkg-share state_estimation)/config/synpf_params.yaml"/>
+
+    <!-- Per-car overrides (if file exists) -->
+    <!-- <param from="$(find-pkg-share stack_master)/config/$(var racecar_version)/synpf_params.yaml"/> -->
+  </node>
+</launch>

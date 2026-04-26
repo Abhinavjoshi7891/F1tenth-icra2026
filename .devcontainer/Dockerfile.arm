@@ -29,6 +29,12 @@ ADD .install_utils/python_req.txt /tmp/.install_utils/python_req.txt
 RUN pip3 install -r /tmp/.install_utils/python_req.txt &&\
     pip3 install quadprog~=0.1.11
 
+# Install range_libc for particle filter ray casting (CPU-only; for CUDA on Jetson, rebuild with WITH_CUDA=ON)
+RUN apt-get install -y git python3-dev cython3 \
+    && git clone --depth 1 https://github.com/f1tenth/range_libc.git /tmp/range_libc \
+    && cd /tmp/range_libc/pywrapper \
+    && python3 setup.py install \
+    && rm -rf /tmp/range_libc
 
 # ********************************************************
 # * Anything else you want to do like clean up goes here *

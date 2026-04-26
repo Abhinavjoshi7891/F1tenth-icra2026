@@ -1,0 +1,86 @@
+synpf_node:
+  ros__parameters:
+    # ---- Topics ------------------------------------------------------------
+    scan_topic: "/scan"
+    odometry_topic: "/car_state/odom"
+    pose_pub_topic: "/tracked_pose"            # matches ROS1 default
+
+    # ---- TF frames ---------------------------------------------------------
+    # Sim: ego_namespace='car_state' → car_state/base_link, car_state/laser
+    # Real car: base_link, laser
+    base_frame_id: "car_state/base_link"
+    laser_frame_id: "car_state/laser"
+
+    # ---- Visualization -----------------------------------------------------
+    viz: false
+    max_viz_particles: 50
+
+    # ---- Core particle filter ----------------------------------------------
+    max_particles: 3000
+    squash_factor: 2.2
+
+    # ---- LiDAR -------------------------------------------------------------
+    max_range: 20.0                    # metres
+    des_lidar_beams: 21                # target beam count (TUM boxed selection)
+    lidar_aspect_ratio: 3.5            # corridor aspect ratio for beam boxing
+
+    # ---- Ray casting (range_libc) ------------------------------------------
+    # Methods: bl | cddt | pcddt | rm | rmgpu | glt
+    range_method: "glt"
+    rangelib_variant: 3                # 0-4; 3=one-shot calc+eval (fastest CPU)
+    theta_discretization: 150
+
+    # ---- Sensor model beam weights (should sum to 1.0) --------------------
+    z_hit: 0.85
+    z_short: 0.10
+    z_max: 0.025
+    z_rand: 0.025
+    sigma_hit: 0.1                     # metres (converted to pixels internally)
+    lambda_short: 0.25                 # metres (converted to pixels internally)
+
+    # ---- Motion model ------------------------------------------------------
+    # Choose: tum | amcl | arc | default
+    motion_model: "tum"
+
+    # TUM motion model params (dynamically tunable via ros2 param set)
+    alpha_1_tum: 0.5
+    alpha_2_tum: 0.015
+    alpha_3_tum: 1.0
+    alpha_4_tum: 0.1
+    lam_thresh: 0.1
+
+    # AMCL motion model params
+    alpha_1_amcl: 0.5
+    alpha_2_amcl: 0.5
+    alpha_3_amcl: 1.0
+    alpha_4_amcl: 0.1
+
+    # Arc (kinematic bicycle) motion model params
+    motion_dispersion_arc_x: 0.8
+    motion_dispersion_arc_y: 1.0
+    motion_dispersion_arc_theta: 0.75
+    motion_dispersion_arc_xy: 1.0
+    motion_dispersion_arc_x_min: 0.01
+    motion_dispersion_arc_y_min: 0.03
+    motion_dispersion_arc_y_max: 1.0
+    motion_dispersion_arc_theta_min: 0.01
+    motion_dispersion_arc_xy_min_x: 0.10
+
+    # Default (MIT) motion model params
+    motion_dispersion_x: 0.05
+    motion_dispersion_y: 0.025
+    motion_dispersion_theta: 0.25
+
+    # ---- Initialization ----------------------------------------------------
+    # If initial_pose_x/y/theta are present, use pose init; else global init
+    # initial_pose_x: 0.0
+    # initial_pose_y: 0.0
+    # initial_pose_theta: 0.0
+    initial_var_x: 0.5
+    initial_var_y: 0.5
+    initial_var_theta: 0.4
+
+    # ---- Output ------------------------------------------------------------
+    publish_tf: true
+    pub_covariance: false
+    debug: false

@@ -29,6 +29,8 @@ class FrenetOdomRepublisher(Node):
             10)
 
     def global_trajectory_callback(self, msg):
+        if self.has_global_trajectory:
+            return  # converter already built; ignore re-publications
         waypoint_array = msg.wpnts
         waypoints_x = [waypoint.x_m for waypoint in waypoint_array]
         waypoints_y = [waypoint.y_m for waypoint in waypoint_array]

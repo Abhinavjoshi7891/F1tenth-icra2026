@@ -37,6 +37,7 @@ from geometry_msgs.msg import Twist
 from geometry_msgs.msg import TransformStamped
 from geometry_msgs.msg import Transform
 from ackermann_msgs.msg import AckermannDriveStamped
+from rosgraph_msgs.msg import Clock
 from tf2_ros import TransformBroadcaster
 
 import gymnasium as gym
@@ -152,6 +153,14 @@ class GymBridge(Node):
             self.get_parameter('ego_pose_topic').value
         self.scan_distance_to_base_link = self.get_parameter(
             'scan_distance_to_base_link').value
+        # Allow disabling map -> base_link TF when an external localizer
+        # (e.g. synpf) publishes that edge — avoids dual-publisher tree corruption.
+        if not self.has_parameter('publish_tf'):
+            self.declare_parameter('publish_tf', True)
+        self.publish_tf = self.get_parameter('publish_tf').value
+        self.get_logger().info(
+            f'gym_bridge publish_tf={self.publish_tf!r} '
+            f'(type={type(self.publish_tf).__name__})')
         self.ts = self.get_clock().now().to_msg()
 
         if num_agents == 2:
@@ -199,6 +208,10 @@ class GymBridge(Node):
             LaserScan, ego_scan_topic, 10)
         self.ego_odom_pub = self.create_publisher(Odometry, ego_odom_topic, 10)
         self.ego_pose_pub = self.create_publisher(PoseStamped, ego_pose_topic, 10)
+        # /clock so use_sim_time=True consumers (carstate's create_timer, etc.)
+        # have a clock source. Without this, sim_time is frozen at 0 and any
+        # ROS-timer-driven node never fires its callbacks.
+        self.clock_pub = self.create_publisher(Clock, '/clock', 10)
         self.ego_drive_published = False
         if num_agents == 2:
             self.opp_scan_pub = self.create_publisher(
@@ -246,6 +259,46 @@ class GymBridge(Node):
                 '/cmd_vel',
                 self.teleop_callback,
                 10)
+
+        # Auto-init external localizer (e.g. synpf) with the gym spawn pose so
+        # the user doesn't need to click 2D Pose Estimate. Only when gym is NOT
+        # publishing map->base_link itself (i.e. synpf owns localization).
+        # Match BEST_EFFORT/VOLATILE QoS to synpf's /initialpose subscription.
+        # Wait until a subscriber appears, then publish once and stop.
+        if not self.publish_tf:
+            self.init_pose_pub = self.create_publisher(
+                PoseWithCovarianceStamped, '/initialpose',
+                qos_profile=best_effort_qos_profile)
+            self._init_pose_sent = False
+            self.init_pose_timer = self.create_timer(
+                0.5, self._try_publish_initial_pose, callback_group=cb_group1)
+
+    def _try_publish_initial_pose(self):
+        if self._init_pose_sent:
+            return
+        # Gym itself subscribes to /initialpose for its reset callback, so
+        # subscription_count is already 1 from gym's own subscriber. Require >1
+        # so we only fire after the external localizer (synpf) has also
+        # subscribed.
+        if self.init_pose_pub.get_subscription_count() <= 1:
+            return
+        msg = PoseWithCovarianceStamped()
+        msg.header.frame_id = 'map'
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.pose.pose.position.x = self.ego_pose[0]
+        msg.pose.pose.position.y = self.ego_pose[1]
+        msg.pose.pose.position.z = 0.0
+        q = euler.euler2quat(0.0, 0.0, self.ego_pose[2], axes='sxyz')
+        msg.pose.pose.orientation.w = q[0]
+        msg.pose.pose.orientation.x = q[1]
+        msg.pose.pose.orientation.y = q[2]
+        msg.pose.pose.orientation.z = q[3]
+        self.init_pose_pub.publish(msg)
+        self._init_pose_sent = True
+        self.init_pose_timer.cancel()
+        self.get_logger().info(
+            f'Auto-init external localizer at ({self.ego_pose[0]:.2f}, '
+            f'{self.ego_pose[1]:.2f}, {self.ego_pose[2]:.2f}rad)')
 
     def drive_callback(self, drive_msg):
         self.ego_requested_speed = drive_msg.drive.speed
@@ -310,6 +363,12 @@ class GymBridge(Node):
         self._update_sim_state()
 
     def timer_callback(self):
+        # pub clock first so subscribers' ROS clocks advance before they
+        # try to act on the scan/odom/tf messages stamped with the same ts.
+        clock_msg = Clock()
+        clock_msg.clock = self.ts
+        self.clock_pub.publish(clock_msg)
+
         # pub scans
         scan = LaserScan()
         scan.header.stamp = self.ts
@@ -400,6 +459,8 @@ class GymBridge(Node):
             self.ego_opp_odom_pub.publish(opp_odom)
 
     def _publish_transforms(self, ts):
+        if not self.publish_tf:
+            return
         ego_t = Transform()
         ego_t.translation.x = self.ego_pose[0]
         ego_t.translation.y = self.ego_pose[1]

@@ -6,28 +6,35 @@
     <arg name="measure" default="False" />
     <arg name="map_name" default="hangar_1905_v0" />
     <arg name="perception_algorithm" default="ABD" /> <!-- ABD / Norfair -->
+    <arg name="use_sim_time" default="False" />
 
     <!-- launch controller manager -->
     <include file="$(find-pkg-share controller)/launch/controller_launch.xml">
         <arg name="mode" value="$(var ctrl_algo)"/>
+        <arg name="use_sim_time" value="$(var use_sim_time)"/>
     </include>
     
     <!-- launch state machine -->
     <include file="$(find-pkg-share state_machine)/launch/state_machine_launch.xml">
         <arg name="mode" value="head_to_head"/>
         <arg name="overtake_mode" value="$(var planner)"/>
+        <arg name="use_sim_time" value="$(var use_sim_time)"/>
     </include>
 
     <!-- PLANNER SELECTION -->
     
     <!-- 1. Traditional Spline Planner -->
     <group if="$(eval '\'$(var planner)\' == \'spliner\'')"> 
-        <include file="$(find-pkg-share spline_planner)/launch/spline_planner_launch.xml" />
+        <include file="$(find-pkg-share spline_planner)/launch/spline_planner_launch.xml">
+            <arg name="use_sim_time" value="$(var use_sim_time)"/>
+        </include>
     </group>
 
     <!-- 2. Predictive Spline Planner (GP + SQP) -->
     <group if="$(eval '\'$(var planner)\' == \'predictive_spliner\'')">
-        <include file="$(find-pkg-share predictive_planner)/launch/predictive_planner.launch.py" />
+        <include file="$(find-pkg-share predictive_planner)/launch/predictive_planner.launch.py">
+            <arg name="use_sim_time" value="$(var use_sim_time)"/>
+        </include>
     </group>
 
     <!-- 3. Graph-Based Planner -->
@@ -38,18 +45,22 @@
             <arg name="follow_mode"     value="0"/>
             <arg name="racecar_version" value="$(var racecar_version)"/>
             <arg name="measure"         value="$(var measure)"/>
+            <arg name="use_sim_time"     value="$(var use_sim_time)"/>
         </include>
     </group>
 
     <!-- 4. Frenet-Based Planner -->
     <group if="$(eval '\'$(var planner)\' == \'frenet\'')">
         <!-- Assuming frenet_planner package exists -->
-        <include file="$(find-pkg-share frenet_planner)/launch/frenet_planner_launch.xml" />
+        <include file="$(find-pkg-share frenet_planner)/launch/frenet_planner_launch.xml">
+            <arg name="use_sim_time" value="$(var use_sim_time)"/>
+        </include>
     </group>
 
     <include file="$(find-pkg-share perception)/launch/perception_launch.xml">
         <arg name="param_file" value="$(find-pkg-share stack_master)/config/opponent_tracker_params.yaml" />
         <arg name="perception_algorithm" value="$(var perception_algorithm)" />
+        <arg name="use_sim_time" value="$(var use_sim_time)"/>
     </include> 
 
     
