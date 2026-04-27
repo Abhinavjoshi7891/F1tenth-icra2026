@@ -15,10 +15,20 @@ from f110_msgs.msg import ObstacleArray, Obstacle, WpntArray, OpponentTrajectory
 from frenet_conversion.frenet_converter import FrenetConverter
 from multiprocessing import Pool
 from .utils import id_to_rgb_color
-from std_msgs.msg import Float32
+from std_msgs.msg import Float32, Bool
+from ccma import CCMA
 import time
 import warnings
 from sklearn.exceptions import ConvergenceWarning
+
+# Per-bin history depth — enough to build lap-scale memory without unbounded growth.
+_BIN_CAPACITY = 50
+# When total observations exceed this fraction of the track's bins, compress to this depth.
+_COMPRESSION_CAPACITY = 5
+# Deviation threshold (m) for off-trajectory detection (matches ROS1: 0.3m).
+_OFF_TRAJ_THRESHOLD = 0.3
+# Consecutive-frame count before flagging opponent as off-trajectory (matches ROS1: 5).
+_OFF_TRAJ_FRAMES = 5
 
 class GPNode(Node):
     """
@@ -37,8 +47,7 @@ class GPNode(Node):
 
         self.wpnt_spacing = 0.1
         self.bin_spacing = 0.1
-        self.bin_capacity = 2
-        
+
         # Internal state
         self.current_s = 0.0
         self.tracked_obs = None
@@ -60,6 +69,10 @@ class GPNode(Node):
         self.last_trigger_time = time.time()
         self.collected_messages = []
 
+        # Off-trajectory detection state (per opponent)
+        self.off_traj_counter = [0] * self.num_opponents
+        self.opp_off_traj = [False] * self.num_opponents
+
         # Define GP Kernels (Static for worker reuse)
         self.kernel_d = ConstantKernel(0.5) * Matern(length_scale=1.0, nu=1.5) + WhiteKernel(noise_level=1)
         self.kernel_vs = ConstantKernel(0.5) * RBF(length_scale=1.0) + WhiteKernel(noise_level=1)
@@ -79,6 +92,7 @@ class GPNode(Node):
         self.opp_trajectory_markers_pub = self.create_publisher(MarkerArray, "/perception/opp_trajectory_markers", 10)
         self.opp_trajectory_pub = self.create_publisher(OpponentTrajectory, '/opponent_trajectory', 10)
         self.opp_trajectories_pub = self.create_publisher(OpponentTrajectories, "/perception/opp_trajectories", 10)
+        self.opp_off_traj_pub = self.create_publisher(Bool, '/gp_node/opp_off_traj', 10)
         if self.measuring:
             self.latency_pub = self.create_publisher(Float32, '/gp_node/latency', 10)
 
@@ -170,6 +184,30 @@ class GPNode(Node):
                 self.detection_matching[i]["last_s"] = new_obs[i].s_center
 
         self.collected_messages.append(new_obs)
+
+        # --- Priority 3: Off-trajectory anomaly detection ---
+        # Compare each live detection to the last GP prediction at that s-position.
+        # Flag opponents that deviate >0.3m for 5+ consecutive frames (mirrors ROS1).
+        any_off_traj = False
+        for i in range(self.num_opponents):
+            pred = self.predictions[i]
+            if pred is not None and new_obs[i] is not None:
+                obs_s = new_obs[i].s_center
+                obs_d = new_obs[i].d_center
+                pred_idx = min(int(obs_s // self.wpnt_spacing), len(pred["d"][0]) - 1)
+                predicted_d = float(pred["d"][0][pred_idx])
+                if abs(obs_d - predicted_d) > _OFF_TRAJ_THRESHOLD:
+                    self.off_traj_counter[i] += 1
+                else:
+                    self.off_traj_counter[i] = 0
+                self.opp_off_traj[i] = self.off_traj_counter[i] > _OFF_TRAJ_FRAMES
+            else:
+                self.off_traj_counter[i] = 0
+                self.opp_off_traj[i] = False
+            if self.opp_off_traj[i]:
+                any_off_traj = True
+        self.opp_off_traj_pub.publish(Bool(data=any_off_traj))
+
         if not any(self.is_processing):
             self.trigger_processing()
 
@@ -191,7 +229,7 @@ class GPNode(Node):
             self.get_logger().info(f"[GP] Triggering worker for Opponent {opp_id} with {len(batch[opp_id])} samples...")
             self.pool.apply_async(
                 self.process_worker,
-                args=(batch[opp_id], opp_id, self.binned_data[opp_id], self.max_s),
+                args=(batch[opp_id], opp_id, self.binned_data[opp_id], self.max_s, self.boundaries),
                 callback=self.on_worker_done,
                 error_callback=self.on_worker_error
             )
@@ -205,66 +243,108 @@ class GPNode(Node):
         self.is_processing = [False] * self.num_opponents # Full reset to clear the lock
 
     @staticmethod
-    def process_worker(obs_list, opp_id, my_bins, max_s):
+    def process_worker(obs_list, opp_id, my_bins, max_s, boundaries=None):
         # Local model definitions for better pickling
         from sklearn.gaussian_process.kernels import Matern, RBF, WhiteKernel, ConstantKernel
         from sklearn.gaussian_process import GaussianProcessRegressor
 
         kernel_d = ConstantKernel(0.5) * Matern(length_scale=1.0, nu=1.5) + WhiteKernel(noise_level=1)
         kernel_vs = ConstantKernel(0.5) * RBF(length_scale=1.0) + WhiteKernel(noise_level=1)
-        
-        # We use default optimizer in worker to avoid pickling static methods
+
         model_d = GaussianProcessRegressor(kernel=kernel_d)
         model_v = GaussianProcessRegressor(kernel=kernel_vs)
-        
-        # Bin data
+
         bin_spacing = 0.1
         wpnt_spacing = 0.1
-        capacity = 2
-        
+        total_bins = int(max_s / bin_spacing)
+        # Compress all bins to _COMPRESSION_CAPACITY when total observations
+        # exceed 1.5x the expected full-lap bin count (prevents unbounded growth).
+        compression_trigger = int(1.5 * total_bins) * _BIN_CAPACITY
+
         for obs in obs_list:
+            # --- Priority 1: Boundary pre-filter ---
+            # Discard detections outside track walls before they reach the GP.
+            if boundaries is not None:
+                b_idx_bound = min(int(obs.s_center // bin_spacing), len(boundaries) - 1)
+                d_min, d_max = boundaries[b_idx_bound, 0], boundaries[b_idx_bound, 1]
+                if not (d_min <= obs.d_center <= d_max):
+                    continue
+
             b_idx = int(obs.s_center // bin_spacing)
             if b_idx not in my_bins:
                 my_bins[b_idx] = {"s": [], "d": [], "vs": []}
             my_bins[b_idx]["s"].append(obs.s_center)
             my_bins[b_idx]["d"].append(obs.d_center)
             my_bins[b_idx]["vs"].append(obs.vs)
-            if len(my_bins[b_idx]["s"]) > capacity:
-                for k in ["s", "d", "vs"]: my_bins[b_idx][k].pop(0)
-        
+            # --- Priority 2: Per-bin ring buffer (50 samples vs original 2) ---
+            if len(my_bins[b_idx]["s"]) > _BIN_CAPACITY:
+                for k in ["s", "d", "vs"]:
+                    my_bins[b_idx][k].pop(0)
+
+        # --- Priority 2: Global compression when memory exceeds threshold ---
+        total_obs = sum(len(v["s"]) for v in my_bins.values())
+        if total_obs > compression_trigger:
+            for b in my_bins:
+                for k in ["s", "d", "vs"]:
+                    my_bins[b][k] = my_bins[b][k][-_COMPRESSION_CAPACITY:]
+
         # Fit and Predict
         idxs = sorted(my_bins.keys())
         THRESHOLD = int(0.1 * max_s / bin_spacing)
-        
-        # DEBUG LOG: Print every 20 bins
+        full_lap = len(idxs) > int(0.8 * total_bins)
+
         if len(idxs) % 20 == 0:
-            print(f"[GP-Worker-{opp_id}] Bins visited: {len(idxs)} / {THRESHOLD} (Threshold)")
+            print(f"[GP-Worker-{opp_id}] Bins: {len(idxs)}/{THRESHOLD} threshold, full_lap={full_lap}")
 
         if len(idxs) > THRESHOLD:
             s_vals, d_vals, vs_vals = [], [], []
             for idx in idxs:
-                s_vals.extend(my_bins[idx]["s"]); d_vals.extend(my_bins[idx]["d"]); vs_vals.extend(my_bins[idx]["vs"])
-            
+                s_vals.extend(my_bins[idx]["s"])
+                d_vals.extend(my_bins[idx]["d"])
+                vs_vals.extend(my_bins[idx]["vs"])
+
             X = np.array(s_vals).reshape(-1, 1)
             warnings.simplefilter("ignore", ConvergenceWarning)
             model_d.fit(X, np.array(d_vals).reshape(-1, 1))
             model_v.fit(X, np.array(vs_vals).reshape(-1, 1))
-            
-            s_future = np.linspace(0, max_s, num=int(max_s/wpnt_spacing)).reshape(-1, 1)
+
+            s_future = np.linspace(0, max_s, num=int(max_s / wpnt_spacing)).reshape(-1, 1)
             d_p, d_s = model_d.predict(s_future, return_std=True)
             v_p, v_s = model_v.predict(s_future, return_std=True)
-            
+
             return {
-                "id": opp_id, "bins": my_bins,
+                "id": opp_id, "bins": my_bins, "full_lap": full_lap,
                 "preds": {"s": s_future, "d": (d_p, d_s), "vs": (v_p, v_s)}
             }
-        return {"id": opp_id, "bins": my_bins, "preds": None}
+        return {"id": opp_id, "bins": my_bins, "full_lap": full_lap, "preds": None}
 
     def on_worker_done(self, res):
         idx = res["id"]
         self.get_logger().info(f"[GP] Worker for Opponent {idx} finished.")
         self.binned_data[idx] = res["bins"]
-        if res["preds"]: self.predictions[idx] = res["preds"]
+        if res["preds"]:
+            preds = res["preds"]
+            # --- Priority 4: CCMA smoothing for full-lap d predictions ---
+            # On a complete lap, apply curvature-corrected smoothing to the lateral
+            # trajectory before publishing.  This prevents the car from chasing
+            # GP artefacts that GP doesn't naturally suppress on closed curves.
+            if res.get("full_lap", False) and self.converter is not None:
+                try:
+                    s_vals = preds["s"].flatten()
+                    d_vals = preds["d"][0].flatten()
+                    cart = self.converter.get_cartesian(s_vals, d_vals)  # (2, n)
+                    xy = cart.T  # (n, 2)
+                    ccma = CCMA(w_ma=5, w_cc=3)
+                    smoothed_xy = ccma.filter(xy, mode="wrapping")  # (n, 2)
+                    frenet = self.converter.get_frenet(
+                        smoothed_xy[:, 0], smoothed_xy[:, 1]
+                    )  # (2, n)
+                    d_smoothed = frenet[1].reshape(-1, 1)
+                    preds = dict(preds)
+                    preds["d"] = (d_smoothed, preds["d"][1])
+                except Exception as e:
+                    self.get_logger().warn(f"[GP] CCMA smoothing failed: {e}")
+            self.predictions[idx] = preds
         self.is_processing[idx] = False
 
     def publish_all(self):

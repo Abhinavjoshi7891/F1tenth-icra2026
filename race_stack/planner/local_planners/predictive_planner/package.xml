@@ -21,6 +21,7 @@
   <exec_depend>python3-scipy</exec_depend>
   <exec_depend>python3-sklearn</exec_depend>
   <exec_depend>frenet_conversion</exec_depend>
+  <exec_depend>ccma</exec_depend>
 
   <export>
     <build_type>ament_python</build_type>
