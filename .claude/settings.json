@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Data_Drive/**)",
+      "Bash(cat)",
+      "Read(//tmp/**)",
+      "Bash(xargs -I {} sh -c 'echo \"{}\"; grep \"<name>\" {} | head -1')",
+      "Bash(cp /home/abhinav/Data_Drive/ros1_race_stack/system_identification/id_analyser/models/NUC2/NUC2_pacejka.txt /home/abhinav/Data_Drive/forzaeth/race_stack/system_identification/id_analyser/models/NUC2/NUC2_pacejka.txt)",
+      "Bash(cp /home/abhinav/Data_Drive/ros1_race_stack/system_identification/id_analyser/models/NUC2/NUC2_linear.txt /home/abhinav/Data_Drive/forzaeth/race_stack/system_identification/id_analyser/models/NUC2/NUC2_linear.txt)",
+      "Bash(cp /home/abhinav/Data_Drive/ros1_race_stack/system_identification/id_analyser/models/SIM/SIM_pacejka.txt /home/abhinav/Data_Drive/forzaeth/race_stack/system_identification/id_analyser/models/NUC2/SIM_pacejka.txt)",
+      "Bash(grep -rn \"import rospy\\\\|from rospy\\\\|from tf import\\\\|import tf$\" /home/abhinav/Data_Drive/forzaeth/race_stack/utilities/nodes/lap_analyser/lap_analyser/)"
+    ]
+  }
+}

@@ -27,7 +27,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'slam_tuner_node = slam_tuner.slam_tuner_node:main'
+            'path_recorder = slam_tuner.path_recorder:main',
+            'reconstruction_error = slam_tuner.reconstruction_error:main',
         ],
     },
 )

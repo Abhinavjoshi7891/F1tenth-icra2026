@@ -1,0 +1,25 @@
+# Template model file for a fresh car.
+# Fill in car geometry from physical measurements.
+# C_d, C_0d are filled by analyse_steering.py (experiment 5).
+# C_Pf, C_Pr are filled by analyse_tires.py.
+# C_acc, C_R are filled by analyse_accel.py (experiment 2).
+
+C_0d: 0.45          # servo centre offset (filled by analyse_steering)
+C_d: -1.0           # servo gain (filled by analyse_steering)
+C_Pf: [4.8, 2.2, 0.65, 0.37]   # Pacejka [B,C,D,E] front (filled by analyse_tires)
+C_Pr: [20.0, 1.5, 0.62, 0.0]   # Pacejka [B,C,D,E] rear  (filled by analyse_tires)
+C_acc: 0.36         # motor current → accel gain (filled by analyse_accel)
+C_R: 9.6            # rolling resistance (filled by analyse_accel)
+C_dec: 3.2
+I_z: 0.05797        # moment of inertia [kg m²] — measure or estimate
+a_max: 3.0
+a_min: -3.0
+h_cg: 0.074         # CoG height [m] — measure
+l_f: 0.15875        # CoG to front axle [m] — measure
+l_r: 0.17145        # CoG to rear axle [m] — measure
+l_wb: 0.32          # wheelbase = l_f + l_r
+m: 3.47             # total mass [kg] — weigh the car
+model_name: MYCAR
+mu: 1.0             # surface friction coefficient
+tau_steer: 0.16
+tire_model: pacejka

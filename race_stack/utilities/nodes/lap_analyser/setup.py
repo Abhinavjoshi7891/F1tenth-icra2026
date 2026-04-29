@@ -23,7 +23,10 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'lap_analyser = lap_analyser.lap_analyser:main', # runs main in lap_analyser.py
+            'lap_analyser = lap_analyser.lap_analyser:main',
+            'longitudinal_analyser = lap_analyser.longitudinal_analyser:main',
+            'vel_analyser = lap_analyser.vel_analyser:main',
+            'scan_align_analyser = lap_analyser.scan_align_analyser:main',
         ],
     },
 )

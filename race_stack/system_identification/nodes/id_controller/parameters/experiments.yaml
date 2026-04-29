@@ -1,0 +1,43 @@
+id_controller:
+  ros__parameters:
+    # Which experiment to run (1-7)
+    experiment: 5
+
+    # Exp 1: constant VESC erpm + servo position
+    # erpm = mechanical RPM * motor poles
+    const_erpm: 3000
+    const_servo: 0.415
+
+    # Exp 2: accelerate then brake via direct current commands
+    # from vesc.yaml: current_min: 0.0, current_max: 100.0
+    const_curr: 40.0
+    const_brake: 50.0
+    accel_time: 1.5   # seconds, never exceed 2.0
+    decel_time: 1.5   # seconds, never exceed 2.0
+
+    # Exp 3: accel/decel via Ackermann acceleration field
+    const_accel: 5.0
+    const_decel: -5.0
+
+    # Exp 4: sweep servo position from start_pos to end_pos over angle_time
+    # drives at const_erpm defined above
+    angle_time: 20.0  # seconds for full sweep
+    start_pos: -0.1
+    end_pos: 0.4
+
+    # Exp 5: sweep steering angle from start_angle to end_angle at const_speed
+    # uses angle_time from exp 4
+    start_angle: 0.1  # rad
+    end_angle: 0.4    # rad
+    const_speed: 3.0  # m/s
+
+    # Exp 6: follow acceleration profile
+    # 1: step to 3 m/s for 4s
+    # 2: full accel for accel_time, full brake for decel_time
+    # 3: speed steps 0→3→5→5→0 over 6s
+    acc_profile: 3
+
+    # Exp 7: bang-bang servo at const_speed
+    period: 3.0         # seconds per bang-bang cycle
+    repetitions: 5      # total duration = period * repetitions
+    bangbang_steer: 0.1 # rad
