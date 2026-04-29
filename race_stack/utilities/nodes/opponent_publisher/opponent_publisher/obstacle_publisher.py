@@ -4,6 +4,7 @@ from rcl_interfaces.msg import ParameterDescriptor, ParameterType, FloatingPoint
 from rclpy.parameter import Parameter
 from f110_msgs.msg import ObstacleArray, Obstacle, WpntArray, OpponentTrajectory, OppWpnt
 from visualization_msgs.msg import Marker, MarkerArray
+from geometry_msgs.msg import PointStamped
 from nav_msgs.msg import Odometry, OccupancyGrid
 import numpy as np
 from frenet_conversion.frenet_converter import FrenetConverter
@@ -98,6 +99,7 @@ class ObstaclePublisher(Node):
         self.wpnts       = None
         self.converter   = None
         self.car_odom    = None
+        self.clicked_obstacles = []
 
         # Step-speed profile state
         self._step_timer      = 0.0
@@ -120,6 +122,7 @@ class ObstaclePublisher(Node):
         self.create_subscription(Odometry,  '/car_state/odom_frenet', self._odom_cb, 10)
         self.create_subscription(WpntArray, self.waypoints_topic,     self._waypoints_cb, 10)
         self.create_subscription(WpntArray, '/global_waypoints',      self._global_waypoints_cb, 10)
+        self.create_subscription(PointStamped, '/clicked_point', self.clicked_cb, 10)
 
         if self.opp_type == 'lidar':
             qos_map = QoSProfile(
@@ -193,6 +196,29 @@ class ObstaclePublisher(Node):
     # ====================================================================== #
     # Callbacks                                                               #
     # ====================================================================== #
+    def clicked_cb(self, msg: PointStamped):
+        if self.converter is None:
+            self.get_logger().warn("Click ignored: No FrenetConverter yet (waiting for waypoints)")
+            return
+
+        # Transform click to Frenet (requires lists/arrays)
+        s_arr, d_arr = self.converter.get_frenet([msg.point.x], [msg.point.y])
+        s, d = float(s_arr[0]), float(d_arr[0])
+
+        obs = Obstacle()
+        obs.id = 100 + len(self.clicked_obstacles)
+        obs.s_center = s
+        obs.d_center = d
+        # Give it a small default bounding box
+        obs.s_start = s - 0.125
+        obs.s_end   = s + 0.125
+        obs.d_right = d - 0.125
+        obs.d_left  = d + 0.125
+        obs.size    = 0.25
+        obs.is_static = True
+        self.clicked_obstacles.append(obs)
+        self.get_logger().info(f"CLICK: Added extra obstacle {obs.id} at S={s:.2f}, D={d:.2f} | Total Extra: {len(self.clicked_obstacles)}")
+
     def _global_waypoints_cb(self, data: WpntArray):
         self.ego_wpnts = data.wpnts[:-1]
         self.max_s     = self.ego_wpnts[-1].s_m
@@ -402,6 +428,10 @@ class ObstaclePublisher(Node):
         obstacle_msg.header.stamp    = self.get_clock().now().to_msg()
         obstacle_msg.header.frame_id = 'frenet'
         obstacle_msg.obstacles.append(self.dynamic_obstacle)
+
+        # Add clicked obstacles
+        for c_obs in self.clicked_obstacles:
+            obstacle_msg.obstacles.append(c_obs)
 
         self.obstacle_pub.publish(obstacle_msg)
 

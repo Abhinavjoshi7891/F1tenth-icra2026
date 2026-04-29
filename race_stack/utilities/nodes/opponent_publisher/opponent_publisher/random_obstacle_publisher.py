@@ -4,6 +4,7 @@ import rclpy
 from rclpy.node import Node
 from f110_msgs.msg import ObstacleArray, Obstacle, WpntArray
 from nav_msgs.msg import Odometry
+from geometry_msgs.msg import PointStamped
 from visualization_msgs.msg import Marker, MarkerArray
 from frenet_conversion.frenet_converter import FrenetConverter
 import numpy as np
@@ -39,6 +40,7 @@ class RandomObstaclePublisher(Node):
 
         # ---- State ----
         self.obstacle_array = []
+        self.clicked_obstacles = []
         self.gb_wpnts = None
         self.ego_s = 0.0
         self.final_s = 0.0
@@ -49,6 +51,7 @@ class RandomObstaclePublisher(Node):
         # ---- Subscribers & Publishers ----
         self.create_subscription(WpntArray, '/global_waypoints', self.global_waypoints_cb, 10)
         self.create_subscription(Odometry, '/car_state/odom_frenet', self.odom_cb, 10)
+        self.create_subscription(PointStamped, '/clicked_point', self.clicked_cb, 10)
         
         self.obstacle_pub = self.create_publisher(ObstacleArray, '/perception/obstacles', 10)
         self.marker_pub   = self.create_publisher(MarkerArray, '/perception/random_obstacle_markers', 10)
@@ -130,6 +133,29 @@ class RandomObstaclePublisher(Node):
                 closest_wpt = wpt
         return closest_wpt
 
+    def clicked_cb(self, msg: PointStamped):
+        if self.converter is None:
+            self.get_logger().warn("Click ignored: No FrenetConverter yet (waiting for waypoints)")
+            return
+
+        # Transform click to Frenet (requires lists/arrays)
+        s_arr, d_arr = self.converter.get_frenet([msg.point.x], [msg.point.y])
+        s, d = float(s_arr[0]), float(d_arr[0])
+
+        obs = Obstacle()
+        obs.id = 1000 + len(self.clicked_obstacles)
+        obs.s_center = s
+        obs.d_center = d
+        # Give it a small default bounding box so planners can avoid it
+        obs.s_start = s - 0.125
+        obs.s_end   = s + 0.125
+        obs.d_right = d - 0.125
+        obs.d_left  = d + 0.125
+        obs.size    = 0.25
+        obs.is_static = True
+        self.clicked_obstacles.append(obs)
+        self.get_logger().info(f"CLICK: Added obstacle {obs.id} at S={s:.2f}, D={d:.2f} | Total Extra: {len(self.clicked_obstacles)}")
+
     def timer_cb(self):
         """Publish the generated obstacles and their markers."""
         if not self.obstacles_generated:
@@ -151,11 +177,15 @@ class RandomObstaclePublisher(Node):
             obs_to_pub = self.obstacle_array
 
         msg.obstacles = obs_to_pub
+        # Add clicked obstacles
+        for c_obs in self.clicked_obstacles:
+            msg.obstacles.append(c_obs)
+
         self.obstacle_pub.publish(msg)
         
         # Publish Visualization Markers
         if self.converter is not None:
-            self.publish_markers(obs_to_pub)
+            self.publish_markers(msg.obstacles)
 
     def publish_markers(self, obstacles):
         """Publish spheres to RViz for each active obstacle."""
