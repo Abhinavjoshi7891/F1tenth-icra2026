@@ -3,6 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from f110_msgs.msg import ObstacleArray, Obstacle, WpntArray
+from geometry_msgs.msg import PointStamped
 from nav_msgs.msg import Odometry
 from visualization_msgs.msg import Marker, MarkerArray
 from frenet_conversion.frenet_converter import FrenetConverter
@@ -44,11 +45,13 @@ class RandomObstaclePublisher(Node):
         self.final_s = 0.0
         self.gen = np.random.default_rng(seed)
         self.obstacles_generated = False
+        self.clicked_obstacles = []
         self.converter = None
 
         # ---- Subscribers & Publishers ----
         self.create_subscription(WpntArray, '/global_waypoints', self.global_waypoints_cb, 10)
         self.create_subscription(Odometry, '/car_state/odom_frenet', self.odom_cb, 10)
+        self.create_subscription(PointStamped, '/clicked_point', self.clicked_point_cb, 10)
         
         self.obstacle_pub = self.create_publisher(ObstacleArray, '/perception/obstacles', 10)
         self.marker_pub   = self.create_publisher(MarkerArray, '/perception/random_obstacle_markers', 10)
@@ -78,6 +81,38 @@ class RandomObstaclePublisher(Node):
     def odom_cb(self, msg):
         """Update ego position for lookahead mode."""
         self.ego_s = msg.pose.pose.position.x
+
+    def clicked_point_cb(self, msg: PointStamped):
+        """Callback for RViz clicked points. Spawns a static obstacle at the click location."""
+        if self.converter is None:
+            self.get_logger().warn('Frenet converter not yet initialized. Cannot place obstacle.', throttle_duration_sec=2.0)
+            return
+
+        # Convert clicked Cartesian (x, y) to Frenet (s, d)
+        x = msg.point.x
+        y = msg.point.y
+        frenet = self.converter.get_frenet([x], [y])
+        s_clicked = float(frenet[0][0])
+        d_clicked = float(frenet[1][0])
+
+        # Create new Obstacle
+        ob = Obstacle()
+        ob.id = 1000 + len(self.clicked_obstacles)
+        ob.s_center = s_clicked
+        ob.d_center = d_clicked
+        ob.s_start  = (s_clicked - 0.125) % self.final_s
+        ob.s_end    = (s_clicked + 0.125) % self.final_s
+        ob.d_right  = d_clicked - 0.125
+        ob.d_left   = d_clicked + 0.125
+        ob.size     = 0.25
+        ob.vs       = 0.0
+        ob.vd       = 0.0
+        ob.is_static = True
+        ob.is_visible = True
+        ob.is_actually_a_gap = False
+
+        self.clicked_obstacles.append(ob)
+        self.get_logger().info(f'Added static obstacle at s={s_clicked:.2f}, d={d_clicked:.2f} (Total extra: {len(self.clicked_obstacles)})')
 
     def generate_obstacles(self):
         """Logic from ROS 1: split track into sectors and place one obstacle in each."""
@@ -148,7 +183,10 @@ class RandomObstaclePublisher(Node):
                 if dist < self.lookahead_distance:
                     obs_to_pub.append(ob)
         else:
-            obs_to_pub = self.obstacle_array
+            obs_to_pub = self.obstacle_array.copy()
+
+        # Add manually clicked obstacles
+        obs_to_pub.extend(self.clicked_obstacles)
 
         msg.obstacles = obs_to_pub
         self.obstacle_pub.publish(msg)

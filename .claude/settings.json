@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install *)",
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\('race_stack/planner/local_planners/spline_planner/spline_planner/spline_planner.py'\\).read\\(\\)\\); print\\('syntax OK'\\)\")",
+      "Bash(git checkout *)",
+      "Read(//Data_Drive/**)",
+      "Read(//home/abhinav/**)",
+      "Bash(git -C /home/abhinav/Data_Drive/ros1_race_stack/ log --oneline -20)",
+      "Bash(git -C /home/abhinav/Data_Drive/ros1_race_stack/ submodule status)",
+      "Bash(python3 -m json.tool)",
+      "Bash(xargs cat *)",
+      "Bash(colcon build *)",
+      "Bash(cat)",
+      "Read(//tmp/**)",
+      "Bash(awk '{print $NF}')",
+      "Bash(xargs -I {} basename {})",
+      "Bash(python3 -c ' *)",
+      "Bash(grep -v \"^$\")",
+      "Bash(python3 -m py_compile /home/abhinav/Data_Drive/forzaeth/race_stack/planner/local_planners/static_rrt_planner/static_rrt_planner/static_rrt_node.py)",
+      "Bash(python3 -m py_compile /home/abhinav/Data_Drive/forzaeth/race_stack/planner/local_planners/spline_planner/spline_planner/spline_planner.py)",
+      "Bash(grep -n \"self.obstacles\\\\s*=\\\\|self.obstacles_perception\\\\s*=\\\\|@property\\\\s*$\\\\|def _check_only_ftg\" /home/abhinav/Data_Drive/forzaeth/race_stack/state_machine/state_machine/state_machine.py)",
+      "Bash(python3 -m py_compile /home/abhinav/Data_Drive/forzaeth/race_stack/state_machine/state_machine/transitions.py)"
+    ],
+    "additionalDirectories": [
+      "/tmp"
+    ]
+  }
+}

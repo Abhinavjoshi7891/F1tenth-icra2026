@@ -164,9 +164,17 @@ def PSGlobalTrackingTransition(state_machine: StateMachine) -> StateType:
         gb_predict_free = state_machine._check_prediction_gbfree
         o_free          = state_machine._check_ofree
         force_trailing  = state_machine._check_force_trailing
+        static_only     = state_machine._check_static_blocker_only
 
         if force_trailing:
             return StateType.TRAILING
+        # Static-blocker bypass: a stationary box has no speed to match, so
+        # TRAILING would just bleed our speed to 0 and trigger FTG. Commit to
+        # OVERTAKE (RRT path live) or FTGONLY (RRT silent) with no wait state.
+        elif static_only and valid_spline and o_free and ot_sector:
+            return StateType.OVERTAKE
+        elif static_only:
+            return StateType.FTGONLY
         elif valid_spline and o_free and ot_sector:
             return StateType.OVERTAKE
         elif enemy_in_front and gb_free and gb_predict_free and ot_sector and not force_trailing:
@@ -182,6 +190,18 @@ def PSGlobalTrackingTransition(state_machine: StateMachine) -> StateType:
 def PSTrailingTransition(state_machine: StateMachine) -> StateType:
     """Transitions for being in `StateType.TRAILING` with predictive_spliner"""
     if not state_machine._check_only_ftg_zone:
+        static_only = state_machine._check_static_blocker_only
+        # Static-blocker bypass — see PSGlobalTrackingTransition for rationale.
+        # Skipped before _check_ftg so we never consume the 3s slow-speed timer
+        # while waiting on a non-existent gap behind a stationary box.
+        if static_only:
+            valid_spline = state_machine._check_availability_splini_wpts
+            o_free       = state_machine._check_ofree
+            ot_sector    = state_machine._check_ot_sector
+            if valid_spline and o_free and ot_sector:
+                return StateType.OVERTAKE
+            return StateType.FTGONLY
+
         if state_machine._check_ftg:
             return StateType.FTGONLY
 

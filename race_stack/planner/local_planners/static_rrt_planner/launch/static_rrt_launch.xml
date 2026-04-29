@@ -1,0 +1,49 @@
+<launch>
+
+    <node pkg="static_rrt_planner" exec="static_rrt_node" name="static_rrt_node" output="screen">
+        <!-- Lookahead window [m]: larger than spliner so static obstacles are detected early -->
+        <param name="lookahead"             value="10.0"/>
+        <!-- Max lateral distance from raceline to consider an obstacle [m].
+             Must be wide enough to catch obstacles the avoidance path could encounter
+             (a detour for a near-raceline obstacle can swing 1+ m laterally).
+             1.5 m covers essentially the full drivable half-width. -->
+        <param name="obs_traj_tresh"        value="1.5"/>
+        <!-- RRT* iteration budget per planning cycle -->
+        <param name="max_iter"              value="1200"/>
+        <!-- Hard wall-clock cap per cycle [s] — clearance-weighted edges are 2x
+             the cost of plain collision-only edges, so the budget needs to be
+             larger than the 0.040s used pre-Fix-B. Trades the timer down to
+             ~12 Hz, which is still well above 5 Hz state-machine consumption. -->
+        <param name="time_limit"            value="0.080"/>
+        <!-- Frenet steer distance per RRT step [m] -->
+        <param name="step_size"             value="0.5"/>
+        <!-- Goal acceptance radius [m] -->
+        <param name="goal_thresh"           value="0.8"/>
+        <!-- RRT* rewire neighbourhood radius [m] -->
+        <param name="rrt_star_radius"       value="2.5"/>
+        <!-- Arc-length past obstacle s_end for goal point [m] -->
+        <param name="goal_offset"           value="10.0"/>
+        <!-- Speed scale during avoidance (fraction of reference) -->
+        <param name="avoidance_speed_factor" value="0.65"/>
+        <!-- Minimum clearance from track walls [m] -->
+        <param name="spline_bound_mindist"  value="0.15"/>
+        <!-- Car width [m] -->
+        <param name="car_width"             value="0.28"/>
+        <!-- Extra clearance margin from obstacle edge [m] -->
+        <param name="obs_margin"            value="0.05"/>
+        <!-- B: clearance-weighted cost. 0 = pure shortest path (raceline-hugging).
+             1.0 is a useful penalty without starving the search. k=4.0 was tested
+             and starved iter throughput (50 iters/cycle vs 200+) so RRT* committed
+             to tight first-feasible paths instead of finding wide arcs. -->
+        <param name="clearance_weight"      value="2.0"/>
+        <!-- C: fraction of pre-solution samples drawn from the wider half-corridor.
+             0 = no bias (uniform), 1 = always sample preferred side. -->
+        <param name="bias_prob"             value="0.7"/>
+        <!-- Smoothing residual passed to splprep. 0 = exact interpolation through
+             RRT nodes (preserves detour shape). Raise if path looks jittery. -->
+        <param name="smoothing_factor"      value="0.0"/>
+        <!-- Publish latency to /planner/rrt/latency -->
+        <param name="measure"               value="true"/>
+    </node>
+
+</launch>

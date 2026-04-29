@@ -309,6 +309,7 @@ class SQPAvoidanceNode(Node):
             
             msg = OTWpntArray()
             msg.header.stamp = self.get_clock().now().to_msg()
+            msg.header.frame_id = "predictive_spliner"
             msg.wpnts = [Wpnt(id=i, s_m=float(s), d_m=float(d), x_m=float(x), y_m=float(y), vx_mps=float(v)) 
                          for i, (x, y, s, d, v) in enumerate(zip(cart[0], cart[1], ev_s, ev_d, ev_v))]
             self.past_avoidance_d = res.x

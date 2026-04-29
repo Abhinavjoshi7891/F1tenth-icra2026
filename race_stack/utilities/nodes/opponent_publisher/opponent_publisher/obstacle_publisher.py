@@ -3,6 +3,7 @@ from rclpy.node import Node
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType, FloatingPointRange, SetParametersResult
 from rclpy.parameter import Parameter
 from f110_msgs.msg import ObstacleArray, Obstacle, WpntArray, OpponentTrajectory, OppWpnt
+from geometry_msgs.msg import PointStamped
 from visualization_msgs.msg import Marker, MarkerArray
 from nav_msgs.msg import Odometry, OccupancyGrid
 import numpy as np
@@ -111,6 +112,7 @@ class ObstaclePublisher(Node):
         self.last_ind     = None
 
         self.dynamic_obstacle = self._init_dynamic_obstacle()
+        self.clicked_obstacles = []
         self.obj_len = 0.5
         self.counter = 0
 
@@ -120,6 +122,7 @@ class ObstaclePublisher(Node):
         self.create_subscription(Odometry,  '/car_state/odom_frenet', self._odom_cb, 10)
         self.create_subscription(WpntArray, self.waypoints_topic,     self._waypoints_cb, 10)
         self.create_subscription(WpntArray, '/global_waypoints',      self._global_waypoints_cb, 10)
+        self.create_subscription(PointStamped, '/clicked_point',      self._clicked_point_cb, 10)
 
         if self.opp_type == 'lidar':
             qos_map = QoSProfile(
@@ -205,6 +208,38 @@ class ObstaclePublisher(Node):
 
     def _odom_cb(self, data: Odometry):
         self.car_odom = data
+
+    def _clicked_point_cb(self, msg: PointStamped):
+        """Callback for RViz clicked points. Spawns a static obstacle at the click location."""
+        if self.converter is None:
+            self.get_logger().warn('Frenet converter not yet initialized. Cannot place obstacle.', throttle_duration_sec=2.0)
+            return
+
+        # Convert clicked Cartesian (x, y) to Frenet (s, d)
+        x = msg.point.x
+        y = msg.point.y
+        frenet = self.converter.get_frenet([x], [y])
+        s_clicked = float(frenet[0][0])
+        d_clicked = float(frenet[1][0])
+
+        # Create new Obstacle
+        obs = Obstacle()
+        obs.id = 100 + len(self.clicked_obstacles)
+        obs.s_center = s_clicked
+        obs.d_center = d_clicked
+        obs.s_start  = (s_clicked - 0.2) % self.max_s
+        obs.s_end    = (s_clicked + 0.2) % self.max_s
+        obs.d_right  = d_clicked - 0.15
+        obs.d_left   = d_clicked + 0.15
+        obs.size     = 0.35
+        obs.vs       = 0.0
+        obs.vd       = 0.0
+        obs.is_static = True
+        obs.is_visible = True
+        obs.is_actually_a_gap = False
+
+        self.clicked_obstacles.append(obs)
+        self.get_logger().info(f'Added static obstacle at s={s_clicked:.2f}, d={d_clicked:.2f}')
 
     def _map_cb(self, data: OccupancyGrid):
         if self.first_map:
@@ -401,13 +436,19 @@ class ObstaclePublisher(Node):
         obstacle_msg = ObstacleArray()
         obstacle_msg.header.stamp    = self.get_clock().now().to_msg()
         obstacle_msg.header.frame_id = 'frenet'
+        
+        # Add moving dynamic obstacle
         obstacle_msg.obstacles.append(self.dynamic_obstacle)
+        
+        # Add manually clicked obstacles
+        for obs in self.clicked_obstacles:
+            obstacle_msg.obstacles.append(obs)
 
         self.obstacle_pub.publish(obstacle_msg)
 
         # HUD LOGGING: Detailed status of virtual opponent
         self.get_logger().info(
-            f"VIRTUAL OPPONENT: S: {self.dynamic_obstacle.s_center:.1f}m | D: {self.dynamic_obstacle.d_center:.1f}m | Speed: {self.dynamic_obstacle.vs:.2f}m/s | Profile: {self.speed_type}",
+            f"VIRTUAL OPPONENT: S: {self.dynamic_obstacle.s_center:.1f}m | D: {self.dynamic_obstacle.d_center:.1f}m | Speed: {self.dynamic_obstacle.vs:.2f}m/s | Profile: {self.speed_type} | Extra Obs: {len(self.clicked_obstacles)}",
             throttle_duration_sec=1.0
         )
 

@@ -140,6 +140,7 @@ class StateMachine(Node):
         self.first_visualization = True
         self.x_viz = 0
         self.y_viz = 0
+        self.active_planner = self.params.overtake_mode  # Dynamically updated by avoidance_cb
 
         # choose how to transition between states
         if self.params.mode == 'dummy':
@@ -225,6 +226,12 @@ class StateMachine(Node):
                 ttl = self.params.splini_ttl
             self.splini_ttl_counter = int(ttl * self.params.rate_hz)
             self.avoidance_wpnts = data
+            
+            # Update active planner source based on frame_id
+            new_planner = data.header.frame_id
+            if new_planner and new_planner != "map" and new_planner != self.active_planner:
+                self.get_logger().info(f"[STATE MACHINE] Planner shift: {self.active_planner} -> {new_planner}")
+                self.active_planner = new_planner
         # If empty we don't overwrite the avoidance waypoints
 
     def obstacles_cb(self, data):
@@ -406,6 +413,28 @@ class StateMachine(Node):
             if gap < horizon:
                 return True
         return False
+
+    @property
+    def _check_static_blocker_only(self) -> bool:
+        """True iff every obstacle inside the trailing horizon is static.
+
+        TRAILING is designed to follow a moving opponent at their speed. With a
+        stationary box the matched speed is 0, so the FTG slow-speed timer fires
+        in 3s and the car stalls before any overtake check runs. This flag lets
+        the PS transitions bypass that loop: if the only blocker is static, go
+        straight to OVERTAKE (when avoidance_wpnts are valid) or FTGONLY (when
+        they are not), with no slow-and-wait phase in between.
+        """
+        horizon = self.params.gb_horizon_m
+        any_in_horizon = False
+        for obs in self.obstacles:
+            gap = (obs.s_start - self.cur_s) % self.track_length
+            if gap >= horizon:
+                continue
+            any_in_horizon = True
+            if not obs.is_static:
+                return False
+        return any_in_horizon
 
     @property
     def _check_availability_splini_wpts(self) -> bool:
@@ -857,7 +886,7 @@ class StateMachine(Node):
             closest_obs = min(self.obstacles, key=lambda obs: (obs.s_center - self.cur_s) % self.track_length)
             gap = (closest_obs.s_center - self.cur_s) % self.track_length
             self.get_logger().info(
-                f"HUD: Ego S: {self.cur_s:.1f}m | Opp S: {closest_obs.s_center:.1f}m | Gap: {gap:.1f}m | State: {self.state.value} | Planner: {self.params.overtake_mode}",
+                f"HUD: Ego S: {self.cur_s:.1f}m | Opp S: {closest_obs.s_center:.1f}m | Gap: {gap:.1f}m | State: {self.state.value} | Planner: {self.active_planner}",
                 throttle_duration_sec=1.0
             )
 

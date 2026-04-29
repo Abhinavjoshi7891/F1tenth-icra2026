@@ -682,7 +682,7 @@ class ObstacleSpliner(Node):
 
             # Fill the rest of OTWpnts
             wpnts.header.stamp = self.get_clock().now().to_msg()
-            wpnts.header.frame_id = "map"
+            wpnts.header.frame_id = "spliner"
             if not danger_flag:
                 wpnts.ot_side = more_space
                 wpnts.ot_line = outside
@@ -715,8 +715,12 @@ class ObstacleSpliner(Node):
         return wpnts, mrks
 
     def _obs_filtering(self, obstacles: ObstacleArray) -> List[Obstacle]:
+        # Static obstacles are handled by static_rrt_planner. Yield to avoid
+        # publishing competing trajectories on /planner/avoidance/otwpnts.
+        dynamic_obs = [obs for obs in obstacles.obstacles if not obs.is_static]
+
         # Only use obstacles that are within a threshold of the raceline, else we don't care about them
-        obs_on_traj = [obs for obs in obstacles.obstacles if abs(
+        obs_on_traj = [obs for obs in dynamic_obs if abs(
             obs.d_center) < self.obs_traj_tresh]
 
         # Only use obstacles that within self.lookahead in front of the car
