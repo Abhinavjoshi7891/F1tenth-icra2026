@@ -1,4 +1,20 @@
 services:
+  jet-deploy:
+    build:
+      context: .
+      dockerfile: Dockerfile.jetson-deploy
+    image: forzaeth:humble-l4t-r36.3.0
+    runtime: nvidia
+    network_mode: host
+    privileged: true
+    environment:
+      - ROS_DOMAIN_ID=48
+      - DISPLAY
+      - XAUTHORITY=/root/.Xauthority
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /tmp/.docker.xauth:/root/.Xauthority:rw
+      - /dev:/dev
   nuc:
     build:
       context: .
@@ -8,6 +24,10 @@ services:
         - UID=${UID}
         - GID=${GID}
     image: nuc_forzaeth_racestack_ros2:humble
+    network_mode: host
+    privileged: true
+    environment:
+      - ROS_DOMAIN_ID=48
   jet:
     build:
       context: .
@@ -17,3 +37,4 @@ services:
         - UID=${UID}
         - GID=${GID}
     image: jet_forzaeth_racestack_ros2:humble
+    network_mode: host

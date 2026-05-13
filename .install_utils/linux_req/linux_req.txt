@@ -21,3 +21,9 @@ ros-humble-rqt
 ros-humble-xacro
 ros-humble-nav2-map-server
 ros-humble-nav2-lifecycle-manager
+ros-humble-ros2launch
+ros-humble-ros2pkg
+ros-humble-ros2run
+ros-humble-joy
+ros-humble-rmw-cyclonedds-cpp
+ros-humble-foxglove-bridge
