@@ -293,6 +293,11 @@ class LapAnalyser(Node):
 def main():
     rclpy.init()
     lap_analyser = LapAnalyser()
-    rclpy.spin(lap_analyser)
-    lap_analyser.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(lap_analyser)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        lap_analyser.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()

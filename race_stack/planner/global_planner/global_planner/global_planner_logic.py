@@ -55,6 +55,7 @@ class GlobalPlannerLogic:
                  required_laps_: int = 1,
                  reverse_mapping_: bool = False,
                  centerline_smoother_: str = 'ccma',   # <-- ADD THIS
+                 optimizer_config_: str = 'racecar_f110.ini',
                  loginfo_: Callable[[str], None] = print,
                  logwarn_: Callable[[str], None] = sys.stderr.write,
                  logerror_: Callable[[str], None] = sys.stderr.write) -> None:
@@ -67,7 +68,8 @@ class GlobalPlannerLogic:
 
         # Debugging
         self.show_plots = show_plots_
-        self.centerline_smoother = centerline_smoother_  
+        self.centerline_smoother = centerline_smoother_
+        self.optimizer_config = optimizer_config_
 
         # Affects operation of the module
         self.map_editor_mode = map_editor_mode_
@@ -120,10 +122,11 @@ class GlobalPlannerLogic:
 
         # Variables to check laps
         self.was_at_init_pos: bool = True
-        self.x_max_diff = 0.5  # meter
-        self.y_max_diff = 0.5  # meter
+        self.x_max_diff = 2.0  # meter (increased from 0.5 for environments with drift)
+        self.y_max_diff = 2.0  # meter (increased from 0.5 for environments with drift)
         self.theta_max_diff = np.pi / 2  # rad
         self.lap_count = 0
+        self._debug_tick = 0  # for periodic debug logging
 
         # for comparing driven lap length with calculated centerline length
         self.cent_driven = None
@@ -256,13 +259,27 @@ class GlobalPlannerLogic:
         # skeletonize
         skeleton = skeletonize(filtered_map, method='lee')
 
-        f, (ax0, ax1) = plt.subplots(2, 1)
-        f.suptitle(f"Map [{self.map_name}]: Filtered map versus morphological skeleton")
-        ax0.imshow(filtered_map, cmap='gray')
-        ax1.imshow(skeleton, cmap='gray')
-        plt.show()
+        if self.map_editor_mode:
+            skeleton_path = os.path.join(self.map_dir, 'skeleton_edit.png')
+            cv2.imwrite(skeleton_path, skeleton)
+            
+            # Map container path to host path for the log message
+            host_path = skeleton_path.replace('/home/abhinav/ws/src/race_stack', '/home/abhinav/Data_Drive/forzaeth/race_stack')
+            self.logwarn('=== MANUAL SKELETON EDIT MODE ===')
+            self.logwarn(f'Please run this on your laptop: python3 /home/abhinav/Data_Drive/forzaeth/race_stack/map_painter.py {host_path}')
+            
+            import time
+            mtime_orig = os.path.getmtime(skeleton_path)
+            # Wait for user to save the file in the painter
+            while os.path.getmtime(skeleton_path) == mtime_orig:
+                time.sleep(1.0)
+            
+            # Reload the edited skeleton
+            skeleton = cv2.imread(skeleton_path, 0)
+            _, skeleton = cv2.threshold(skeleton, 127, 255, cv2.THRESH_BINARY)
+            
+            self.loginfo('Manual edit detected! Proceeding with optimized skeleton...')
 
-        ################################################################################################################
         # Extract centerline from filtered occupancy grid map
         ################################################################################################################
         try:
@@ -273,7 +290,23 @@ class GlobalPlannerLogic:
                 map_editor_mode=self.map_editor_mode)
         except IOError:
             if self.map_editor_mode:
-                self.logwarn('No closed contours found! Check the edited image...')
+                self.logwarn('No closed contours found! Waiting for manual skeleton edit...')
+                self.logwarn(f'Please run this on your laptop: python3 /home/abhinav/Data_Drive/forzaeth/race_stack/map_painter.py {skeleton_path}')
+                
+                # Check for the file to be updated (we wait for the user to press 'S' in painter)
+                import time
+                mtime_orig = os.path.getmtime(skeleton_path)
+                
+                # We block here until the user saves the file
+                while os.path.getmtime(skeleton_path) == mtime_orig:
+                    time.sleep(1.0)
+                
+                # Load the edited skeleton
+                skeleton = cv2.imread(skeleton_path, 0)
+                _, skeleton = cv2.threshold(skeleton, 127, 255, cv2.THRESH_BINARY)
+                
+                # Try again with the edited skeleton
+                return self.compute_global_trajectory(cent_length)
             else:
                 self.logwarn('No closed contours found! Keep driving...')
             return False
@@ -334,6 +367,15 @@ class GlobalPlannerLogic:
         if not compare_direction(cent_direction, self.initial_position[2]):
             centerline_smooth = np.flip(centerline_smooth, axis=0)
             centerline_meter_int = np.flip(centerline_meter_int, axis=0)
+
+        # Ensure CCW orientation in world coordinates (required by tph curvature convention).
+        # Signed area: positive = CCW, negative = CW. Flip CW centerlines.
+        x, y = centerline_meter_int[:, 0], centerline_meter_int[:, 1]
+        signed_area = 0.5 * np.sum(x[:-1] * y[1:] - x[1:] * y[:-1])
+        if signed_area < 0:  # CW → flip to CCW
+            centerline_smooth = np.flip(centerline_smooth, axis=0)
+            centerline_meter_int = np.flip(centerline_meter_int, axis=0)
+            self.loginfo('Centerline flipped to CCW (signed area was negative)')
 
         # Flip again if necessary
         if self.reverse_mapping:
@@ -407,7 +449,7 @@ class GlobalPlannerLogic:
         try:
             global_trajectory_iqp, bound_r_iqp, bound_l_iqp, est_t_iqp = trajectory_optimizer(
                 input_path=self.input_path, track_name=iqp_centerline_path, curv_opt_type='mincurv_iqp', safety_width=self.safety_width, plot=(
-                    self.show_plots and not self.map_editor_mode))
+                    self.show_plots and not self.map_editor_mode), veh_params_file=self.optimizer_config)
         except RuntimeError as e:
             self.logwarn(f"Error during iterative minimum curvature optimization, error: {e}")
             self.loginfo('Try again later!')
@@ -450,7 +492,8 @@ class GlobalPlannerLogic:
                                                             track_name=iqp_centerline_path,
                                                             curv_opt_type='mincurv_iqp',
                                                             safety_width=self.safety_width_sp,
-                                                            plot=(self.show_plots and not self.map_editor_mode))
+                                                            plot=(self.show_plots and not self.map_editor_mode),
+                                                            veh_params_file=self.optimizer_config)
 
         # use new iqp path as centerline
         new_cent_with_dist = add_dist_to_cent(centerline_smooth=global_trajectory_iqp_ot[:, 1:3],
@@ -469,7 +512,7 @@ class GlobalPlannerLogic:
         # is a bit faster but cuts corner a bit more
         global_trajectory_sp, bound_r_sp, bound_l_sp, est_t_sp = trajectory_optimizer(
             input_path=self.input_path, track_name=sp_centerline_path, curv_opt_type='shortest_path', safety_width=self.safety_width_sp, plot=(
-                self.show_plots and not self.map_editor_mode))
+                self.show_plots and not self.map_editor_mode), veh_params_file=self.optimizer_config)
 
         self.est_lap_time = Float32()  # variable which will be published and used in l1_param_optimizer
         self.est_lap_time.data = est_t_sp
@@ -521,16 +564,16 @@ class GlobalPlannerLogic:
         Returns:
             filtered_map (np.ndarray): The filtered occupancy grid map.
         """
-        # Assume that map is from the occupancy grid and therefore needs to be processed
-        original_map = np.int8(self.map_occupancy_grid).reshape(self.map_height, self.map_width)
+        # Use np.frombuffer for guaranteed ARM64-compatible conversion from ROS array.array type
+        raw = np.frombuffer(bytes(self.map_occupancy_grid), dtype=np.int8).copy()
+        original_map = raw.reshape(self.map_height, self.map_width)
 
-        # get right shape for occupancy grid map
         # mark unknown (-1) as occupied (100)
-        original_map = np.where(original_map == -1, 100, original_map)
+        original_map[original_map == -1] = 100
 
-        # binarised map
-        bw = np.where(original_map < self.occupancy_grid_threshold, 255, 0)
-        bw = np.uint8(bw)
+        # binarise: free space (< threshold) -> 255 (white), occupied -> 0 (black)
+        bw = np.zeros(original_map.shape, dtype=np.uint8)
+        bw[original_map < self.occupancy_grid_threshold] = 255
 
         # Filtering with morphological opening
         kernel = np.ones((self.filter_kernel_size, self.filter_kernel_size), np.uint8)
@@ -605,6 +648,21 @@ class GlobalPlannerLogic:
 
         elif not is_at_init_pos:
             self.was_at_init_pos = False
+
+        # Periodic debug logging (~every 5 seconds at 10Hz)
+        self._debug_tick += 1
+        if self._debug_tick % 50 == 0:
+            x_diff = np.abs(self.current_position[0] - self.initial_position[0])
+            y_diff = np.abs(self.current_position[1] - self.initial_position[1])
+            theta_diff0 = np.abs(self.current_position[2] - self.initial_position[2])
+            theta_diff1 = 2 * np.pi - theta_diff0
+            theta_diff = min(theta_diff0, theta_diff1)
+            self.loginfo(
+                f"[LAP DEBUG] pos=({self.current_position[0]:.2f}, {self.current_position[1]:.2f}, {self.current_position[2]:.2f}) "
+                f"init=({self.initial_position[0]:.2f}, {self.initial_position[1]:.2f}, {self.initial_position[2]:.2f}) "
+                f"diff=(x:{x_diff:.2f}/{self.x_max_diff}, y:{y_diff:.2f}/{self.y_max_diff}, θ:{theta_diff:.2f}/{self.theta_max_diff:.2f}) "
+                f"at_init={is_at_init_pos} was_at_init={self.was_at_init_pos} laps={self.lap_count}"
+            )
 
     def at_init_pos_check(self) -> bool:
         """

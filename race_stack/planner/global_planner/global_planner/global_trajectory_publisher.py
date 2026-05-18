@@ -156,9 +156,14 @@ class GlobalRepublisher(Node):
 def main(args=None):
     rclpy.init(args=args)
     republisher = GlobalRepublisher()
-    rclpy.spin(republisher)
-    republisher.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(republisher)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        republisher.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 if __name__ == '__main__':
     main()

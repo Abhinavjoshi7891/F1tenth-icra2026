@@ -37,6 +37,7 @@ class GlobalPlanner(Node):
         self.show_plots = self.get_parameter('show_plots').value
         self.required_laps = self.get_parameter('required_laps').value
         self.centerline_smoother = self.get_parameter('centerline_smoother').value  # <-- ADD
+        self.optimizer_config = self.get_parameter('optimizer_config').value
 
         # get map source path
         self.map_dir = get_data_path('maps/' + self.map_name)
@@ -58,7 +59,8 @@ class GlobalPlanner(Node):
             self.filter_kernel_size,
             self.required_laps,
             self.reverse_mapping,
-            self.centerline_smoother, 
+            self.centerline_smoother,
+            self.optimizer_config,
             self.get_logger().info,
             self.get_logger().warn,
             self.get_logger().error

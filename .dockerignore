@@ -1,0 +1,10 @@
+build/
+install/
+log/
+cache/
+old_ghost_files/
+autodrive_sim/
+.git/
+**/__pycache__/
+**/*.pyc
+**/*.pyo

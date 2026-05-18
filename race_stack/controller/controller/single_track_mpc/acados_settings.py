@@ -4,7 +4,6 @@
 # ROS2 port: removed pbl_config import, relative import for bicycle_model
 
 import numpy as np
-from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver
 from typing import Tuple
 from .bicycle_model import bicycle_model
 from .utils.indicies import StateIndex
@@ -12,6 +11,7 @@ from .utils.indicies import StateIndex
 
 def acados_settings(s0, kapparef, d_left, d_right,
                     stmpc_config, car_config, tire_config) -> Tuple:
+    from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver
     ocp = AcadosOcp()
 
     model, constraint, params = bicycle_model(

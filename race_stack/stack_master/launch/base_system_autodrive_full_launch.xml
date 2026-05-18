@@ -1,0 +1,79 @@
+<!-- -*- mode: XML -*- -->
+<!--
+  Full AutoDRIVE base system launch. Self-contained — does NOT wrap
+  base_system_autodrive_launch.xml because that file sets sim=False in
+  global_parameters, which causes the ForzaETH controller to publish to the
+  VESC topic instead of /drive, so the adapter never receives drive commands.
+
+  This file sets sim=True in global_parameters (controller -> /drive -> adapter)
+  while NOT launching gym_bridge (no competing 2D physics).
+
+  Usage:
+    ros2 launch stack_master base_system_autodrive_full_launch.xml map_name:=porto
+
+  Then in a separate terminal:
+    ros2 launch stack_master time_trials_launch.xml \
+        racecar_version:=AUTODRIVE LU_table:=SIM_linear ctrl_algo:=PP
+-->
+<launch>
+  <arg name="map_name" description="Map name in stack_master/maps" />
+  <arg name="racecar_version" default="AUTODRIVE"
+       description="Racecar config version. AUTODRIVE selects config/AUTODRIVE/slam." />
+  <arg name="loc_algorithm" default="slam" description="'slam' / 'synpf'" />
+
+  <let name="map_path" value="$(find-pkg-share stack_master)/maps/$(var map_name)" />
+
+  <!-- AutoDRIVE adapter: /autodrive/roboracer_1/* -> /scan, /odom, /sensors/imu/raw.
+       /tf remapped: Cartographer publishes map->base_link directly
+       (published_frame=base_link, provide_odom_frame=false) so the adapter's
+       dead-reckoning odom->base_link TF is unused and kept off the tree. -->
+  <node pkg="autodrive_adapter" exec="adapter_node" name="autodrive_adapter" output="screen">
+    <remap from="/tf" to="/tf_adapter_unused" />
+  </node>
+
+  <!-- State estimation: EKF + Cartographer SLAM.
+       slam_config_path must include /slam suffix — lua files live in that subdir.
+       use_sim_time=False: AutoDRIVE is real-time, wall clock is correct.
+       carstate_node sees use_sim_time=False -> subscribes to /odom (adapter output). -->
+  <include file="$(find-pkg-share state_estimation)/launch/state_estimation_launch.xml">
+    <arg name="racecar_version"   value="$(var racecar_version)" />
+    <arg name="mapping_bool"      value="False" />
+    <arg name="map_name"          value="$(var map_name)" />
+    <arg name="frenet_bool"       value="True" />
+    <arg name="loc_algorithm"     value="$(var loc_algorithm)" />
+    <arg name="use_sim_time"      value="False" />
+    <arg name="slam_config_path"
+         value="$(find-pkg-share stack_master)/config/$(var racecar_version)/slam" />
+  </include>
+
+  <!-- Global parameters: sim=True so the ForzaETH controller publishes to /drive
+       (not the VESC topic). gym_bridge is NOT launched — sim here only controls
+       the controller's drive topic selection, nothing else. -->
+  <node pkg="stack_master" name="global_parameters" exec="global_parameter_node">
+    <param name="racecar_version" value="$(var racecar_version)" />
+    <param name="sim"             value="True" />
+    <param name="map_path"        value="$(var map_path)" />
+    <param name="use_sim_time"    value="False" />
+  </node>
+
+  <!-- Global trajectory publisher -->
+  <include file="$(find-pkg-share global_planner)/launch/global_trajectory_publisher_launch.xml">
+    <arg name="map_path" value="$(var map_path)" />
+  </include>
+
+  <!-- Sector tuner -->
+  <node pkg="sector_tuner" name="sector_tuner" exec="sector_tuner">
+    <param name="map_name" value="$(var map_name)" />
+    <param from="$(find-pkg-share stack_master)/maps/$(var map_name)/speed_scaling.yaml" />
+  </node>
+
+  <!-- OT interpolator -->
+  <node pkg="sector_tuner" name="ot_interpolator" exec="ot_interpolator">
+    <param name="map_name" value="$(var map_name)" />
+    <param from="$(find-pkg-share stack_master)/maps/$(var map_name)/ot_sectors.yaml" />
+  </node>
+
+  <!-- Lap analyser -->
+  <node pkg="lap_analyser" name="lap_analyser" exec="lap_analyser" output="screen" />
+
+</launch>

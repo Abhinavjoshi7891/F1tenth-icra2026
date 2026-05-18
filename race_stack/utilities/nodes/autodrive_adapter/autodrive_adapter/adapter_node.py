@@ -25,10 +25,11 @@ QoS: AutoDRIVE bridge uses RELIABLE — all subscriptions must match.
 
 import math
 import rclpy
+import rclpy.time
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 import tf2_ros
-from geometry_msgs.msg import TransformStamped, Quaternion, Twist
+from geometry_msgs.msg import TransformStamped, Quaternion, Twist, Point, PoseStamped
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import LaserScan, Imu, JointState
 from std_msgs.msg import Float32
@@ -147,6 +148,22 @@ class AutoDRIVEAdapter(Node):
         # Teleop state
         self._teleop_active = False
 
+        # Monotonic scan stamp guard (prevents rare nanosecond clock jitter)
+        self._last_scan_stamp_ns: int = 0
+
+        # Diagnostic state
+        self._ips_pos: Point = None
+        self._slam_pose: PoseStamped = None  # from carstate_node (real TF tree)
+        self.create_subscription(Point, '/autodrive/roboracer_1/ips',
+                                  self._ips_cb, RELIABLE_QOS)
+        # /car_state/pose is published by carstate_node using the real /tf tree,
+        # so it reflects Cartographer's estimate without the /tf remap blind spot.
+        self.create_subscription(PoseStamped, '/car_state/pose',
+                                  self._slam_pose_cb, CTRL_QOS)
+
+        # 0.1 Hz diagnostic log comparing IPS truth vs SLAM vs dead-reckoning
+        self.create_timer(10.0, self._diag_cb)
+
         self.get_logger().info(
             '[autodrive_adapter] Node started. '
             'PID speed controller enabled (FF=%.3f, Kp=%.3f, Ki=%.3f, Kd=%.3f)' %
@@ -220,7 +237,9 @@ class AutoDRIVEAdapter(Node):
             self._theta = math.atan2(math.sin(self._theta), math.cos(self._theta))
 
         # ── Publish /odom WITH twist ─────────────────────────────────────
-        stamp = msg.header.stamp
+        # Wall clock: must match scan's clock so range_data_collator can
+        # interleave scan+odom without dropping all scan points.
+        stamp = self.get_clock().now().to_msg()
 
         odom = Odometry()
         odom.header.stamp    = stamp
@@ -254,12 +273,45 @@ class AutoDRIVEAdapter(Node):
         self._tf_broadcaster.sendTransform(t)
 
     def _lidar_cb(self, msg: LaserScan) -> None:
+        now_ns = self.get_clock().now().nanoseconds
+        if now_ns <= self._last_scan_stamp_ns:
+            now_ns = self._last_scan_stamp_ns + 1
+        self._last_scan_stamp_ns = now_ns
+        msg.header.stamp = rclpy.time.Time(nanoseconds=now_ns).to_msg()
         msg.header.frame_id = 'ego_racecar/laser'
+        # Zero AutoDRIVE's per-point timing fields — they use a different
+        # epoch/unit than ROS wall clock, causing Cartographer's collator to
+        # compute point timestamps far in the past and drop every scan.
+        msg.time_increment = 0.0
+        msg.scan_time = 0.05  # 1/20 Hz nominal; not used by Cartographer
         self._scan_pub.publish(msg)
 
     def _imu_cb(self, msg: Imu) -> None:
+        msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = 'base_link'
         self._imu_pub.publish(msg)
+
+    def _ips_cb(self, msg: Point) -> None:
+        self._ips_pos = msg
+
+    def _slam_pose_cb(self, msg: PoseStamped) -> None:
+        self._slam_pose = msg
+
+    def _diag_cb(self) -> None:
+        ips_str = (f"({self._ips_pos.x:.2f}, {self._ips_pos.y:.2f})"
+                   if self._ips_pos else "N/A")
+
+        if self._slam_pose is not None:
+            sx = self._slam_pose.pose.position.x
+            sy = self._slam_pose.pose.position.y
+            slam_str = f"({sx:.2f}, {sy:.2f})"
+        else:
+            slam_str = "N/A"
+
+        self.get_logger().info(
+            f"[DIAG] IPS={ips_str}  SLAM={slam_str}"
+            f"  odom=({self._x:.2f},{self._y:.2f})"
+            f"  speed={self._actual_speed:.2f}m/s")
 
     # ── Drive command with PID speed controller ───────────────────────────────
 
@@ -365,7 +417,8 @@ def main(args=None):
         pass
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == '__main__':

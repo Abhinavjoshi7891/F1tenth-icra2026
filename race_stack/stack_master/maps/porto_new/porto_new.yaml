@@ -1,0 +1,9 @@
+free_thresh: 0.196
+image: porto_new.png
+negate: 0
+occupied_thresh: 0.65
+origin:
+- -5.671458053588868
+- -8.927519226074219
+- 0
+resolution: 0.05000000074505806

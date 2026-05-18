@@ -24,7 +24,11 @@ def get_data_path(subpath=''):
     """
     Helper function to get an absolute path to the specified (relative) path within the data folder.
     """
-    return Path(get_package_share_directory('stack_master')).parents[3] / 'src/race_stack/stack_master' / subpath
+    base_path = Path(get_package_share_directory('stack_master')).parents[3] / 'src'
+    # Check if 'forzaeth' exists in src, if not use race_stack directly
+    if (base_path / 'forzaeth').exists():
+        return base_path / 'forzaeth/race_stack/stack_master' / subpath
+    return base_path / 'race_stack/stack_master' / subpath
 
 
 def extract_centerline(skeleton, cent_length: float, map_resolution: float, map_editor_mode: bool) -> np.ndarray:
@@ -91,15 +95,24 @@ def extract_centerline(skeleton, cent_length: float, map_resolution: float, map_
         elif map_editor_mode or cent_length == 0.0:
             line_lengths[i] = line_length
 
-    # take the shortest line
-    min_line_length = min(line_lengths)
-
-    if min_line_length == np.inf:
+    # In map_editor_mode (or when cent_length is unknown), prefer the LONGEST closed
+    # contour: the skeleton often has two parallel traces (inner + outer edges of the
+    # corridor band), and the shorter inner one typically has sharp artifacts that
+    # cause infeasibly high curvature in the optimizer.  The longest contour is the
+    # true outer centerline.
+    finite_lengths = [(l, i) for i, l in enumerate(line_lengths) if l != np.inf]
+    if not finite_lengths:
         raise ValueError("Only invalid closed contour line lengths")
 
-    min_length_index = line_lengths.index(min_line_length)
+    if map_editor_mode or cent_length == 0.0:
+        # pick longest — outer / most-complete loop
+        best_length, best_index = max(finite_lengths, key=lambda t: t[0])
+    else:
+        # original behaviour: pick closest-to-driven-length
+        best_length, best_index = min(finite_lengths, key=lambda t: t[0])
+
     # print(line_lengths)
-    smallest_contour = np.array(closed_contours[min_length_index]).flatten()
+    smallest_contour = np.array(closed_contours[best_index]).flatten()
 
     # reshape smallest_contours from the shape [x1,y1,x2,y2,...] to [[x1,y1],[x2,y2],...]
     # this will be the centerline

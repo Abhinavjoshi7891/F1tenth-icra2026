@@ -372,7 +372,14 @@ class RacelineEditor:
 
         self._draw_velocity_colors()
 
-        self.ax.set_aspect('equal', 'datalim')
+        # Auto-zoom to the track area with padding
+        x_min, x_max = np.min(self.active['x_m']), np.max(self.active['x_m'])
+        y_min, y_max = np.min(self.active['y_m']), np.max(self.active['y_m'])
+        padding = 3.0  # meters
+        self.ax.set_xlim(x_min - padding, x_max + padding)
+        self.ax.set_ylim(y_min - padding, y_max + padding)
+
+        self.ax.set_aspect('equal')
         self.ax.grid(True, alpha=0.3)
         self.ax.legend(loc='upper right', fontsize=8)
         edit_label = 'Shortest Path' if self.edit_key == 'sp' else 'Min Curvature Raceline'

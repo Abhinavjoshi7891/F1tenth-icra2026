@@ -98,7 +98,7 @@ class Controller(Node):
         if self.sim:
             self.publish_topic = '/drive'
         else:
-            self.publish_topic = '/vesc/high_level/ackermann_cmd_mux/input/nav_1'
+            self.publish_topic = '/drive'
         
         self.drive_pub = self.create_publisher(AckermannDriveStamped, self.publish_topic, 10)
         self.steering_pub = self.create_publisher(Marker, 'steering', 10)
@@ -531,7 +531,7 @@ class Controller(Node):
             if future.done():
                 try:
                     res = future.result()
-                    return getattr(res.values[0], self.type_arr[res.values[0].type])
+                    return return_param_value(res.values[0])
                 except Exception as e:
                     self.get_logger().warn('Service call failed %r' % (e,))
                 break

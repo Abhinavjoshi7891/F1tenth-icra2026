@@ -37,14 +37,21 @@ TRAJECTORY_BUILDER_2D.use_imu_data = false
 TRAJECTORY_BUILDER_2D.max_range = 10.0
 TRAJECTORY_BUILDER_2D.min_range = 0.06
 
--- might be able to optimize these parameters
--- see: http://google-cartographer-ros.readthedocs.io/en/latest/tuning.html
-TRAJECTORY_BUILDER_2D.submaps.num_range_data = 60
+-- Motion filter: default 5s fires only on timer (2% retention = 0.2 nodes/sec).
+-- Tighten so distance/angle trigger on a slow-moving car.
+TRAJECTORY_BUILDER_2D.motion_filter.max_time_seconds = 0.5
+TRAJECTORY_BUILDER_2D.motion_filter.max_distance_meters = 0.05
+TRAJECTORY_BUILDER_2D.motion_filter.max_angle_radians = math.rad(0.5)
 
--- Aggressive loop closure search
+-- Small submaps → fill in ~5s → loop closure can start within first lap.
+-- (60 nodes × 5s each = 5 min/submap with old filter; 10 nodes × 0.5s ≈ 5s now)
+TRAJECTORY_BUILDER_2D.submaps.num_range_data = 10
+
+-- see: http://google-cartographer-ros.readthedocs.io/en/latest/tuning.html
 POSE_GRAPH.optimize_every_n_nodes = 5
-POSE_GRAPH.global_sampling_ratio = 0.1
-POSE_GRAPH.constraint_builder.sampling_ratio = 0.1
+POSE_GRAPH.global_sampling_ratio = 0.5
+POSE_GRAPH.constraint_builder.sampling_ratio = 0.3
+POSE_GRAPH.constraint_builder.min_score = 0.80
 
 TRAJECTORY_BUILDER_2D.ceres_scan_matcher.rotation_weight = 0.2 * TRAJECTORY_BUILDER_2D.ceres_scan_matcher.rotation_weight
 

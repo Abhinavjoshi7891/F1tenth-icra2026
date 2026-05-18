@@ -34,18 +34,25 @@ MAP_BUILDER.use_trajectory_builder_2d = true
 MAP_BUILDER.use_trajectory_builder_3d = false
 MAP_BUILDER.num_background_threads = 4.0
 TRAJECTORY_BUILDER_2D.use_imu_data = false
-TRAJECTORY_BUILDER_2D.max_range = 25.0
-TRAJECTORY_BUILDER_2D.min_range = 0.05
+TRAJECTORY_BUILDER_2D.max_range = 10.0
+TRAJECTORY_BUILDER_2D.min_range = 0.06
 TRAJECTORY_BUILDER.pure_localization_trimmer = {
     max_submaps_to_keep = 5,
 }
 
 -- might be able to optimize these parameters
 -- see: http://google-cartographer-ros.readthedocs.io/en/latest/tuning.html
+-- Tighten motion filter (same as mapping) so localization gets dense nodes.
+TRAJECTORY_BUILDER_2D.motion_filter.max_time_seconds = 0.5
+TRAJECTORY_BUILDER_2D.motion_filter.max_distance_meters = 0.05
+TRAJECTORY_BUILDER_2D.motion_filter.max_angle_radians = math.rad(0.5)
+
 TRAJECTORY_BUILDER_2D.submaps.num_range_data = 80
 POSE_GRAPH.optimize_every_n_nodes = 5
-POSE_GRAPH.global_sampling_ratio = 0.05
-POSE_GRAPH.constraint_builder.sampling_ratio = 0.05
+POSE_GRAPH.global_sampling_ratio = 1.0
+POSE_GRAPH.constraint_builder.sampling_ratio = 0.3
+-- Reject false-positive loop closure constraints (Porto air ducts score 55-58%).
+POSE_GRAPH.constraint_builder.min_score = 0.80
 
 TRAJECTORY_BUILDER_2D.ceres_scan_matcher.rotation_weight = 0.2 * TRAJECTORY_BUILDER_2D.ceres_scan_matcher.rotation_weight
 

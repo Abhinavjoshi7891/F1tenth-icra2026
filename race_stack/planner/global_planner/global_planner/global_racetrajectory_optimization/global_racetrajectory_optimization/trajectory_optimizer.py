@@ -21,7 +21,8 @@ def trajectory_optimizer(input_path: str,
                          track_name: str,
                          curv_opt_type: str,
                          safety_width: float = 0.8,
-                         plot: bool = False) -> Tuple[np.ndarray, np.ndarray, np.ndarray, float]:
+                         plot: bool = False,
+                         veh_params_file: str = "racecar_f110.ini") -> Tuple[np.ndarray, np.ndarray, np.ndarray, float]:
     """
     Optimizes a trajectory based on the given input parameters.
 
@@ -54,7 +55,7 @@ def trajectory_optimizer(input_path: str,
                  "mintime_plots": False}            # plot states, controls, friction coeffs etc. (mintime only)
     
     # vehicle parameter file -------------------------------------------------------------------------------------------
-    file_paths = {"veh_params_file": "racecar_f110.ini"}
+    file_paths = {"veh_params_file": veh_params_file}
 
     # track file (including centerline coordinates + track widths) -----------------------------------------------------
     file_paths["track_name"] = track_name
@@ -240,6 +241,10 @@ def trajectory_optimizer(input_path: str,
     # ------------------------------------------------------------------------------------------------------------------
     # CALL OPTIMIZATION ------------------------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------------------------------------------
+    print(f"[TRAJ_OPT] ini: {os.path.join(file_paths['inputs'], file_paths['veh_params_file'])}")
+    print(f"[TRAJ_OPT] stepsize_reg={pars['stepsize_opts']['stepsize_reg']}m  curvlim={pars['veh_params']['curvlim']}rad/m  w_veh={safety_width}m")
+    print(f"[TRAJ_OPT] reftrack points: {len(reftrack_interp)}  w_tr_right min/mean/max: {reftrack_interp[:,2].min():.3f}/{reftrack_interp[:,2].mean():.3f}/{reftrack_interp[:,2].max():.3f}m")
+    print(f"[TRAJ_OPT] w_tr_left  min/mean/max: {reftrack_interp[:,3].min():.3f}/{reftrack_interp[:,3].mean():.3f}/{reftrack_interp[:,3].max():.3f}m")
 
     # if reoptimization of mintime solution is used afterwards we have to consider some additional deviation in the first
     # optimization

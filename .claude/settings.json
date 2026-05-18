@@ -8,7 +8,33 @@
       "Bash(cp /home/abhinav/Data_Drive/ros1_race_stack/system_identification/id_analyser/models/NUC2/NUC2_pacejka.txt /home/abhinav/Data_Drive/forzaeth/race_stack/system_identification/id_analyser/models/NUC2/NUC2_pacejka.txt)",
       "Bash(cp /home/abhinav/Data_Drive/ros1_race_stack/system_identification/id_analyser/models/NUC2/NUC2_linear.txt /home/abhinav/Data_Drive/forzaeth/race_stack/system_identification/id_analyser/models/NUC2/NUC2_linear.txt)",
       "Bash(cp /home/abhinav/Data_Drive/ros1_race_stack/system_identification/id_analyser/models/SIM/SIM_pacejka.txt /home/abhinav/Data_Drive/forzaeth/race_stack/system_identification/id_analyser/models/NUC2/SIM_pacejka.txt)",
-      "Bash(grep -rn \"import rospy\\\\|from rospy\\\\|from tf import\\\\|import tf$\" /home/abhinav/Data_Drive/forzaeth/race_stack/utilities/nodes/lap_analyser/lap_analyser/)"
+      "Bash(grep -rn \"import rospy\\\\|from rospy\\\\|from tf import\\\\|import tf$\" /home/abhinav/Data_Drive/forzaeth/race_stack/utilities/nodes/lap_analyser/lap_analyser/)",
+      "Bash(grep -E \"\\\\.\\(py|xml|yaml\\)$\")",
+      "Bash(grep -E \"\\(^[^/]*race_stack/[^/]+$\\)\")",
+      "Bash(grep -E \"^./[^/]+$\")",
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\('utilities/nodes/autodrive_adapter/autodrive_adapter/adapter_node.py'\\).read\\(\\)\\); print\\('syntax OK'\\)\")",
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\('utilities/nodes/autodrive_adapter/autodrive_adapter/adapter_node.py'\\).read\\(\\)\\); print\\('OK'\\)\")",
+      "Bash(grep -v \"^--$\")",
+      "Bash(grep -v \"^$\")",
+      "Bash(git checkout *)",
+      "Bash(xargs ls *)",
+      "Read(//home/abhinav/ws/build/global_planner/global_planner/**)",
+      "Read(//home/abhinav/ws/src/race_stack/planner/global_planner/global_planner/**)",
+      "Bash(xargs cat *)",
+      "Bash(curl -s \"https://hub.docker.com/v2/repositories/dustynv/ros/tags?page_size=100&name=humble-ros-base\")",
+      "Bash(python3 -c \"import sys,json; tags=json.load\\(sys.stdin\\)['results']; [print\\(t['name']\\) for t in tags]\")",
+      "Bash(ls ~/.ssh/)",
+      "Read(//home/abhinav/.ssh/**)",
+      "Bash(ssh-copy-id -i ~/.ssh/id_ed25519.pub abhinav@192.168.29.236)",
+      "Bash(ssh orin *)",
+      "Bash(ssh -i ~/.ssh/id_ed25519 -o BatchMode=yes orin \"echo ok\")",
+      "Bash(ssh -vvv -i ~/.ssh/id_ed25519 abhinav@192.168.29.236 \"echo ok\")",
+      "Bash(ssh -o StrictHostKeyChecking=no abhinav@192.168.29.236 \"echo ok\")",
+      "Bash(sed -n '280,320p' /usr/local/lib/python3.10/dist-packages/trajectory_planning_helpers/opt_min_curv.py)",
+      "Read(//usr/local/lib/python3.10/dist-packages/trajectory_planning_helpers/**)"
+    ],
+    "additionalDirectories": [
+      "/home/abhinav/.ssh"
     ]
   }
 }

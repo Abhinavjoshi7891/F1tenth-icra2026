@@ -25,3 +25,11 @@ state_machine:
     ftg_threshold_speed: 1.0 # [m/s] speed threshold below which we start a timer for activating FTG
     ftg_timer_sec: 3. # [s] time we have to stay slower than the `ftg_threshold_speed` threshold before we activate FTG
 
+    ### FTG Parameters (ported from ROS1 state_machine_params.yaml) ###
+    debug: False
+    safety_radius: 40
+    max_lidar_dist: 9.0
+    range_offset: 180
+    track_width: 2.6
+    max_speed: 6.0
+

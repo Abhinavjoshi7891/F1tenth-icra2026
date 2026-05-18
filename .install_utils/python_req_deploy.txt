@@ -1,0 +1,35 @@
+# Exact versions from dev machine (pip3 freeze 2026-05-08)
+# Used for Docker deployment image — do not use loose pins here
+
+scikit-learn
+scikit-image==0.25.2
+opencv-python>=4.5.2
+scikit-optimize
+casadi
+pynput
+pandas
+matplotlib==3.5.1
+numba==0.64.0
+llvmlite==0.46.0
+filterpy
+tqdm==4.67.1
+transforms3d==0.4.2
+
+# Gym
+gymnasium==0.29.1
+numpy==1.26.4
+Pillow>=9.0.1
+scipy==1.12.0
+pyyaml>=5.3.1
+pyglet==1.5.20
+pyopengl
+
+# coverage 7.x required by numba 0.64.0
+coverage==7.13.5
+
+# Global planner
+trajectory-planning-helpers==0.79
+
+# acados_template dependencies (v0.3.2)
+deprecated
+future-fstrings

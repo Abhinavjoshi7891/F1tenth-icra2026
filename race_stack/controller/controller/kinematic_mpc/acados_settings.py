@@ -10,11 +10,11 @@
 #                      n_left_bound]            # n - d_left + margin <= 0  → uh=0
 
 import numpy as np
-from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver
 from .bicycle_model import bicycle_model
 
 
 def acados_settings(s0, kapparef, vx_ref, d_left, d_right, kmpc_config, car_config):
+    from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver
     ocp = AcadosOcp()
 
     # Build model — returns (model, constraint, params)
