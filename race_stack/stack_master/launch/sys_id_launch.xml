@@ -1,0 +1,15 @@
+<launch>
+    <arg name="odom_topic" default="/car_state/odom" />
+    <arg name="ackermann_cmd_topic" default="/drive" />
+    <arg name="save_LUT_name" default="DEXTER_pacejka" />
+    <arg name="plot_model" default="True" />
+    <arg name="racecar_version" default="DEXTER"/>
+
+    <include file="$(find-pkg-share on_track_sys_id)/launch/sys_id_launch.xml">
+        <arg name="odom_topic" value="$(var odom_topic)" />
+        <arg name="ackermann_cmd_topic" value="$(var ackermann_cmd_topic)" />
+        <arg name="save_LUT_name" value="$(var save_LUT_name)" />
+        <arg name="plot_model" value="$(var plot_model)" />
+        <arg name="racecar_version" value="$(var racecar_version)" />
+    </include>
+</launch>

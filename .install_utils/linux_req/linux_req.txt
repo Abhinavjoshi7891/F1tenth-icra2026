@@ -24,6 +24,9 @@ ros-humble-nav2-lifecycle-manager
 ros-humble-ros2launch
 ros-humble-ros2pkg
 ros-humble-ros2run
+ros-humble-ros2bag
+ros-humble-rosbag2-transport
+ros-humble-rosbag2-storage-default-plugins
 ros-humble-joy
 ros-humble-rmw-cyclonedds-cpp
 ros-humble-foxglove-bridge

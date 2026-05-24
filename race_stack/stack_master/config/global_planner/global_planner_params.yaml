@@ -9,5 +9,5 @@ global_planner:
     reverse_mapping: False
 
     show_plots: True
-    centerline_smoother: 'savgol'
+    centerline_smoother: 'savgol' # or ccma
     optimizer_config: 'racecar_f110.ini'

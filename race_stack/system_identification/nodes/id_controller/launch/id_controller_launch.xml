@@ -5,5 +5,6 @@
     <node pkg="id_controller" exec="id_controller" name="id_controller" output="screen">
         <param from="$(find-pkg-share id_controller)/parameters/experiments.yaml" />
         <param name="experiment" value="$(var experiment)" />
+        <remap from="drive_topic" to="/drive" />
     </node>
 </launch>

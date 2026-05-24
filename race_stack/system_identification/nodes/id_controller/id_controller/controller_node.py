@@ -12,10 +12,10 @@ class IDController(Node):
         super().__init__('id_controller')
 
         self.cmd_pub = self.create_publisher(AckermannDriveStamped, 'drive_topic', 10)
-        self.erpm_pub = self.create_publisher(Float64, '/vesc/commands/motor/speed', 10)
-        self.servo_pub = self.create_publisher(Float64, '/vesc/commands/servo/position', 10)
-        self.current_pub = self.create_publisher(Float64, '/vesc/commands/motor/current', 10)
-        self.brake_pub = self.create_publisher(Float64, '/vesc/commands/motor/brake', 10)
+        self.erpm_pub = self.create_publisher(Float64, '/commands/motor/speed', 10)
+        self.servo_pub = self.create_publisher(Float64, '/commands/servo/position', 10)
+        self.current_pub = self.create_publisher(Float64, '/commands/motor/current', 10)
+        self.brake_pub = self.create_publisher(Float64, '/commands/motor/brake', 10)
 
         self.declare_parameter('experiment', 1)
         self.declare_parameter('const_erpm', 3000)
@@ -33,6 +33,9 @@ class IDController(Node):
         self.declare_parameter('end_angle', 0.4)
         self.declare_parameter('const_speed', 3.0)
         self.declare_parameter('acc_profile', 3)
+        self.declare_parameter('profile3_speed1', 3.0)
+        self.declare_parameter('profile3_speed2', 5.0)
+        self.declare_parameter('profile3_duration', 6.0)
         self.declare_parameter('period', 3.0)
         self.declare_parameter('repetitions', 5)
         self.declare_parameter('bangbang_steer', 0.1)
@@ -53,6 +56,9 @@ class IDController(Node):
         self.end_angle = float(self.get_parameter('end_angle').value)
         self.const_speed = float(self.get_parameter('const_speed').value)
         self.acc_profile = self.get_parameter('acc_profile').value
+        self.profile3_speed1 = float(self.get_parameter('profile3_speed1').value)
+        self.profile3_speed2 = float(self.get_parameter('profile3_speed2').value)
+        self.profile3_duration = float(self.get_parameter('profile3_duration').value)
         self.period = float(self.get_parameter('period').value)
         self.repetitions = self.get_parameter('repetitions').value
         self.bangbang_steer = float(self.get_parameter('bangbang_steer').value)
@@ -171,7 +177,7 @@ class IDController(Node):
 
         elif self.acc_profile == 3:
             # Speed steps: 0 → speed1 → speed2 → speed2 → 0
-            speed1, speed2, duration = 3.0, 5.0, 6.0
+            speed1, speed2, duration = self.profile3_speed1, self.profile3_speed2, self.profile3_duration
             if elapsed < 2.0 or elapsed > 2.0 + duration:
                 msg.drive.speed = 0.0; msg.drive.jerk = 0.0; msg.drive.acceleration = 0.0
                 self.cmd_pub.publish(msg)

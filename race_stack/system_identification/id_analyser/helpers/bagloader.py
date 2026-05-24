@@ -21,15 +21,20 @@ def _detect_storage_id(bag_path):
 
 
 def _msg_to_flat_dict(msg, prefix=''):
+    prefix = str(prefix)  # kill numpy.str_ propagation through f-string formatting
     result = {}
     if hasattr(msg, 'get_fields_and_field_types'):
         for field in msg.get_fields_and_field_types().keys():
+            field = str(field)  # force Python str — rclpy may return numpy.str_
             val = getattr(msg, field)
             full_key = f'{prefix}.{field}' if prefix else field
             result.update(_msg_to_flat_dict(val, full_key))
     elif isinstance(msg, (int, float, bool, str)):
         result[prefix] = msg
-    # arrays and compound types with no sub-fields are silently ignored
+    elif hasattr(msg, 'item') and np.ndim(msg) == 0:
+        # numpy scalar (np.float64, np.int32, etc.) — convert to Python native
+        result[prefix] = msg.item()
+    # arrays, sequences, and other compound types are silently ignored
     return result
 
 
@@ -66,7 +71,43 @@ def get_bag_df(bag_path, field_dict):
             print(f'ERROR: no messages for topic {topic}')
             sys.exit(1)
 
-        df = pd.DataFrame(rows)
+        all_keys = list(dict.fromkeys(k for row in rows for k in row.keys()))
+        col_data = {}
+        for k in all_keys:
+            col_vals = []
+            for r in rows:
+                v = r.get(k)
+                if hasattr(v, 'item') and callable(v.item):
+                    try:
+                        v = v.item()
+                    except Exception:
+                        pass
+                col_vals.append(v)
+            col_data[str(k)] = col_vals
+
+        print(f"  [DEBUG] Attempting pd.DataFrame construction for '{topic}' ({len(rows)} rows, {len(all_keys)} cols)...")
+
+        try:
+            df = pd.DataFrame(col_data)
+            print(f"  [DEBUG] SUCCESS: pd.DataFrame created for '{topic}'.")
+        except Exception as e:
+            print(f"\n[CRASH LOG] DataFrame construction failed for topic: {topic}")
+            print(f"[CRASH LOG] Error: {e}")
+            print("[CRASH LOG] --- DETAILED COLUMN TYPE INSPECTION ---")
+            for k, v_list in col_data.items():
+                types = set(type(x).__name__ for x in v_list)
+                print(f"  -> Column '{k}' contains types: {types}")
+                for idx, val in enumerate(v_list):
+                    if isinstance(val, np.ndarray):
+                        print(f"      !!! FOUND np.ndarray in '{k}' at row {idx} !!! Shape: {val.shape}, Dtype: {val.dtype}")
+                        break
+                    elif isinstance(val, list):
+                        print(f"      !!! FOUND list in '{k}' at row {idx} !!!")
+                        break
+                    elif type(val).__module__ == 'numpy':
+                        print(f"      !!! FOUND rogue numpy type {type(val)} in '{k}' at row {idx} !!!")
+                        break
+            sys.exit(1)
 
         # rename Float64 'data' → 'topic.data' to match analysis script convention
         if 'data' in df.columns:
@@ -80,16 +121,22 @@ def get_bag_df(bag_path, field_dict):
         df.sort_values('timestamp_ns', inplace=True)
         df.reset_index(drop=True, inplace=True)
         topic_dfs[topic] = df
-        print(f'  {len(df)} rows from {topic}')
+        print(f'  {len(df)} rows from {topic} finalized.')
 
     dfs = list(topic_dfs.values())
     merged = dfs[0].sort_values('timestamp_ns')
     for df in dfs[1:]:
-        merged = pd.merge_asof(
-            merged,
-            df.sort_values('timestamp_ns'),
-            on='timestamp_ns',
-        )
+        try:
+            merged = pd.merge_asof(
+                merged,
+                df.sort_values('timestamp_ns'),
+                on='timestamp_ns',
+            )
+        except Exception as e:
+            print(f"\n[CRASH LOG] pd.merge_asof failed!")
+            print(f"[CRASH LOG] Error: {e}")
+            sys.exit(1)
+
     merged.dropna(inplace=True)
     merged.reset_index(drop=True, inplace=True)
     return merged
@@ -115,6 +162,15 @@ def load_bags(directory, field_dict):
         raise ValueError(f'No ROS2 bags found in {directory}')
 
     dataframes = [get_bag_df(p, field_dict) for p in bag_dirs]
-    result = pd.concat(dataframes, ignore_index=True)
+
+    print("  [DEBUG] Attempting pd.concat on all bags...")
+    try:
+        result = pd.concat(dataframes, ignore_index=True)
+        print("  [DEBUG] SUCCESS: pd.concat completed.")
+    except Exception as e:
+        print(f"\n[CRASH LOG] pd.concat failed!")
+        print(f"[CRASH LOG] Error: {e}")
+        sys.exit(1)
+
     print(f'Total datapoints: {result.shape[0]}')
     return result
