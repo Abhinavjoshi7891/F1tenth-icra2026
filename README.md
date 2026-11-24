@@ -2,7 +2,7 @@
 
 This is a customized version of the **ForzaETH Race Stack**, specifically adapted for the **AutoDRIVE RoboRacer ICRA 2026 Sim Racing League**. It integrates the high-performance racing algorithms from ETH Zurich with the AutoDRIVE simulator environment.
 
-## 🎥 Physical 1:10 Hardware & Autonomy Demos
+## 🎥 Hardware & Simulation Autonomy Demos
 
 <table>
   <tr>
@@ -19,10 +19,50 @@ This is a customized version of the **ForzaETH Race Stack**, specifically adapte
     </td>
     <td align="center">
       <a href="media/car_2_clip.mp4">
-        <img src="media/car_2_clip.gif" alt="RViz Cartographer SLAM and dynamic cornering raceline tracking" width="480" />
+        <img src="media/car_2_clip.gif" alt="RViz Cartographer SLAM and dynamic cornering raceline tracking" width="460" />
       </a>
       <br />
       <a href="media/car_2_clip.mp4">▶ Watch / Download full MP4 (<code>media/car_2_clip.mp4</code>)</a>
+    </td>
+  </tr>
+  <tr>
+    <th align="center">RUN 03 — Physical Track Mapping (Teleop LiDAR SLAM)</th>
+    <th align="center">RUN 04 — Physical Tyre &amp; Vehicle Dynamics Profiling (SysID)</th>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="media/mapping_teleop.mp4">
+        <img src="media/mapping_teleop.gif" alt="Physical 1:10 F1Tenth teleop track mapping run" width="360" />
+      </a>
+      <br />
+      <a href="media/mapping_teleop.mp4">▶ Watch / Download full MP4 (<code>media/mapping_teleop.mp4</code>)</a>
+    </td>
+    <td align="center">
+      <a href="media/tyre_profile.mp4">
+        <img src="media/tyre_profile.gif" alt="Physical 1:10 F1Tenth outdoor tyre and dynamics profiling run" width="340" />
+      </a>
+      <br />
+      <a href="media/tyre_profile.mp4">▶ Watch / Download full MP4 (<code>media/tyre_profile.mp4</code>)</a>
+    </td>
+  </tr>
+  <tr>
+    <th align="center">SIM 01 — Multi-Sector Time Trial Run (RViz / F1Tenth Gym)</th>
+    <th align="center">SIM 02 — Dynamic Opponent Overtaking (RViz / F1Tenth Gym)</th>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="media/sim_run.mp4">
+        <img src="media/sim_run.gif" alt="F1Tenth Gym RViz autonomous multi-sector time trial run" width="460" />
+      </a>
+      <br />
+      <a href="media/sim_run.mp4">▶ Watch / Download full MP4 (<code>media/sim_run.mp4</code>)</a>
+    </td>
+    <td align="center">
+      <a href="media/sim_overtake.mp4">
+        <img src="media/sim_overtake.gif" alt="F1Tenth Gym RViz autonomous dynamic overtaking maneuver" width="420" />
+      </a>
+      <br />
+      <a href="media/sim_overtake.mp4">▶ Watch / Download full MP4 (<code>media/sim_overtake.mp4</code>)</a>
     </td>
   </tr>
 </table>
