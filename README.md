@@ -2,6 +2,31 @@
 
 This is a customized version of the **ForzaETH Race Stack**, specifically adapted for the **AutoDRIVE RoboRacer ICRA 2026 Sim Racing League**. It integrates the high-performance racing algorithms from ETH Zurich with the AutoDRIVE simulator environment.
 
+## 🎥 Physical 1:10 Hardware & Autonomy Demos
+
+<table>
+  <tr>
+    <th align="center">RUN 01 — High-Speed Raceline (50 Hz SQP MPC · Jetson Orin Nano)</th>
+    <th align="center">RUN 02 — Dynamic Cornering &amp; Cartographer SLAM (Pacejka Single-Track)</th>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="media/car_1_clip.mp4">
+        <img src="media/car_1_clip.gif" alt="Physical 1:10 F1Tenth autonomous high-speed raceline run" width="420" />
+      </a>
+      <br />
+      <a href="media/car_1_clip.mp4">▶ Watch / Download full MP4 (<code>media/car_1_clip.mp4</code>)</a>
+    </td>
+    <td align="center">
+      <a href="media/car_2_clip.mp4">
+        <img src="media/car_2_clip.gif" alt="RViz Cartographer SLAM and dynamic cornering raceline tracking" width="480" />
+      </a>
+      <br />
+      <a href="media/car_2_clip.mp4">▶ Watch / Download full MP4 (<code>media/car_2_clip.mp4</code>)</a>
+    </td>
+  </tr>
+</table>
+
 ## 🚀 Key RoboRacer Additions
 
 *   **AutoDRIVE Bridge:** A custom `autodrive_adapter` package that translates AutoDRIVE simulator topics (LiDAR, Odometry, IPS) to the standard ROS 2 topics expected by the ForzaETH stack.
